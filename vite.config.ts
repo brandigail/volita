@@ -18,6 +18,8 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         start_url: '/',
+        // Lets the installed app appear in the phone's share sheet, so a customer's message can be shared straight in.
+        share_target: { action: '/', method: 'GET', params: { title: 'title', text: 'text', url: 'url' } },
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },

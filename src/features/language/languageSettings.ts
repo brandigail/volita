@@ -27,3 +27,7 @@ export const writeSpokenLanguage = (code: string) => write(SPOKEN_KEY, code)
 /** The language drafts are written in ("same" keeps whatever was spoken, "af" translates to Afrikaans, and so on). */
 export const readWriteLanguage = () => read(WRITE_KEY, WRITE_CODES, SAME)
 export const writeWriteLanguage = (code: string) => write(WRITE_KEY, code)
+
+/** Free accounts are English only, whatever was chosen on this device earlier (for example before a plan change). */
+export const effectiveSpoken = (anyLanguage: boolean) => (anyLanguage ? readSpokenLanguage() : 'en')
+export const effectiveWrite = (anyLanguage: boolean) => (anyLanguage ? readWriteLanguage() : SAME)

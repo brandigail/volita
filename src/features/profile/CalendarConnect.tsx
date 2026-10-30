@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { z } from 'zod'
 import { CalendarCheck, CheckCircle2, ClipboardPaste, ExternalLink, Link2Off, X } from 'lucide-react'
+import { UpgradeNote } from '../../components/UpgradeNote'
 import { ApiRequestError, request } from '../../lib/api'
+import { addCalendar, fetchCalendars, removeCalendar, type CalendarsInfo } from '../../lib/plan-api'
 import type { CalendarCheckResponse } from '../../types/agenda'
 
 type ProviderId = 'google' | 'outlook' | 'apple' | 'other'
@@ -81,14 +83,11 @@ function googleSettingsUrl(email: string): string {
 interface CalendarConnectProps {
   /** The email the user signed up to Apex with; used as the starting guess for their Google account. */
   accountEmail: string
-  /** The saved calendar address, or "" when none is linked. */
-  url: string
-  /** Saves the new address (or "" to disconnect). */
-  onChange: (url: string) => Promise<boolean>
 }
 
 /** Guides someone through linking their calendar: pick the app, copy the address with a few taps, test it, done. */
-export function CalendarConnect({ accountEmail, url, onChange }: CalendarConnectProps) {
+export function CalendarConnect({ accountEmail }: CalendarConnectProps) {
+  const [info, setInfo] = useState<CalendarsInfo | null>(null)
   const [googleEmail, setGoogleEmail] = useState(accountEmail)
   const dialogRef = useRef<HTMLDialogElement | null>(null)
   const [provider, setProvider] = useState<Provider | null>(null)
@@ -97,6 +96,16 @@ export function CalendarConnect({ accountEmail, url, onChange }: CalendarConnect
   const [result, setResult] = useState<CalendarCheckResponse | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchCalendars()
+      .then((loaded) => !cancelled && setInfo(loaded))
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const open = () => {
     setProvider(null)
@@ -145,10 +154,14 @@ export function CalendarConnect({ accountEmail, url, onChange }: CalendarConnect
 
   const use = async () => {
     setSaving(true)
-    const saved = await onChange(draft.trim())
-    setSaving(false)
-    if (saved) close()
-    else setProblem('Could not save the link. Please try again.')
+    try {
+      setInfo(await addCalendar(draft.trim()))
+      close()
+    } catch (err) {
+      setProblem(err instanceof ApiRequestError ? err.message : 'Could not save the link. Please try again.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -157,26 +170,38 @@ export function CalendarConnect({ accountEmail, url, onChange }: CalendarConnect
         Calendar <span className="muted font-normal">(optional)</span>
       </p>
       <div className="surface flex flex-col gap-3 p-4">
-        {url ? (
-          <p className="flex items-center gap-2 text-sm font-semibold text-emerald-500">
-            <CheckCircle2 className="size-5" aria-hidden="true" />
-            Calendar connected
-          </p>
+        {info && info.max === 0 ? (
+          <UpgradeNote message="Linking a calendar is part of the Basic plan (Pro links up to three)." needs="basic" onSeePlans={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })} />
         ) : (
-          <p className="muted text-sm">Link your calendar so the assistant knows your meetings.</p>
+          <>
+            {info && info.calendars.length > 0 ? (
+              <ul className="space-y-2">
+                {info.calendars.map((calendar, index) => (
+                  <li key={`${calendar.host}-${index}`} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate font-semibold">{calendar.host}</span>
+                    <button type="button" onClick={() => void removeCalendar(index).then(setInfo).catch(() => undefined)} className="btn btn-ghost px-3 py-1 text-xs">
+                      <Link2Off className="size-3" aria-hidden="true" />
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted text-sm">Link your calendar so the assistant knows your meetings.</p>
+            )}
+            {info && info.inactive > 0 && <p className="muted text-xs">{info.inactive} more linked calendar(s) are kept but switched off on your plan.</p>}
+            {info && info.calendars.length < info.max && (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={open} className="btn btn-primary">
+                  <CalendarCheck className="size-4" aria-hidden="true" />
+                  {info.calendars.length > 0 ? 'Add another calendar' : 'Connect calendar'}
+                </button>
+              </div>
+            )}
+            {info && info.max === 1 && info.calendars.length === 1 && <p className="muted text-xs">Pro links up to three calendars.</p>}
+          </>
         )}
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={open} className="btn btn-primary">
-            <CalendarCheck className="size-4" aria-hidden="true" />
-            {url ? 'Change calendar' : 'Connect calendar'}
-          </button>
-          {url && (
-            <button type="button" onClick={() => void onChange('')} className="btn btn-ghost">
-              <Link2Off className="size-4" aria-hidden="true" />
-              Disconnect
-            </button>
-          )}
-        </div>
       </div>
 
       {createPortal(

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { Check, FlaskConical, Sparkles } from 'lucide-react'
 import { ApiRequestError, request } from '../../lib/api'
-import { CURRENCIES, PLANS, type PlanId, type RatesResponse } from '../../types/plans'
+import { CURRENCIES, PLANS, type PaidPlanId, type RatesResponse } from '../../types/plans'
 import type { SubscriptionResponse } from '../../types/subscription'
 
 const ratesSchema = z.object({
@@ -77,7 +77,7 @@ export function SubscriptionSection() {
   const [state, setState] = useState<SubscriptionResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [currency, setCurrency] = useState(defaultCurrency)
-  const [busy, setBusy] = useState<PlanId | 'cancel' | null>(null)
+  const [busy, setBusy] = useState<PaidPlanId | 'cancel' | null>(null)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [returned] = useState(paymentResult)
   const [waiting, setWaiting] = useState(returned === 'success')
@@ -131,7 +131,7 @@ export function SubscriptionSection() {
   const subscription = state?.subscription ?? null
   const active = subscription?.status === 'active'
 
-  const subscribe = async (plan: PlanId) => {
+  const subscribe = async (plan: PaidPlanId) => {
     setBusy(plan)
     setError(null)
     try {

@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { MEMORY_KINDS, MEMORY_LIMITS } from '../../../src/types/memory.ts'
+import { MEMORY_KINDS, MEMORY_LIMITS, MEMORY_SOURCES } from '../../../src/types/memory.ts'
 import { contactInputSchema, memoryInputSchema } from '../../../src/types/memory-schema.ts'
 import type { ToolContext } from './assistant-tools.ts'
 import type { ToolDefinition } from './groq-chat.ts'
+import { planLimits } from '../../../src/types/plans.ts'
 import { addMemory, deleteContact, deleteMemory, listContacts, listMemories, saveContact } from './memory-store.ts'
 
 const RECALL_LIMIT = 12
@@ -18,6 +19,7 @@ export const MEMORY_TOOLS: ToolDefinition[] = [
         properties: {
           text: { type: 'string', description: 'One short third-person sentence, for example "Charges 15% VAT on quotes".' },
           kind: { type: 'string', enum: [...MEMORY_KINDS], description: 'preference is always applied; fact is used when relevant.' },
+          source: { type: 'string', enum: [...MEMORY_SOURCES], description: 'said when the user stated it outright; guessed when you worked it out yourself and they should check it.' },
         },
         required: ['text', 'kind'],
       },
@@ -59,7 +61,7 @@ export const MEMORY_TOOLS: ToolDefinition[] = [
   },
 ]
 
-const rememberArgs = z.object({ text: memoryInputSchema.shape.content, kind: memoryInputSchema.shape.kind })
+const rememberArgs = z.object({ text: memoryInputSchema.shape.content, kind: memoryInputSchema.shape.kind, source: z.enum(MEMORY_SOURCES).optional() })
 const recallArgs = z.object({ query: z.string().trim().max(100).optional() })
 const forgetArgs = z.object({ id: z.uuid() })
 
@@ -69,7 +71,7 @@ const short = (text: string) => (text.length > 60 ? `${text.slice(0, 57)}...` : 
 async function remember(args: unknown, ctx: ToolContext): Promise<string> {
   const parsed = rememberArgs.safeParse(args)
   if (!parsed.success) return fail(`Give a short sentence (at most ${MEMORY_LIMITS.content} characters) and whether it is a preference or a fact.`)
-  const result = await addMemory(ctx.userId, parsed.data.kind, parsed.data.text)
+  const result = await addMemory(ctx.userId, parsed.data.kind, parsed.data.text, { cap: planLimits(ctx.plan).memoryItems }, parsed.data.source ?? 'said')
   if (!result.ok) return fail(result.message)
   const { memory, duplicate } = result.value
   if (duplicate) return JSON.stringify({ alreadyKnown: true })
@@ -80,7 +82,7 @@ async function remember(args: unknown, ctx: ToolContext): Promise<string> {
 async function saveContactTool(args: unknown, ctx: ToolContext): Promise<string> {
   const parsed = contactInputSchema.safeParse(args)
   if (!parsed.success) return fail('Give at least the name.')
-  const result = await saveContact(ctx.userId, parsed.data)
+  const result = await saveContact(ctx.userId, parsed.data, { cap: planLimits(ctx.plan).contacts })
   if (!result.ok) return fail(result.message)
   const { contact, created } = result.value
   ctx.actions.push({ type: 'contact_saved', id: contact.id, label: contact.name })

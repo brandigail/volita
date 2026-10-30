@@ -2,6 +2,10 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { AlertCircle, CalendarDays, CalendarPlus, Link2, Trash2 } from 'lucide-react'
 import type { Tab } from '../../components/TabBar'
 import type { AgendaItem } from '../../types/agenda'
+import { UpgradeNote } from '../../components/UpgradeNote'
+import { goToPlans } from '../../lib/navigation'
+import { usePlan } from '../../providers/usePlan'
+import { EnableReminders, TomorrowOnWhatsApp } from './AgendaExtras'
 import { useAgenda } from './useAgenda'
 
 const timeFormat = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
@@ -32,6 +36,7 @@ function timeText(item: AgendaItem): string {
 }
 
 export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
+  const { limits } = usePlan()
   const { items, status, error, calendarLinked, calendarError, add, remove } = useAgenda()
   const [title, setTitle] = useState('')
   const [when, setWhen] = useState('')
@@ -62,7 +67,15 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       </h1>
       <p className="muted mt-1">The next two weeks. Ask the assistant about it, or tell it to add things.</p>
 
-      {!calendarLinked && status === 'ready' && (
+      <EnableReminders />
+
+      {limits.calendars === 0 && status === 'ready' && (
+        <div className="mt-5">
+          <UpgradeNote message="Linking a calendar is part of the Basic plan. You can still add meetings here by hand or by telling the assistant." needs="basic" onSeePlans={goToPlans} />
+        </div>
+      )}
+
+      {limits.calendars > 0 && !calendarLinked && status === 'ready' && (
         <button
           type="button"
           onClick={() => onNavigate('profile')}
@@ -127,6 +140,8 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
           Nothing on your agenda for the next two weeks.
         </p>
       )}
+
+      {status === 'ready' && <TomorrowOnWhatsApp items={items} />}
 
       <div className="mt-5 flex flex-col gap-5">
         {days.map(([key, dayItems]) => (

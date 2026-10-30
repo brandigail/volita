@@ -5,7 +5,8 @@ import type { DraftCategory, GeneratedDraft } from '../../../src/types/draft.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 import { retryPrompt, systemPrompt, userPrompt } from './draft-prompt.ts'
 import { chat, type ChatMessage } from './groq-chat.ts'
-import { withSignature } from './signature.ts'
+import { withFooter, withSignature } from './signature.ts'
+import { toneInstruction } from '../../../src/types/tones.ts'
 
 /** Don't start a retry with less time than this left. */
 const MIN_RETRY_MS = 2_500
@@ -46,6 +47,14 @@ export interface DraftRequest {
   spokenLanguage?: string
   /** What Apex remembers that is relevant to this dictation (see loadMemoryContext), or empty. */
   memory?: string
+  /** The user's saved prices, for quotes. */
+  prices?: string
+  /** A tone id from tones.ts to rewrite in. */
+  tone?: string
+  /** Free plan: add the "Written with Apex Voice" footer. */
+  footer?: boolean
+  /** A photo (data URL) the draft should be about, for photo-to-caption. */
+  image?: string
 }
 
 /** Turns a transcript into a validated, signed draft for one channel, retrying once if the model's JSON is invalid. */
@@ -58,11 +67,15 @@ export async function writeDraft({
   writeLanguage,
   spokenLanguage,
   memory,
+  prices,
+  tone,
+  footer,
+  image,
 }: DraftRequest): Promise<DraftResult> {
   const startedAt = Date.now()
   const messages: ChatMessage[] = [
-    { role: 'system', content: systemPrompt(category, profile, writeLanguage, spokenLanguage, memory) },
-    { role: 'user', content: userPrompt(transcript) },
+    { role: 'system', content: systemPrompt(category, profile, writeLanguage, spokenLanguage, memory, { tone: toneInstruction(tone), prices }) },
+    { role: 'user', content: image ? [{ type: 'text', text: userPrompt(transcript, true) }, { type: 'image_url', image_url: { url: image } }] : userPrompt(transcript) },
   ]
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -80,7 +93,8 @@ export async function writeDraft({
       // A language the user chose is more reliable than the model's own label for what it wrote.
       const chosen = writeLanguage && writeLanguage !== SAME ? writeLanguage : spokenLanguage && spokenLanguage !== AUTO ? spokenLanguage : null
       const draft = chosen ? { ...parsed.draft, language: chosen } : parsed.draft
-      return { ok: true, draft: withSignature(draft, profile) }
+      const signed = withSignature(draft, profile)
+      return { ok: true, draft: footer ? withFooter(signed) : signed }
     }
 
     console.error('Invalid draft from model:', parsed.problem)

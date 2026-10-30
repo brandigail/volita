@@ -1,7 +1,7 @@
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless'
 import type { Config } from '@netlify/functions'
 import { z } from 'zod'
-import { CURRENCIES, PLANS, type PlanId } from '../../src/types/plans.ts'
+import { CURRENCIES, PLANS, type PaidPlanId } from '../../src/types/plans.ts'
 import type { CheckoutResponse, Subscription, SubscriptionResponse } from '../../src/types/subscription.ts'
 import { featuresFor } from './_lib/features.ts'
 import { errorResponse, json } from './_lib/http.ts'
@@ -11,7 +11,7 @@ import { requireUser } from './_lib/session.ts'
 import { describeError, describeUpstream } from './_lib/safe-log.ts'
 
 interface SubscriptionRow {
-  plan: PlanId
+  plan: PaidPlanId
   status: Subscription['status']
   amount_zar: string
   display_currency: string
@@ -23,7 +23,7 @@ interface SubscriptionRow {
 const COLUMNS = 'plan, status, amount_zar, display_currency, pf_token, last_payment_at, next_billing_at'
 
 const checkoutSchema = z.object({
-  plan: z.enum(PLANS.map((plan) => plan.id) as [PlanId, ...PlanId[]]),
+  plan: z.enum(PLANS.map((plan) => plan.id) as [PaidPlanId, ...PaidPlanId[]]),
   currency: z.enum(CURRENCIES.map((currency) => currency.code) as [string, ...string[]]),
 })
 

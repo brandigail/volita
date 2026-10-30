@@ -95,3 +95,13 @@ Reading a client's email is the most sensitive thing this app could do, so these
 - Who can access the data: the Neon console (database), Netlify (settings and logs), Groq console (data controls).
 - Search the git history for secrets: `git log --all -p | grep -E "gsk_|postgres://"` (should print nothing).
 - Packages: `npm audit --omit=dev`.
+
+## 7. Plans, the owner screen and new data (added 2026-10-30)
+
+- **Plans are decided on the server only.** `netlify/functions/_lib/plan.ts` resolves the plan for every request (owner, then a plan the owner granted, then an active subscription, otherwise Free). The browser never sends a plan; it only displays what `/api/plan` says. A refused action returns HTTP 402 with the plan that would allow it.
+- **The family screen** (`/api/admin/users`) answers only to emails in the `OWNER_EMAILS` setting; anyone else gets 403. It lists name, email, draft count and last use, and can grant Basic or Pro. It cannot read anyone's drafts, memory or recordings. An owner account cannot be demoted from the screen.
+- **New stored data, encrypted like the rest:** templates and the price list (`templates`, `services`), and the original wording of each draft (`drafts.original_body`, used to learn writing style). Plan grants, onboarding flags and the premium-voice counter hold no message content.
+- **Linked calendars** are kept in the same encrypted field, one address per line. The screen only ever shows the host name, never the secret address.
+- **Limits are metered by the server, not the browser.** Recording time is metered as 45 second clips per day (a client could send a longer clip, but the daily total still stops it); everything else (channels, languages, tools, memory caps, history length, calendar count) is checked in the function.
+- **Notifications** are scheduled on the device from the agenda; no message text is sent to any push service. Pop-ups show a short title and the item name on the lock screen, so a phone with lock-screen previews on will show it.
+- **Still true:** the gaps in section 4 about the live site remain until the next deploy.

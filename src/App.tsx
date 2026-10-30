@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import type { Tab } from './components/TabBar'
 import { AuthScreen } from './features/auth/AuthScreen'
@@ -11,6 +11,11 @@ import { authClient } from './lib/auth-client'
 import { useFeatures } from './lib/useFeatures'
 import { useActivityReporting } from './lib/useActivityReporting'
 import { UnsentBanner } from './features/history/UnsentBanner'
+import { NAVIGATE_EVENT } from './features/notifications/prefs'
+import { useNotificationScheduler } from './features/notifications/useNotificationScheduler'
+import { Onboarding } from './features/plan/Onboarding'
+import { SharedDialog } from './features/share/SharedDialog'
+import { useSharedContent } from './features/share/useSharedContent'
 import { GuidedTour } from './features/tour/GuidedTour'
 import { highlight, hasSeenTour, markTourSeen } from './features/tour/highlight'
 import { TOUR_STEPS, type TourStep } from './features/tour/steps'
@@ -21,6 +26,21 @@ export default function App() {
   const { data: session, isPending } = authClient.useSession()
   const features = useFeatures(Boolean(session))
   useActivityReporting(Boolean(session), tab)
+  useNotificationScheduler(Boolean(session))
+  const { shared, clear: clearShared } = useSharedContent(Boolean(session))
+
+  // Tapping a reminder on the phone opens the screen it is about.
+  useEffect(() => {
+    const onNavigate = (event: Event) => setTab((event as CustomEvent<Tab>).detail)
+    window.addEventListener(NAVIGATE_EVENT, onNavigate)
+    return () => window.removeEventListener(NAVIGATE_EVENT, onNavigate)
+  }, [])
+
+  const openPlans = () => {
+    setHistoryOnUnsent(false)
+    setTab('profile')
+    window.setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 400)
+  }
 
   // The tour opens by itself the first time someone signs in on this device; the "?" button opens it again.
   const userId = session?.user.id
@@ -66,6 +86,7 @@ export default function App() {
       }}
       signedIn={Boolean(session)}
       onHelp={openTour}
+      onPlan={openPlans}
     >
       {session && tab === 'record' && (
         <UnsentBanner
@@ -82,7 +103,7 @@ export default function App() {
       ) : !session ? (
         <AuthScreen />
       ) : tab === 'record' ? (
-        <RecordView />
+        <RecordView onNavigate={setTab} />
       ) : tab === 'assistant' ? (
         <AssistantView onNavigate={setTab} />
       ) : tab === 'agenda' ? (
@@ -91,6 +112,19 @@ export default function App() {
         <HistoryView key={String(historyOnUnsent)} initialStatus={historyOnUnsent ? 'UNSENT' : 'ALL'} />
       ) : (
         <ProfileView user={session.user} showSubscriptions={features.subscriptions} activityLogged={features.activityLogged} />
+      )}
+      {session && <Onboarding />}
+      {session && shared && (
+        <SharedDialog
+          shared={shared}
+          onClose={clearShared}
+          onSeePlans={openPlans}
+          onSaved={() => {
+            clearShared()
+            setHistoryOnUnsent(false)
+            setTab('history')
+          }}
+        />
       )}
       {session && (
         <GuidedTour open={tourOpen} step={tourStep} onStep={setTourStep} onFinish={finishTour} onShow={showStep} />

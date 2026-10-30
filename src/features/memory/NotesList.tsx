@@ -59,8 +59,16 @@ function NoteRow({ memory, onEdit, onRemove }: { memory: Memory; onEdit: NotesLi
     <li className="flex items-start gap-3 p-3">
       <div className="min-w-0 flex-1">
         <p className="text-sm">{memory.content}</p>
-        <p className="muted mt-0.5 text-xs">{KIND_LABEL[memory.kind]}</p>
+        <p className="muted mt-0.5 text-xs">
+          {KIND_LABEL[memory.kind]} ·{' '}
+          {memory.source === 'guessed' ? <span className="font-semibold text-amber-600 dark:text-amber-300">I guessed this. Is it right?</span> : 'You said'}
+        </p>
       </div>
+      {memory.source === 'guessed' && (
+        <button type="button" onClick={() => void onEdit(memory.id, memory.kind, memory.content)} className="btn btn-ghost cursor-pointer text-xs">
+          Looks right
+        </button>
+      )}
       <button type="button" onClick={() => setEditing(true)} className="btn btn-ghost cursor-pointer" aria-label={`Edit: ${memory.content}`}>
         <Pencil className="size-4" aria-hidden="true" />
       </button>

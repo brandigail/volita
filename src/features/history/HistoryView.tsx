@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { AlertCircle, RotateCcw } from 'lucide-react'
+import { UpgradeNote } from '../../components/UpgradeNote'
+import { goToPlans } from '../../lib/navigation'
+import { usePlan } from '../../providers/usePlan'
 import { ConversationsView } from './ConversationsView'
 import { DraftListItem } from './DraftListItem'
 import { HistoryFilters, type CategoryFilter, type StatusFilter } from './HistoryFilters'
@@ -49,7 +52,10 @@ export function HistoryView({ initialStatus = 'ALL' }: HistoryViewProps) {
 }
 
 function DraftsSection({ initialStatus }: { initialStatus: StatusFilter }) {
-  const { drafts, status: loadStatus, error, reload, remove, updateStatus } = useDrafts()
+  const { drafts, hidden, status: loadStatus, error, reload, remove, updateStatus } = useDrafts()
+  const { limits } = usePlan()
+  const capped = limits.historyDrafts !== null
+  const seePlans = goToPlans
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<CategoryFilter>('ALL')
   const [status, setStatus] = useState<StatusFilter>(initialStatus)
@@ -100,7 +106,7 @@ function DraftsSection({ initialStatus }: { initialStatus: StatusFilter }) {
         <p className="muted mt-4">No drafts yet. Record a voice note and it will be saved here automatically.</p>
       )}
 
-      {drafts.length > 0 && (
+      {drafts.length > 0 && !capped && (
         <HistoryFilters
           query={query}
           onQuery={setQuery}
@@ -110,6 +116,16 @@ function DraftsSection({ initialStatus }: { initialStatus: StatusFilter }) {
           onStatus={setStatus}
           unsentCount={unsentCount}
         />
+      )}
+
+      {capped && drafts.length > 0 && (
+        <div className="mt-4">
+          <UpgradeNote
+            message={`The free plan shows your last ${limits.historyDrafts} drafts${hidden > 0 ? `. ${hidden} older ${hidden === 1 ? 'draft is' : 'drafts are'} kept safe and come back on Basic` : ''}. Search and filters are part of Basic.`}
+            needs="basic"
+            onSeePlans={seePlans}
+          />
+        </div>
       )}
 
       {drafts.length > 0 && visible.length === 0 && (

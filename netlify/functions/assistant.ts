@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
-import { runTool, TOOLS, type ToolContext } from './_lib/assistant-tools.ts'
+import { runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
 import { assistantSystemPrompt } from './_lib/assistant-prompt.ts'
 import { chat, type ChatMessage } from './_lib/groq-chat.ts'
 import { errorResponse, json } from './_lib/http.ts'
@@ -10,6 +10,7 @@ import { requireUser } from './_lib/session.ts'
 import { logActivity } from './_lib/activity.ts'
 import { rememberTurn } from './_lib/conversations.ts'
 import { safeTimeZone } from './_lib/time.ts'
+import { planLimits } from '../../src/types/plans.ts'
 import { SPOKEN_CODES } from '../../src/types/languages.ts'
 
 /** Netlify's default function timeout is 10 s; leave a second for the response. */
@@ -90,7 +91,7 @@ export default async function handler(req: Request): Promise<Response> {
     return errorResponse(400, 'Send the conversation so far, ending with what the user said.')
   }
 
-  const quota = await claimQuota(session.user.id, 'assistant')
+  const quota = await claimQuota(session.user, 'assistant')
   if (!quota.ok) return quota.response
 
   const startedAt = Date.now()
@@ -98,6 +99,7 @@ export default async function handler(req: Request): Promise<Response> {
   const { profile } = session.user
   const ctx: ToolContext = {
     userId: session.user.id,
+    plan: session.user.plan,
     profile,
     timeZone,
     apiKey,
@@ -120,9 +122,14 @@ export default async function handler(req: Request): Promise<Response> {
     return json<AssistantResponse>({ reply, actions: ctx.actions, speechLanguage: ctx.speechLanguage })
   }
 
+  const limits = planLimits(session.user.plan)
+  const tools = toolsFor(session.user.plan)
   const models = assistantModels()
   const messages: ChatMessage[] = [
-    { role: 'system', content: assistantSystemPrompt(profile, timeZone, await loadMemoryContext(session.user.id, lastUserText)) },
+    {
+      role: 'system',
+      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools),
+    },
     ...request.data.messages.map(({ role, content, actions }): ChatMessage => {
       if (role === 'user' || !actions?.length) return { role, content }
       const done = actions.map((a) => `${a.type} id=${a.id} (${a.label})`).join('; ')
@@ -135,10 +142,10 @@ export default async function handler(req: Request): Promise<Response> {
     const remaining = ctx.deadlineAt - Date.now()
     if (remaining < MIN_ROUND_MS) break
 
-    let result = await chat(apiKey, messages, remaining, { tools: TOOLS, temperature: 0.5, model: models[0] })
+    let result = await chat(apiKey, messages, remaining, { tools, temperature: 0.5, model: models[0] })
     for (const fallback of models.slice(1)) {
       if (result.ok || result.status !== 429) break
-      result = await chat(apiKey, messages, ctx.deadlineAt - Date.now(), { tools: TOOLS, temperature: 0.5, model: fallback })
+      result = await chat(apiKey, messages, ctx.deadlineAt - Date.now(), { tools, temperature: 0.5, model: fallback })
     }
     if (!result.ok) {
       // If a tool already ran, say what was done instead of an error that hides it.

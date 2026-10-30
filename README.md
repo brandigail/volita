@@ -24,6 +24,12 @@ Talk to your business. Apex Voice turns a spoken note into a finished email, quo
 - A subscription preview, switched on per account with `FEATURE_SUBSCRIPTIONS`: plans with live currency conversion and PayFast checkout (sandbox by default), payment confirmation via PayFast's signed notifications, cancel, and a confirmation email
 - A guided tour (opens on first sign-in, reopened by the "?" button) with a step for each part, example sentences, a "Show me" button that highlights the real control, and a feedback box whose notes are saved for the owner
 - Per-user rate limits and daily quotas, with a tighter cap for the assistant, to protect the free Groq quota
+- Three plans (Free, Basic $5, Pro $12), enforced on the server only (`src/types/plans.ts` holds every limit, `netlify/functions/_lib/plan.ts` decides who is on which plan): draft and assistant limits, recording length, channels, languages, assistant tools, memory caps, history length, calendars, a monthly premium-voice pool counted per assistant turn, and a "Written with Apex Voice" footer on Free. A downgrade locks features but never deletes data. Billing is not open yet: the owner gives plans out by hand
+- A family screen (owner only, `OWNER_EMAILS`) to choose who gets Basic or Pro for free, plus a usage meter, a plan chip and upgrade prompts instead of errors
+- Pop-up notifications: Android local notifications (high-importance channel, work with the app closed) for send-at reminders, meetings, a daily briefing and unanswered-quote nudges, with per-type switches and a test button; in a browser they work while the app is open
+- Pro habit features: a morning briefing, rewrite in a different tone, and writing style learned from the drafts you edit before sending. Basic and up: saved templates, a price list used on quotes (the assistant asks when a price is missing), quote as PDF, photo to caption, follow-up nudges for unanswered quotes, and a one-tap WhatsApp list for tomorrow
+- Memory is tagged "you said" or "I guessed"; guessed items can be confirmed or corrected
+- Share a customer's message (or a WhatsApp voice note, on Android) into Apex to get a drafted reply; a three-question welcome for new accounts
 
 ## Stack
 React 19, Vite, TypeScript (strict), Tailwind CSS v4, zod, vite-plugin-pwa, Netlify Functions, Neon Postgres, Better Auth, Groq (Whisper, `openai/gpt-oss` for the assistant, Qwen for drafts, Orpheus for speech), Capacitor (Android).
@@ -47,7 +53,9 @@ cp .env.example .env.local     # add GROQ_API_KEY, DATABASE_URL, BETTER_AUTH_SEC
 npm run db:migrate
 npx netlify-cli@latest dev     # http://localhost:8888
 ```
-Checks: `npm run build`, `npm run lint`.
+Checks: `npm run build`, `npm run lint`, `npm run typecheck`.
+
+Set `OWNER_EMAILS` in `.env.local` to your own email to get the family screen. Accounts that existed before plans were introduced were given Pro by migration 013; new sign-ups start on Free.
 
 ## Android app
 The app is a Capacitor shell around the live site, so web deploys reach it without a new APK.
@@ -63,5 +71,8 @@ cd android
 ```
 Install the release APK by copying it to the phone and opening it (allow "install unknown apps" for your file manager or browser). The first conversation asks for microphone and notification permission. iPhone users use the web app.
 
+## Android test build (USB)
+The release app loads the live site, so new features reach it only after a deploy. To try changes first, plug the phone in (USB debugging on) and run `scripts/phone-test.ps1`: it builds a separate "Apex Voice (test)" app that talks to the dev server on the computer over the cable, and installs it next to the real one.
+
 ## Phase 2
-Send from inside Apex (Gmail API or Resend), offline queue, re-generate with a different tone, iOS app.
+Paid plans and billing (PayFast live merchant, upgrade and cancel, yearly prices), web push for closed-browser reminders, send from inside Apex (Gmail API or Resend), inbox awareness, payment links on quotes, offline queue, iOS app.

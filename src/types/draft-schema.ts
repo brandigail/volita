@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { GenerateRequest } from './api.ts'
 import { DRAFT_CATEGORIES, type Draft, type DraftStatusUpdate, type GeneratedDraft, type SaveDraftInput } from './draft.ts'
 import { SPOKEN_CODES, WRITE_CODES } from './languages.ts'
+import { TONE_IDS } from './tones.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 
@@ -20,6 +21,7 @@ export const generateRequestSchema = z.object({
   category: z.enum(DRAFT_CATEGORIES),
   writeLanguage: z.string().refine((code) => WRITE_CODES.includes(code)).optional(),
   spokenLanguage: z.string().refine((code) => SPOKEN_CODES.includes(code)).optional(),
+  tone: z.string().refine((id) => TONE_IDS.includes(id)).optional(),
 }) satisfies z.ZodType<GenerateRequest>
 
 export const draftSchema = generatedDraftSchema.extend({
@@ -34,5 +36,5 @@ export const draftSchema = generatedDraftSchema.extend({
 export const saveDraftSchema = draftSchema.omit({ sentAt: true, sendAt: true }) satisfies z.ZodType<SaveDraftInput>
 
 export const draftStatusSchema = z
-  .object({ sent: z.boolean().optional(), sendAt: z.iso.datetime({ offset: true }).nullable().optional() })
-  .refine((update) => update.sent !== undefined || update.sendAt !== undefined, 'Nothing to change.') satisfies z.ZodType<DraftStatusUpdate>
+  .object({ sent: z.boolean().optional(), sendAt: z.iso.datetime({ offset: true }).nullable().optional(), followUpDone: z.boolean().optional() })
+  .refine((update) => update.sent !== undefined || update.sendAt !== undefined || update.followUpDone !== undefined, 'Nothing to change.') satisfies z.ZodType<DraftStatusUpdate>

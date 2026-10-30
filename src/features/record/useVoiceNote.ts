@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiRequestError, generateDraft, transcribeRecording } from '../../lib/api'
 import { authClient } from '../../lib/auth-client'
 import type { DraftCategory, GeneratedDraft } from '../../types/draft'
-import { readSpokenLanguage, readWriteLanguage } from '../language/languageSettings'
+import { usePlan } from '../../providers/usePlan'
+import { effectiveSpoken, effectiveWrite } from '../language/languageSettings'
 import type { RecordedAudio } from './useAudioRecorder'
 
 export type VoiceNoteStage = 'idle' | 'transcribing' | 'structuring' | 'done' | 'error'
@@ -23,6 +24,8 @@ export interface UseVoiceNote {
   run: (recording: RecordedAudio) => Promise<void>
   /** Re-run the failed step for the last clip, reusing the transcript if transcription already succeeded. */
   retry: () => Promise<void>
+  /** Show a draft that was written some other way (from a photo or shared text), as if it had just been dictated. */
+  loadDraft: (draft: GeneratedDraft, transcript: string) => void
   /** Apply the user's edits to the current draft. */
   updateDraft: (patch: Partial<GeneratedDraft>) => void
   reset: () => void
@@ -34,10 +37,13 @@ export function useVoiceNote(category: DraftCategory): UseVoiceNote {
   const [result, setResult] = useState<VoiceNoteResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const { limits } = usePlan()
+  const anyLanguageRef = useRef(limits.anyLanguage)
   const categoryRef = useRef(category)
   useEffect(() => {
     categoryRef.current = category
-  }, [category])
+    anyLanguageRef.current = limits.anyLanguage
+  }, [category, limits.anyLanguage])
 
   const recordingRef = useRef<RecordedAudio | null>(null)
   const transcriptRef = useRef<string | null>(null)
@@ -57,14 +63,14 @@ export function useVoiceNote(category: DraftCategory): UseVoiceNote {
         let transcript = transcriptRef.current
         if (transcript === null) {
           setStage('transcribing')
-          transcript = await transcribeRecording(recording.segments, recording.mimeType, readSpokenLanguage())
+          transcript = await transcribeRecording(recording.segments, recording.mimeType, effectiveSpoken(anyLanguageRef.current))
           if (!transcript) throw new ApiRequestError(422, 'No speech detected. Try recording again.')
           if (!isCurrent()) return
           transcriptRef.current = transcript
         }
 
         setStage('structuring')
-        const draft = await generateDraft(transcript, categoryRef.current, readWriteLanguage(), readSpokenLanguage())
+        const draft = await generateDraft(transcript, categoryRef.current, effectiveWrite(anyLanguageRef.current), effectiveSpoken(anyLanguageRef.current))
         if (!isCurrent()) return
 
         setResult({ id: crypto.randomUUID(), createdAt: new Date().toISOString(), transcript, draft })
@@ -88,6 +94,13 @@ export function useVoiceNote(category: DraftCategory): UseVoiceNote {
     setResult((current) => (current ? { ...current, draft: { ...current.draft, ...patch } } : current))
   }, [])
 
+  const loadDraft = useCallback((draft: GeneratedDraft, transcript: string) => {
+    runIdRef.current++
+    setError(null)
+    setResult({ id: crypto.randomUUID(), createdAt: new Date().toISOString(), transcript, draft })
+    setStage('done')
+  }, [])
+
   const reset = useCallback(() => {
     runIdRef.current++
     recordingRef.current = null
@@ -97,5 +110,5 @@ export function useVoiceNote(category: DraftCategory): UseVoiceNote {
     setError(null)
   }, [])
 
-  return { stage, result, error, run, retry, updateDraft, reset }
+  return { stage, result, error, run, retry, loadDraft, updateDraft, reset }
 }

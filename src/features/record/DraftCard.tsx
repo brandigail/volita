@@ -17,6 +17,12 @@ import { updateDraftStatus } from '../../lib/drafts-api'
 import { reportActivity } from '../../lib/activity-api'
 import { languageName } from '../../types/languages'
 import { SendAtField } from '../history/SendAtField'
+import { UpgradeNote } from '../../components/UpgradeNote'
+import { learnStyle } from '../../lib/plan-api'
+import { usePlan } from '../../providers/usePlan'
+import { DraftTools } from './DraftTools'
+import { permissionState, requestPermission } from '../notifications/notify'
+import { requestReschedule } from '../notifications/prefs'
 import { ReadAloudButton } from './ReadAloudButton'
 import { SentPrompt } from './SentPrompt'
 import { useEmailProvider } from './useEmailProvider'
@@ -27,6 +33,8 @@ interface DraftCardProps {
   result: VoiceNoteResult
   onChange: (patch: Partial<GeneratedDraft>) => void
   saveStatus: SaveStatus
+  /** Opens the plans screen from an upgrade prompt. */
+  onSeePlans: () => void
 }
 
 const SAVE_LABEL: Record<SaveStatus, string> = {
@@ -40,8 +48,9 @@ type CopyState = 'idle' | 'copied' | 'failed'
 
 const labelClass = 'mb-1.5 block text-sm font-semibold'
 
-export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
+export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCardProps) {
   const { draft, transcript } = result
+  const { limits } = usePlan()
   const channel = channelFor(draft.category)
   const [copyState, setCopyState] = useState<CopyState>('idle')
   const [sent, setSent] = useState(false)
@@ -92,6 +101,11 @@ export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
     resetTimer.current = window.setTimeout(() => setCopyState('idle'), 2000)
   }
 
+  /** Pro: once a few edited drafts have gone out, Apex quietly studies them for the person's writing style. */
+  const learnFromEdits = () => {
+    if (limits.writingStyle) void learnStyle().catch(() => undefined)
+  }
+
   /** Answer to the pop-up shown on coming back from the mail or chat app. */
   const confirmSent = async () => {
     sendPrompt.close()
@@ -100,6 +114,7 @@ export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
     setSent(true)
     try {
       await updateDraftStatus(result.id, { sent: true })
+      learnFromEdits()
     } catch {
       setSent(false)
     }
@@ -112,6 +127,7 @@ export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
     setSent(next)
     try {
       await updateDraftStatus(result.id, { sent: next })
+      if (next) learnFromEdits()
     } catch {
       setSent(!next)
     }
@@ -123,6 +139,9 @@ export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
     setSendAt(next)
     try {
       await updateDraftStatus(result.id, { sendAt: next })
+      // Ask once, when a reminder is first set, so the person knows why; then rebuild the phone's reminders.
+      if (next && (await permissionState()) === 'prompt') await requestPermission()
+      requestReschedule()
     } catch {
       setSendAt(previous)
     }
@@ -241,7 +260,13 @@ export function DraftCard({ result, onChange, saveStatus }: DraftCardProps) {
             />
           </div>
 
-          <SendAtField id="draft-send-at" value={sendAt} sent={sent} disabled={saveStatus !== 'saved'} onChange={(next) => void handleSendAt(next)} />
+          <DraftTools draft={draft} transcript={transcript} onChange={onChange} onSeePlans={onSeePlans} />
+
+          {limits.sendAtReminders ? (
+            <SendAtField id="draft-send-at" value={sendAt} sent={sent} disabled={saveStatus !== 'saved'} onChange={(next) => void handleSendAt(next)} />
+          ) : (
+            <UpgradeNote message="Send-at reminders are part of the Basic plan." needs="basic" onSeePlans={onSeePlans} />
+          )}
 
           {isMail && (
             <div>

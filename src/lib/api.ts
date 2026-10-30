@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { ApiError, GenerateRequest } from '../types/api'
+import { isPlanId, type PlanId } from '../types/plans'
 import { generatedDraftSchema } from '../types/draft-schema'
 import type { DraftCategory, GeneratedDraft } from '../types/draft'
 import { extensionForMime } from './audio-mime'
@@ -8,11 +9,14 @@ const REQUEST_TIMEOUT_MS = 20_000
 
 export class ApiRequestError extends Error {
   readonly status: number
+  /** Set when the refusal is about the plan: the plan that would allow it. */
+  readonly upgrade?: PlanId
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, upgrade?: PlanId) {
     super(message)
     this.name = 'ApiRequestError'
     this.status = status
+    this.upgrade = upgrade
   }
 }
 
@@ -34,13 +38,15 @@ export async function request(path: string, init: RequestInit = {}): Promise<unk
 
   if (!response.ok) {
     let message = 'Something went wrong. Please try again.'
+    let upgrade: PlanId | undefined
     try {
       const body = (await response.json()) as Partial<ApiError>
       if (typeof body.error === 'string') message = body.error
+      if (isPlanId(body.upgrade)) upgrade = body.upgrade
     } catch {
       // non-JSON error body; keep the generic message
     }
-    throw new ApiRequestError(response.status, message)
+    throw new ApiRequestError(response.status, message, upgrade)
   }
 
   try {
@@ -90,8 +96,9 @@ export async function generateDraft(
   category: DraftCategory,
   writeLanguage: string,
   spokenLanguage: string,
+  tone?: string,
 ): Promise<GeneratedDraft> {
-  const payload: GenerateRequest = { transcript, category, writeLanguage, spokenLanguage }
+  const payload: GenerateRequest = { transcript, category, writeLanguage, spokenLanguage, ...(tone ? { tone } : {}) }
   const data = generateResponseSchema.safeParse(
     await request('/api/generate', {
       headers: { 'Content-Type': 'application/json' },

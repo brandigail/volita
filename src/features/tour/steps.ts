@@ -1,4 +1,4 @@
-import { CalendarDays, Globe2, History, Mic, MessageSquareHeart, ShieldCheck, Sparkles, Timer, UserRound, type LucideIcon } from 'lucide-react'
+import { Bell, CalendarDays, Crown, Globe2, History, Mic, MessageSquareHeart, ShieldCheck, Sparkles, Timer, UserRound, type LucideIcon } from 'lucide-react'
 import type { Tab } from '../../components/TabBar'
 
 export interface TourStep {
@@ -136,6 +136,32 @@ export const TOUR_STEPS: readonly TourStep[] = [
       'The sun and moon at the top switch between light and dark.',
     ],
     show: { tab: 'profile', target: 'profile-form', label: 'Show me my profile' },
+  },
+  {
+    id: 'plans',
+    title: 'Your plan',
+    summary: 'Apex has Free, Basic and Pro. The little badge at the top shows yours.',
+    icon: Crown,
+    from: '#a855f7',
+    to: '#ec4899',
+    points: [
+      'The counter on the Record and Assistant screens shows how much you have left in the last 24 hours.',
+      'A lock means the feature is part of a bigger plan. Nothing you saved is ever deleted if a plan changes.',
+    ],
+    show: { tab: 'profile', target: 'plans', label: 'Show me the plans' },
+  },
+  {
+    id: 'notifications',
+    title: 'Pop-up reminders',
+    summary: 'Apex can nudge you when it is time to send something, before meetings, and with a morning briefing.',
+    icon: Bell,
+    from: '#f59e0b',
+    to: '#ef4444',
+    points: [
+      'Turn them on under Notifications on your profile, and use the test button to check they appear.',
+      'On the Android app they arrive even when Apex is closed.',
+    ],
+    show: { tab: 'profile', target: 'notifications', label: 'Show me notifications' },
   },
   {
     id: 'privacy',

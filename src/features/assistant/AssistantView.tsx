@@ -3,7 +3,9 @@ import { AlertCircle, BellRing, Brain, CalendarPlus, CheckCheck, FilePenLine, Sp
 import type { Tab } from '../../components/TabBar'
 import { warmUp } from '../../lib/assistant-api'
 import type { AssistantAction } from '../../types/assistant'
+import { UsageMeter } from '../plan/UsageMeter'
 import { AssistantOrb } from './AssistantOrb'
+import { BriefingCard } from './BriefingCard'
 import { VoicePicker } from './VoicePicker'
 import { useAssistant, type AssistantPhase } from './useAssistant'
 
@@ -84,7 +86,9 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
         {STATUS[phase]}
       </p>
 
+      <UsageMeter kind="assistant" />
       {!active && <VoicePicker />}
+      {!active && lines.length === 0 && <BriefingCard />}
 
       {active ? (
         <button type="button" onClick={end} className="btn btn-ghost">

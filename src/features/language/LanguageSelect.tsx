@@ -4,10 +4,14 @@ import { readSpokenLanguage, readWriteLanguage, writeSpokenLanguage, writeWriteL
 
 interface SelectProps {
   id: string
+  /** Free accounts are English only: the choice is fixed and says why. */
+  locked?: boolean
 }
 
+const ENGLISH_ONLY = 'English only on the free plan'
+
 /** Which language the user is speaking. Naming it makes recognition noticeably more accurate, for Afrikaans especially. */
-export function SpokenLanguageSelect({ id }: SelectProps) {
+export function SpokenLanguageSelect({ id, locked = false }: SelectProps) {
   const [value, setValue] = useState(readSpokenLanguage)
   return (
     <div className="flex-1 text-left">
@@ -16,12 +20,14 @@ export function SpokenLanguageSelect({ id }: SelectProps) {
       </label>
       <select
         id={id}
-        value={value}
+        value={locked ? 'en' : value}
+        disabled={locked}
         onChange={(e) => {
           writeSpokenLanguage(e.target.value)
           setValue(e.target.value)
         }}
         className="field"
+        aria-describedby={locked ? `${id}-note` : undefined}
       >
         <option value={AUTO}>Detect automatically</option>
         {LANGUAGES.filter((language) => language.speech).map((language) => (
@@ -30,12 +36,17 @@ export function SpokenLanguageSelect({ id }: SelectProps) {
           </option>
         ))}
       </select>
+      {locked && (
+        <p id={`${id}-note`} className="muted mt-1 text-xs">
+          {ENGLISH_ONLY}
+        </p>
+      )}
     </div>
   )
 }
 
 /** Which language the finished draft is written in, so a message can be spoken in one language and sent in another. */
-export function WriteLanguageSelect({ id }: SelectProps) {
+export function WriteLanguageSelect({ id, locked = false }: SelectProps) {
   const [value, setValue] = useState(readWriteLanguage)
   return (
     <div className="flex-1 text-left">
@@ -44,12 +55,14 @@ export function WriteLanguageSelect({ id }: SelectProps) {
       </label>
       <select
         id={id}
-        value={value}
+        value={locked ? SAME : value}
+        disabled={locked}
         onChange={(e) => {
           writeWriteLanguage(e.target.value)
           setValue(e.target.value)
         }}
         className="field"
+        aria-describedby={locked ? `${id}-note` : undefined}
       >
         <option value={SAME}>Same language I speak</option>
         {LANGUAGES.map((language) => (
@@ -59,6 +72,11 @@ export function WriteLanguageSelect({ id }: SelectProps) {
           </option>
         ))}
       </select>
+      {locked && (
+        <p id={`${id}-note`} className="muted mt-1 text-xs">
+          {ENGLISH_ONLY}
+        </p>
+      )}
     </div>
   )
 }

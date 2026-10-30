@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ASSISTANT_VOICES, MAX_SPEECH_CHARS } from '../../src/types/assistant.ts'
 import { errorResponse } from './_lib/http.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
+import { claimVoiceTurn } from './_lib/voice-pool.ts'
 import { requireUser } from './_lib/session.ts'
 import { describeError, describeUpstream } from './_lib/safe-log.ts'
 
@@ -14,6 +15,8 @@ const GROQ_TIMEOUT_MS = 8_500
 const requestSchema = z.object({
   text: z.string().trim().min(1).max(MAX_SPEECH_CHARS),
   voice: z.enum(ASSISTANT_VOICES).optional(),
+  /** The assistant turn this sentence belongs to; premium voice is counted per turn, not per sentence. */
+  turnId: z.uuid().optional(),
 })
 
 /** Turns one short piece of text into a natural-sounding voice clip. The client sends a reply a sentence or two at a time. */
@@ -32,7 +35,11 @@ export default async function handler(req: Request): Promise<Response> {
   const request = requestSchema.safeParse(await req.json().catch(() => null))
   if (!request.success) return errorResponse(400, `Send text of 1 to ${MAX_SPEECH_CHARS} characters.`)
 
-  const quota = await claimQuota(session.user.id, 'speak')
+  // Free accounts, and paid ones whose monthly premium voice is used up, get the device voice instead.
+  const hasPremium = await claimVoiceTurn(session.user.id, session.user.plan, request.data.turnId ?? crypto.randomUUID())
+  if (!hasPremium) return errorResponse(402, 'Premium voice is not available on your plan right now. Using the device voice.')
+
+  const quota = await claimQuota(session.user, 'speak')
   if (!quota.ok) return quota.response
 
   let response: Response

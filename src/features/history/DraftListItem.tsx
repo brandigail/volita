@@ -6,6 +6,7 @@ import { useNow } from '../../lib/useNow'
 import { draftToText } from '../../lib/share'
 import type { Draft, DraftStatusUpdate } from '../../types/draft'
 import { languageName } from '../../types/languages'
+import { usePlan } from '../../providers/usePlan'
 import { SendAtField } from './SendAtField'
 import { SendLink } from './SendLink'
 
@@ -19,6 +20,7 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', tim
 const sendAtFormat = new Intl.DateTimeFormat(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 export function DraftListItem({ draft, onDelete, onUpdateStatus }: DraftListItemProps) {
+  const { limits } = usePlan()
   const [copied, setCopied] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const channel = channelFor(draft.category)
@@ -87,14 +89,17 @@ export function DraftListItem({ draft, onDelete, onUpdateStatus }: DraftListItem
 
         <div className="border-t border-(--line) p-4">
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{draft.body}</p>
-          <div className="mt-4">
-            <SendAtField
-              id={`send-at-${draft.id}`}
-              value={draft.sendAt}
-              sent={draft.sentAt !== null}
-              onChange={(sendAt) => void onUpdateStatus(draft.id, { sendAt })}
-            />
-          </div>
+          {(limits.sendAtReminders || draft.sendAt) && (
+            <div className="mt-4">
+              <SendAtField
+                id={`send-at-${draft.id}`}
+                value={draft.sendAt}
+                sent={draft.sentAt !== null}
+                disabled={!limits.sendAtReminders}
+                onChange={(sendAt) => void onUpdateStatus(draft.id, { sendAt })}
+              />
+            </div>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {!draft.sentAt && <SendLink draft={draft} onSent={() => void onUpdateStatus(draft.id, { sent: true })} />}
 

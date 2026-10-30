@@ -20,7 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
   const request = requestSchema.safeParse(await req.json().catch(() => null))
   if (!request.success) return errorResponse(400, 'Send the calendar link.')
 
-  const quota = await claimQuota(session.user.id, 'calendar')
+  const quota = await claimQuota(session.user, 'calendar')
   if (!quota.ok) return quota.response
 
   const now = new Date()

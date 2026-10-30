@@ -1,5 +1,12 @@
 import { AlertCircle, RotateCcw, Sparkles } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import type { Tab } from '../../components/TabBar'
+import { UpgradeNote } from '../../components/UpgradeNote'
+import { usePlan } from '../../providers/usePlan'
+import { planForChannel } from '../../types/plans'
+import type { DraftCategory } from '../../types/draft'
+import { UsageMeter } from '../plan/UsageMeter'
+import { PhotoCaption } from './PhotoCaption'
 import { ChannelIcon } from '../../components/ChannelIcon'
 import { reportActivity } from '../../lib/activity-api'
 import { channelFor } from '../../lib/channels'
@@ -8,7 +15,7 @@ import { ChannelPicker } from './ChannelPicker'
 import { DraftCard } from './DraftCard'
 import { RecordButton, type RecordButtonMode } from './RecordButton'
 import { RecordTimer } from './RecordTimer'
-import { MAX_RECORDING_SECONDS, useAudioRecorder } from './useAudioRecorder'
+import { useAudioRecorder } from './useAudioRecorder'
 import { useChannel } from './useChannel'
 import { useDraftAutosave } from './useDraftAutosave'
 import { useVoiceNote, type VoiceNoteStage } from './useVoiceNote'
@@ -18,10 +25,24 @@ const STAGE_LABEL: Partial<Record<VoiceNoteStage, string>> = {
   structuring: 'Writing your draft…',
 }
 
-export function RecordView() {
-  const [category, setCategory] = useChannel()
+interface RecordViewProps {
+  onNavigate: (tab: Tab) => void
+}
+
+export function RecordView({ onNavigate }: RecordViewProps) {
+  const { limits, refresh } = usePlan()
+  const [storedCategory, setCategory] = useChannel()
+  const [lockedChannel, setLockedChannel] = useState<DraftCategory | null>(null)
+  // A channel the plan does not include (after a downgrade, or a stored choice) falls back to the first one it does.
+  const category = limits.channels.includes(storedCategory) ? storedCategory : limits.channels[0]
   const note = useVoiceNote(category)
-  const recorder = useAudioRecorder(note.run)
+  const recorder = useAudioRecorder(note.run, limits.recordingSeconds)
+  const seePlans = () => onNavigate('profile')
+  const resultId = note.result?.id
+
+  useEffect(() => {
+    if (resultId) refresh()
+  }, [resultId, refresh])
   const saveStatus = useDraftAutosave(note.result)
   const channel = channelFor(category)
 
@@ -70,7 +91,20 @@ export function RecordView() {
 
       {choosing ? (
         <div className="animate-rise w-full" style={{ animationDelay: '80ms' }}>
-          <ChannelPicker value={category} onChange={setCategory} />
+          <ChannelPicker
+            value={category}
+            onChange={(next) => {
+              setLockedChannel(null)
+              setCategory(next)
+            }}
+            allowed={limits.channels}
+            onLocked={setLockedChannel}
+          />
+          {lockedChannel && (
+            <div className="mt-3">
+              <UpgradeNote message={`${channelFor(lockedChannel).label} drafts are part of the Basic plan.`} needs={planForChannel(lockedChannel)} onSeePlans={seePlans} />
+            </div>
+          )}
         </div>
       ) : (
         !note.result && (
@@ -86,23 +120,26 @@ export function RecordView() {
           <RecordButton mode={mode} channel={channel} onStart={handleStart} onStop={recorder.stop} />
 
           {recording ? (
-            <RecordTimer elapsedMs={recorder.elapsedMs} />
+            <RecordTimer elapsedMs={recorder.elapsedMs} maxSeconds={limits.recordingSeconds} />
           ) : (
             !processing && (
               <p className="muted -mt-2 text-sm">
                 {requesting
                   ? 'Allow microphone access to begin.'
-                  : `Tap to record for ${channel.label}. Up to ${MAX_RECORDING_SECONDS / 60} minutes.`}
+                  : `Tap to record for ${channel.label}. Up to ${limits.recordingSeconds >= 120 ? `${limits.recordingSeconds / 60} minutes` : `${limits.recordingSeconds} seconds`}.`}
               </p>
             )
           )}
 
           {choosing && (
             <div className="surface flex w-full flex-col gap-3 p-4 sm:flex-row" data-tour="languages">
-              <SpokenLanguageSelect id="record-spoken-language" />
-              <WriteLanguageSelect id="record-write-language" />
+              <SpokenLanguageSelect id="record-spoken-language" locked={!limits.anyLanguage} />
+              <WriteLanguageSelect id="record-write-language" locked={!limits.anyLanguage} />
             </div>
           )}
+
+          {choosing && <PhotoCaption category={category} onDraft={note.loadDraft} onSeePlans={seePlans} />}
+          {choosing && <UsageMeter kind="drafts" />}
         </>
       )}
 
@@ -135,7 +172,7 @@ export function RecordView() {
 
       {note.result && (
         <>
-          <DraftCard key={note.result.id} result={note.result} onChange={note.updateDraft} saveStatus={saveStatus} />
+          <DraftCard key={note.result.id} result={note.result} onChange={note.updateDraft} saveStatus={saveStatus} onSeePlans={seePlans} />
           <button type="button" onClick={startNew} className="btn btn-ghost">
             <RotateCcw className="size-4" aria-hidden="true" />
             New recording

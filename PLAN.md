@@ -44,9 +44,20 @@
 - [x] C2. Assistant tools `remember`, `save_contact`, `recall`, `forget`; relevant memory is added to the assistant prompt on every turn
 - [x] C3. Drafts use preferences and saved people (recipient email or phone filled in from a saved contact)
 - [ ] C4. Check on a real phone and with dad's real wording; tune the prompts
-- [ ] C5. Learn writing style from edited, sent drafts
-- [ ] C6. Morning briefing on the Assistant tab (today's meetings, overdue sends, unanswered drafts)
+- [x] C5. Learn writing style from edited, sent drafts
+- [x] C6. Morning briefing on the Assistant tab (today's meetings, overdue sends, unanswered drafts)
 - [ ] C7. Inbox awareness (blocked on the SECURITY.md gaps and two-step login)
+
+## Pricing and plans (demo stage: built 2026-10-30 without billing or deploy; details in PRICING-PLAN.md sections 8 and 9)
+- [~] D0. Prerequisites (security build still to deploy; PayFast and paid Groq deliberately postponed): deploy the pending security build after the Netlify reset (2026-11-10), start the PayFast merchant application, decide on paid Groq
+- [x] D1. `free | basic | pro` in `plans.ts`, shared `limits.ts`, `getPlan()` with `OWNER_EMAILS` override, migration 013 (plan, monthly counters, memory source)
+- [x] D2. Enforce server-side: recording seconds, channels, languages, assistant tools, memory and contact caps, history length, calendar count
+- [x] D3. Meter drafts on `generate` and transcription by audio seconds; one assistant turn = one `assistant` call; premium voice monthly pool with browser-voice fallback flag
+- [x] D4. Free footer, locked-channel upgrade prompts, usage meter, plan comparison screen, three-question onboarding
+- [x] D5. Pop-up notifications: Android local notifications, Settings toggles with test button, in-app reminders on web
+- [ ] D6. (postponed by Brandon) Billing: B7b merchant, live mode, legal pages, upgrade / downgrade (lock, never delete) / cancel, annual plans
+- [x] D7. Pro habit features: C6, tone regenerate, C5, templates, price list, quote to PDF, WhatsApp list
+- [~] D8. Later (photo to caption, share into Apex and follow-up nudges are built; the rest waits): photo to caption, share into Apex (Android), follow-up nudges, web push, send from Apex, C7, payment links
 
 ## Phase 2
 - Send from inside Apex (Gmail API as the user, or Resend free tier with reply-to)

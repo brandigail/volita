@@ -1,10 +1,11 @@
 import { AudioWaveform, CircleHelp, LogOut, Moon, Sun } from 'lucide-react'
 import { authClient } from '../lib/auth-client'
 import { useTheme } from '../providers/useTheme'
+import { PlanChip } from './PlanChip'
 
 const iconButton = 'inline-flex size-10 items-center justify-center rounded-full hover:bg-violet-500/15'
 
-export function Header({ signedIn, onHelp }: { signedIn: boolean; onHelp: () => void }) {
+export function Header({ signedIn, onHelp, onPlan }: { signedIn: boolean; onHelp: () => void; onPlan: () => void }) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
 
@@ -20,6 +21,7 @@ export function Header({ signedIn, onHelp }: { signedIn: boolean; onHelp: () => 
           </span>
         </div>
         <div className="flex items-center">
+          {signedIn && <PlanChip onClick={onPlan} />}
           <button
             type="button"
             onClick={toggleTheme}

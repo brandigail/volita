@@ -1,10 +1,10 @@
-import type { PlanId } from './plans.ts'
+import type { PaidPlanId } from './plans.ts'
 
 export type SubscriptionStatus = 'pending' | 'active' | 'cancelled'
 
 /** The signed-in user's subscription, as the screen needs it. */
 export interface Subscription {
-  plan: PlanId
+  plan: PaidPlanId
   status: SubscriptionStatus
   /** What PayFast charges each month. PayFast bills in rand only, whatever currency the price was shown in. */
   amountZar: number

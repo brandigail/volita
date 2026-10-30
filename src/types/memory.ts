@@ -2,10 +2,15 @@
 export const MEMORY_KINDS = ['preference', 'fact'] as const
 export type MemoryKind = (typeof MEMORY_KINDS)[number]
 
+/** Where a memory came from: the user said it outright, or Apex worked it out and the user should check it. */
+export const MEMORY_SOURCES = ['said', 'guessed'] as const
+export type MemorySource = (typeof MEMORY_SOURCES)[number]
+
 /** One thing Apex has been told to remember about the user, their business or their way of working. */
 export interface Memory {
   id: string
   kind: MemoryKind
+  source: MemorySource
   content: string
   createdAt: string
   updatedAt: string

@@ -1,12 +1,12 @@
 import { formatDuration } from '../../lib/format'
-import { MAX_RECORDING_SECONDS } from './useAudioRecorder'
-
 interface RecordTimerProps {
   elapsedMs: number
+  /** The plan's longest recording. */
+  maxSeconds: number
 }
 
-export function RecordTimer({ elapsedMs }: RecordTimerProps) {
-  const maxMs = MAX_RECORDING_SECONDS * 1000
+export function RecordTimer({ elapsedMs, maxSeconds }: RecordTimerProps) {
+  const maxMs = maxSeconds * 1000
   const percent = Math.min(100, (elapsedMs / maxMs) * 100)
   const nearLimit = elapsedMs >= maxMs - 10_000
 
@@ -20,7 +20,7 @@ export function RecordTimer({ elapsedMs }: RecordTimerProps) {
         role="progressbar"
         aria-label="Recording length"
         aria-valuemin={0}
-        aria-valuemax={MAX_RECORDING_SECONDS}
+        aria-valuemax={maxSeconds}
         aria-valuenow={Math.floor(elapsedMs / 1000)}
         className="mt-3 h-1.5 overflow-hidden rounded-full bg-(--line)"
       >

@@ -42,3 +42,16 @@ export function buildSignature(profile: Profile, language = 'en'): string {
   const organisation = [profile.role, profile.businessName].filter(Boolean).join(', ')
   return [CLOSINGS[language] ?? CLOSINGS.en, profile.name, organisation, profile.phone].filter(Boolean).join('\n')
 }
+
+/** Linked calendars are kept in one field, one address per line. */
+export function splitCalendarUrls(value: string): string[] {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+/** Only as many calendars as the plan allows are used; the rest are kept but ignored (a downgrade never deletes them). */
+export function limitCalendars(value: string, max: number): string {
+  return splitCalendarUrls(value).slice(0, Math.max(0, max)).join('\n')
+}

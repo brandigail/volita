@@ -11,6 +11,8 @@ const PREFETCH = 2
 const FIRST_CHUNK_CHARS = 110
 /** After the hosted voice refuses a request (its free daily or per-minute limit), use the device voice for this long. */
 const HOSTED_PAUSE_MS = 60_000
+/** The plan has no premium voice (or this month's is used up), so the device voice is used for a long while. */
+const PREMIUM_UNAVAILABLE_MS = 30 * 60_000
 const BROWSER_SPEECH_BASE_MS = 4_000
 const BROWSER_SPEECH_MS_PER_CHAR = 90
 /** One silent, valid WAV. Playing it from a tap "unlocks" audio on iOS so later replies may play on their own. */
@@ -88,6 +90,13 @@ let hostedPausedUntil = 0
 export class SpeechPlayer {
   private readonly audio = new Audio()
   private abort: AbortController | null = null
+  /** Groups the sentences of one assistant turn so premium voice is counted once per turn. */
+  private turnId: string | undefined
+
+  /** Call at the start of each assistant turn. */
+  startTurn(turnId: string): void {
+    this.turnId = turnId
+  }
 
   /** Call from a tap or click, before the first reply. */
   unlock(): void {
@@ -159,7 +168,7 @@ export class SpeechPlayer {
       if (index >= chunks.length) return undefined
       let pending = fetched.get(index)
       if (!pending) {
-        pending = fetchSpeech(chunks[index], voice)
+        pending = fetchSpeech(chunks[index], voice, this.turnId)
         pending.catch(() => undefined) // a failure is handled where the chunk is awaited
         fetched.set(index, pending)
       }
@@ -175,6 +184,7 @@ export class SpeechPlayer {
         if (abort.signal.aborted) return 'voice'
         // The free voice service allows few requests; when it says no, switch to the device voice straight away.
         if (err instanceof ApiRequestError && (err.status === 429 || err.status === 503)) hostedPausedUntil = Date.now() + HOSTED_PAUSE_MS
+        if (err instanceof ApiRequestError && err.status === 402) hostedPausedUntil = Date.now() + PREMIUM_UNAVAILABLE_MS
         await this.speakWithBrowser(chunks.slice(i).join(' '), abort.signal)
         return 'browser'
       }

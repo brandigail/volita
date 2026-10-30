@@ -1,3 +1,4 @@
+import type { AssistantToolLevel } from '../../../src/types/plans.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 import { upcomingDays } from './assistant-tools.ts'
 import { describeNow } from './time.ts'
@@ -35,12 +36,23 @@ Memory:
 - Not one-off events (agenda), and never passwords, PINs, card or ID numbers: say kindly you do not keep those.
 - Use what you remember naturally, never recite it, never claim to remember what is not listed below or found by recall. If it might be something they told you before and it is not listed, call recall first. To forget, recall then forget.`
 
-export function assistantSystemPrompt(profile: Profile, timeZone: string, memory = ''): string {
+/** What the assistant must say about things this plan does not include, so it never promises a tool it does not have. */
+const PLAN_NOTES: Record<AssistantToolLevel, string> = {
+  read: 'On this plan you can only read: the agenda and saved drafts. You cannot write drafts, add meetings, schedule sends, mark things sent, remember anything, keep prices or look things up online. If asked for any of that, say kindly in one sentence that it is part of the Basic plan, and offer what you can do instead (for example, tell them to use the Record tab to write the draft).',
+  standard: 'On this plan you cannot look things up on the web. If asked, say kindly it is part of the Pro plan.',
+  full: '',
+}
+
+const PRICE_RULES = `
+Prices: before you write a quote, call get_prices. If an item they want quoted has no price in the list and they did not say one, ask for it first. When they give a price they want kept for next time, call save_price. Never invent a price.`
+
+export function assistantSystemPrompt(profile: Profile, timeZone: string, memory = '', level: AssistantToolLevel = 'full'): string {
   const who = [profile.name && `Their name is ${profile.name}.`, profile.businessName && `Their business is ${profile.businessName}.`, profile.role && `Their role is ${profile.role}.`]
     .filter(Boolean)
     .join(' ')
   return `${PERSONA}
-${MEMORY_RULES}
+${level === 'read' ? '' : MEMORY_RULES + PRICE_RULES}
+${PLAN_NOTES[level]}
 
 ${who}
 Right now it is ${describeNow(timeZone)}.

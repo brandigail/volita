@@ -40,7 +40,7 @@ export interface UseAudioRecorder {
 }
 
 /** `onRecorded` fires once with the complete recording, whether the user stopped it or the time limit did. */
-export function useAudioRecorder(onRecorded?: (recording: RecordedAudio) => void): UseAudioRecorder {
+export function useAudioRecorder(onRecorded?: (recording: RecordedAudio) => void, maxSeconds = MAX_RECORDING_SECONDS): UseAudioRecorder {
   const [status, setStatus] = useState<RecorderStatus>('idle')
   const [elapsedMs, setElapsedMs] = useState(0)
   const [error, setError] = useState<RecorderError | null>(null)
@@ -58,13 +58,16 @@ export function useAudioRecorder(onRecorded?: (recording: RecordedAudio) => void
   /** True from a start() call until the mic is acquired; cleared by teardown to cancel a pending start. */
   const startingRef = useRef(false)
   const onRecordedRef = useRef(onRecorded)
+  /** The plan's recording length; the server also meters recording time, so this only keeps the screen honest. */
+  const maxMsRef = useRef(maxSeconds * 1000)
   const mimeTypeRef = useRef<string | undefined>(undefined)
   /** Starts the next segment; set after beginSegment exists so a segment can hand over to its successor. */
   const nextSegmentRef = useRef<() => void>(() => undefined)
 
   useEffect(() => {
     onRecordedRef.current = onRecorded
-  }, [onRecorded])
+    maxMsRef.current = maxSeconds * 1000
+  }, [onRecorded, maxSeconds])
 
   /** Stops the timer, mic and recorder without firing any state updates. */
   const teardown = useCallback(() => {
@@ -124,7 +127,7 @@ export function useAudioRecorder(onRecorded?: (recording: RecordedAudio) => void
           return
         }
 
-        const durationMs = Math.min(performance.now() - startedAtRef.current, MAX_RECORDING_SECONDS * 1000)
+        const durationMs = Math.min(performance.now() - startedAtRef.current, maxMsRef.current)
         const segments = segmentsRef.current
         segmentsRef.current = []
         teardown()
@@ -202,8 +205,8 @@ export function useAudioRecorder(onRecorded?: (recording: RecordedAudio) => void
     timerRef.current = window.setInterval(() => {
       const now = performance.now()
       const elapsed = now - startedAtRef.current
-      setElapsedMs(Math.min(elapsed, MAX_RECORDING_SECONDS * 1000))
-      if (elapsed >= MAX_RECORDING_SECONDS * 1000) {
+      setElapsedMs(Math.min(elapsed, maxMsRef.current))
+      if (elapsed >= maxMsRef.current) {
         stop()
         return
       }

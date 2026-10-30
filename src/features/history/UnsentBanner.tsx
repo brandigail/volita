@@ -30,7 +30,7 @@ export function UnsentBanner({ onReview }: UnsentBannerProps) {
     if (hidden) return
     let cancelled = false
     listDrafts()
-      .then((drafts) => {
+      .then(({ drafts }) => {
         const now = Date.now()
         const waiting = drafts.filter((d) => {
           const age = now - new Date(d.createdAt).getTime()

@@ -5,8 +5,9 @@ import type { ListDraftsResponse, SaveDraftResponse } from '../../src/types/api.
 import { draftStatusSchema, saveDraftSchema } from '../../src/types/draft-schema.ts'
 import type { Draft, DraftCategory } from '../../src/types/draft.ts'
 import { decryptDraftRow, encryptDraftText } from './_lib/draft-store.ts'
-import { errorResponse, json } from './_lib/http.ts'
-import { requireUser } from './_lib/session.ts'
+import { planLimits } from '../../src/types/plans.ts'
+import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
+import { requireUser, type SessionUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
 
 /** Most drafts one user can keep; stops a client from filling the database with made-up ids. */
@@ -66,17 +67,19 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     if (req.method === 'GET' && id === null) {
-      const rows = (await sql.query(
-        `SELECT ${COLUMNS} FROM drafts WHERE user_id = $1 ORDER BY created_at DESC LIMIT ${LIST_LIMIT}`,
-        [userId],
-      )) as DraftRow[]
-      return json<ListDraftsResponse>({ drafts: rows.map((row) => toDraft(userId, row)) })
+      // A plan with a history cap shows only the newest drafts; the older ones are kept and come back on upgrade.
+      const shown = Math.min(planLimits(session.user.plan).historyDrafts ?? LIST_LIMIT, LIST_LIMIT)
+      const [rows, [{ total }]] = (await Promise.all([
+        sql.query(`SELECT ${COLUMNS} FROM drafts WHERE user_id = $1 ORDER BY created_at DESC LIMIT ${shown}`, [userId]),
+        sql.query('SELECT count(*)::int AS total FROM drafts WHERE user_id = $1', [userId]),
+      ])) as [DraftRow[], { total: number }[]]
+      return json<ListDraftsResponse>({ drafts: rows.map((row) => toDraft(userId, row)), hidden: Math.max(0, total - rows.length) })
     }
 
     if (id !== null && !z.uuid().safeParse(id).success) return errorResponse(400, 'Invalid draft id.')
 
     if (req.method === 'PUT' && id !== null) return await upsert(req, sql, userId, id)
-    if (req.method === 'PATCH' && id !== null) return await updateStatus(req, sql, userId, id)
+    if (req.method === 'PATCH' && id !== null) return await updateStatus(req, sql, session.user, id)
 
     if (req.method === 'DELETE' && id !== null) {
       const deleted = await sql.query('DELETE FROM drafts WHERE id = $1 AND user_id = $2 RETURNING id', [id, userId])
@@ -112,8 +115,8 @@ async function upsert(req: Request, sql: NeonQueryFunction<false, false>, userId
 
   // The WHERE clause means a draft owned by someone else is never overwritten, even if its id is known.
   const rows = (await sql.query(
-    `INSERT INTO drafts (id, user_id, category, recipient, subject, body, transcript, created_at, updated_at, language)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9)
+    `INSERT INTO drafts (id, user_id, category, recipient, subject, body, transcript, created_at, updated_at, language, original_body)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $6)
      ON CONFLICT (id) DO UPDATE SET
        category = EXCLUDED.category, recipient = EXCLUDED.recipient, subject = EXCLUDED.subject,
        body = EXCLUDED.body, transcript = EXCLUDED.transcript, language = EXCLUDED.language, updated_at = now()
@@ -127,18 +130,21 @@ async function upsert(req: Request, sql: NeonQueryFunction<false, false>, userId
 
 export const config: Config = { path: ['/api/drafts', '/api/drafts/*'] }
 
-async function updateStatus(req: Request, sql: NeonQueryFunction<false, false>, userId: string, id: string): Promise<Response> {
+async function updateStatus(req: Request, sql: NeonQueryFunction<false, false>, user: SessionUser, id: string): Promise<Response> {
+  const userId = user.id
   const parsed = draftStatusSchema.safeParse(await req.json().catch(() => null))
-  if (!parsed.success) return errorResponse(400, 'Send {"sent": true} and/or {"sendAt": "<date>" or null}.')
-  const { sent, sendAt } = parsed.data
+  if (!parsed.success) return errorResponse(400, 'Send {"sent": true}, {"sendAt": "<date>" or null} and/or {"followUpDone": true}.')
+  const { sent, sendAt, followUpDone } = parsed.data
+  if (sendAt && !planLimits(user.plan).sendAtReminders) return upgradeResponse('Send-at reminders are part of the Basic plan.', 'basic')
   // A field that is left out keeps its current value; an explicit null clears the planned send time.
   const rows = (await sql.query(
     `UPDATE drafts SET
        sent_at = CASE WHEN $3::boolean IS NULL THEN sent_at WHEN $3 THEN now() ELSE NULL END,
        send_at = CASE WHEN $4::boolean THEN $5::timestamptz ELSE send_at END,
+       followup_done_at = CASE WHEN $6::boolean IS NULL THEN followup_done_at WHEN $6 THEN now() ELSE NULL END,
        updated_at = now()
      WHERE id = $1 AND user_id = $2 RETURNING ${COLUMNS}`,
-    [id, userId, sent ?? null, sendAt !== undefined, sendAt ?? null],
+    [id, userId, sent ?? null, sendAt !== undefined, sendAt ?? null, followUpDone ?? null],
   )) as DraftRow[]
   return rows.length > 0 ? json<SaveDraftResponse>({ draft: toDraft(userId, rows[0]) }) : errorResponse(404, 'Draft not found.')
 }

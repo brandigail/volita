@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless'
 import type { AgendaItem, AgendaResponse, NewAgendaItem } from '../../../src/types/agenda.ts'
+import { splitCalendarUrls } from '../../../src/lib/profile.ts'
 import { readCalendar } from './calendar.ts'
 import { encryptText, openText } from './crypto.ts'
 
@@ -71,15 +72,16 @@ export async function listAgenda(userId: string, calendarUrl: string, from: Date
        ORDER BY send_at LIMIT 100`,
       [userId, to.toISOString()],
     ) as unknown as Promise<DueDraftRow[]>,
-    calendarUrl ? readCalendar(calendarUrl, from, to) : Promise.resolve(null),
+    Promise.all(splitCalendarUrls(calendarUrl).map((url) => readCalendar(url, from, to))),
   ])
 
   const items = [...rows.map((row) => toItem(userId, row)), ...dueDrafts.map((row) => dueDraftItem(userId, row))]
-  if (calendar?.ok) items.push(...calendar.items)
+  for (const result of calendar) if (result.ok) items.push(...result.items)
+  const failed = calendar.find((result) => !result.ok)
   return {
     items: items.sort(byStart),
     calendarLinked: calendarUrl !== '',
-    calendarError: calendar && !calendar.ok ? calendar.error : null,
+    calendarError: failed && !failed.ok ? failed.error : null,
   }
 }
 

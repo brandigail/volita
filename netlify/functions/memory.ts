@@ -3,7 +3,8 @@ import { z } from 'zod'
 import type { Memory, MemoryResponse } from '../../src/types/memory.ts'
 import { MEMORY_LIMITS } from '../../src/types/memory.ts'
 import { memoryInputSchema } from '../../src/types/memory-schema.ts'
-import { errorResponse, json } from './_lib/http.ts'
+import { planLimits } from '../../src/types/plans.ts'
+import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { addMemory, deleteMemory, listContacts, listMemories, updateMemory } from './_lib/memory-store.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { describeError } from './_lib/safe-log.ts'
@@ -31,10 +32,11 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'POST' && id === null) {
       const input = memoryInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, `Write a note of 1 to ${MEMORY_LIMITS.content} characters.`)
-      const quota = await claimQuota(userId, 'memory')
+      const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
-      const result = await addMemory(userId, input.data.kind, input.data.content)
-      return result.ok ? json<Memory>(result.value.memory, 201) : errorResponse(409, result.message)
+      const result = await addMemory(userId, input.data.kind, input.data.content, { cap: planLimits(session.user.plan).memoryItems })
+      if (result.ok) return json<Memory>(result.value.memory, 201)
+      return result.reason === 'plan' ? upgradeResponse(result.message, session.user.plan === 'free' ? 'basic' : 'pro') : errorResponse(409, result.message)
     }
 
     if (id !== null && !z.uuid().safeParse(id).success) return errorResponse(400, 'Invalid id.')
@@ -42,7 +44,7 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'PUT' && id !== null) {
       const input = memoryInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, `Write a note of 1 to ${MEMORY_LIMITS.content} characters.`)
-      const quota = await claimQuota(userId, 'memory')
+      const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
       const memory = await updateMemory(userId, id, input.data.kind, input.data.content)
       return memory ? json<Memory>(memory) : errorResponse(404, 'That memory was not found.')

@@ -3,11 +3,14 @@ import { ApiRequestError } from '../../lib/api'
 import { deleteDraft, listDrafts, updateDraftStatus } from '../../lib/drafts-api'
 import type { DraftStatusUpdate } from '../../types/draft'
 import type { Draft } from '../../types/draft'
+import { requestReschedule } from '../notifications/prefs'
 
 export type DraftsStatus = 'loading' | 'ready' | 'error'
 
 export interface UseDrafts {
   drafts: Draft[]
+  /** Older drafts kept but hidden by the plan's history cap. */
+  hidden: number
   status: DraftsStatus
   error: string | null
   reload: () => void
@@ -23,6 +26,7 @@ function messageFrom(err: unknown): string {
 
 export function useDrafts(): UseDrafts {
   const [drafts, setDrafts] = useState<Draft[]>([])
+  const [hidden, setHidden] = useState(0)
   const [status, setStatus] = useState<DraftsStatus>('loading')
   const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
@@ -32,7 +36,8 @@ export function useDrafts(): UseDrafts {
     listDrafts()
       .then((loaded) => {
         if (cancelled) return
-        setDrafts(loaded)
+        setDrafts(loaded.drafts)
+        setHidden(loaded.hidden)
         setError(null)
         setStatus('ready')
       })
@@ -72,10 +77,11 @@ export function useDrafts(): UseDrafts {
       const updated = await updateDraftStatus(id, update)
       setDrafts((current) => current.map((draft) => (draft.id === id ? updated : draft)))
       setError(null)
+      requestReschedule()
     } catch (err) {
       setError(messageFrom(err))
     }
   }, [])
 
-  return { drafts, status, error, reload, remove, updateStatus }
+  return { drafts, hidden, status, error, reload, remove, updateStatus }
 }

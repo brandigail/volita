@@ -1,8 +1,9 @@
 import { neon } from '@neondatabase/serverless'
-import { errorResponse } from './http.ts'
+import { PLAN_RANK, clipsPerRecording, planLimits, type PlanId } from '../../../src/types/plans.ts'
+import { errorResponse, upgradeResponse } from './http.ts'
 import { describeError } from './safe-log.ts'
 
-export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup'
+export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption'
 
 export interface QuotaLimits {
   /** Calls one user may make in any rolling minute. */
@@ -13,38 +14,44 @@ export interface QuotaLimits {
   globalPerDay: number
 }
 
-const DEFAULT_GLOBAL_PER_DAY = 600
+/** Who is asking: limits depend on the plan, which the server decides (see plan.ts). */
+export interface QuotaSubject {
+  id: string
+  plan: PlanId
+}
+
+const DEFAULT_GLOBAL_PER_DAY = 3000
 
 function globalPerDay(): number {
   const configured = Number(process.env.GLOBAL_DAILY_LIMIT)
   return Number.isInteger(configured) && configured > 0 ? configured : DEFAULT_GLOBAL_PER_DAY
 }
 
-function positiveInt(value: string | undefined, fallback: number): number {
-  const configured = Number(value)
-  return Number.isInteger(configured) && configured > 0 ? configured : fallback
-}
+/** Extra room for a retry or a recording that is thrown away, on top of what a plan's drafts need. */
+const RETRY_ALLOWANCE = 1.5
 
 /**
- * The voice assistant is the expensive feature (every turn is a transcription, a reply and several spoken
- * sentences), so it has its own, tighter caps. `ASSISTANT_DAILY_LIMIT` changes the per-user turns a day.
+ * Limits for one endpoint on one plan. Drafts a day is counted on `generate`. A recording is cut into 45 second
+ * clips and each clip is one `transcribe` call, so recording time is metered as clips: drafts a day times the clips a
+ * recording of that plan's length needs. One assistant turn is one `assistant` call; its `listen` clips are allowed
+ * a little more room, and its spoken sentences are metered by the premium voice pool in speak.ts, not here.
  */
-export function limitsFor(endpoint: MeteredEndpoint): QuotaLimits {
+export function limitsFor(endpoint: MeteredEndpoint, plan: PlanId): QuotaLimits {
+  const limits = planLimits(plan)
   switch (endpoint) {
     case 'transcribe':
-      // Every 45 second piece of a recording is one call, so a 5 minute recording is about seven calls.
-      return { perMinute: 16, perDay: 120, globalPerDay: Math.max(globalPerDay(), 1500) }
+      return { perMinute: 16, perDay: Math.ceil(limits.draftsPerDay * clipsPerRecording(plan) * RETRY_ALLOWANCE), globalPerDay: Math.max(globalPerDay(), 8000) }
     case 'generate':
-      return { perMinute: 10, perDay: 60, globalPerDay: globalPerDay() }
+      return { perMinute: 10, perDay: limits.draftsPerDay, globalPerDay: globalPerDay() }
     case 'assistant':
-      return { perMinute: 6, perDay: positiveInt(process.env.ASSISTANT_DAILY_LIMIT, 40), globalPerDay: 300 }
+      return { perMinute: 6, perDay: limits.assistantTurnsPerDay, globalPerDay: 2000 }
     case 'listen':
-      return { perMinute: 12, perDay: 80, globalPerDay: 500 }
+      return { perMinute: 12, perDay: Math.ceil(limits.assistantTurnsPerDay * RETRY_ALLOWANCE) + 5, globalPerDay: 3000 }
     case 'export':
       return { perMinute: 2, perDay: 10, globalPerDay: 200 }
     case 'lookup':
       // Each search is a few seconds of Groq browsing and a large share of the free token budget.
-      return { perMinute: 3, perDay: 30, globalPerDay: 200 }
+      return { perMinute: 3, perDay: limits.webLookupsPerDay, globalPerDay: 200 }
     case 'memory':
       return { perMinute: 30, perDay: 300, globalPerDay: 3000 }
     case 'feedback':
@@ -52,7 +59,9 @@ export function limitsFor(endpoint: MeteredEndpoint): QuotaLimits {
     case 'calendar':
       return { perMinute: 10, perDay: 100, globalPerDay: 1000 }
     case 'speak':
-      return { perMinute: 24, perDay: 250, globalPerDay: 1500 }
+      return { perMinute: 24, perDay: 250, globalPerDay: 5000 }
+    case 'caption':
+      return { perMinute: 4, perDay: Math.max(10, limits.draftsPerDay), globalPerDay: 300 }
   }
 }
 
@@ -90,24 +99,31 @@ type QuotaResult = { ok: true } | { ok: false; response: Response }
  * expensive upstream call, and return `response` as-is when `ok` is false. Fails closed if the database is down.
  */
 export async function claimQuota(
-  userId: string,
+  user: QuotaSubject,
   endpoint: MeteredEndpoint,
-  limits: QuotaLimits = limitsFor(endpoint),
+  limits: QuotaLimits = limitsFor(endpoint, user.plan),
 ): Promise<QuotaResult> {
   try {
     const sql = neon(process.env.DATABASE_URL ?? '')
-    const claimed = await sql.query(CLAIM_SQL, [userId, endpoint, limits.perMinute, limits.perDay, limits.globalPerDay])
+    const claimed = await sql.query(CLAIM_SQL, [user.id, endpoint, limits.perMinute, limits.perDay, limits.globalPerDay])
     if (claimed.length > 0) {
       if (Math.random() < 1 / PRUNE_ONE_IN) await sql.query(PRUNE_SQL).catch(() => undefined)
       return { ok: true }
     }
 
-    const [counts] = (await sql.query(COUNTS_SQL, [userId, endpoint])) as UsageCounts[]
-    return { ok: false, response: denial(counts, limits, endpoint) }
+    const [counts] = (await sql.query(COUNTS_SQL, [user.id, endpoint])) as UsageCounts[]
+    return { ok: false, response: denial(counts, limits, endpoint, user.plan) }
   } catch (err) {
     console.error('Quota check failed:', describeError(err))
     return { ok: false, response: errorResponse(503, 'Could not check your usage limit. Please try again.') }
   }
+}
+
+/** How many calls of an endpoint the user has left in the last 24 hours, for the usage meter. */
+export async function remainingToday(user: QuotaSubject, endpoint: MeteredEndpoint): Promise<{ used: number; limit: number }> {
+  const sql = neon(process.env.DATABASE_URL ?? '')
+  const [counts] = (await sql.query(COUNTS_SQL, [user.id, endpoint])) as UsageCounts[]
+  return { used: counts?.day_count ?? 0, limit: limitsFor(endpoint, user.plan).perDay }
 }
 
 const NOUN: Record<MeteredEndpoint, string> = {
@@ -121,12 +137,26 @@ const NOUN: Record<MeteredEndpoint, string> = {
   export: 'data downloads',
   memory: 'memory changes',
   lookup: 'web searches',
+  caption: 'photo captions',
 }
 
-function denial(counts: UsageCounts, limits: QuotaLimits, endpoint: MeteredEndpoint): Response {
+/** The plan above this one, for the upgrade prompt; Pro is the top. */
+function nextPlan(plan: PlanId): PlanId | null {
+  return plan === 'free' ? 'basic' : plan === 'basic' ? 'pro' : null
+}
+
+/** Endpoints whose daily cap is what the plan sells, so hitting it is an invitation to upgrade rather than a fault. */
+const PLAN_METERED: readonly MeteredEndpoint[] = ['generate', 'assistant', 'transcribe', 'listen', 'lookup']
+
+function denial(counts: UsageCounts, limits: QuotaLimits, endpoint: MeteredEndpoint, plan: PlanId): Response {
   const noun = NOUN[endpoint]
   if (counts.day_count >= limits.perDay) {
-    return errorResponse(429, `You have reached the limit of ${limits.perDay} ${noun} in 24 hours. Please try again later.`)
+    const upgrade = PLAN_METERED.includes(endpoint) && PLAN_RANK[plan] < PLAN_RANK.pro ? nextPlan(plan) : null
+    const message =
+      limits.perDay === 0
+        ? `Web searches are not part of your plan.`
+        : `You have used your ${limits.perDay} ${noun} for the last 24 hours. ${upgrade ? 'Upgrade for more, or try again later.' : 'Please try again later.'}`
+    return upgrade ? upgradeResponse(message, upgrade, 429) : errorResponse(429, message)
   }
   if (counts.global_count >= limits.globalPerDay) {
     return errorResponse(429, 'Apex Voice has reached its daily usage limit. Please try again later.')

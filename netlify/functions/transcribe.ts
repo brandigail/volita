@@ -2,7 +2,8 @@ import { extensionForMime } from '../../src/lib/audio-mime.ts'
 import type { TranscribeResponse } from '../../src/types/api.ts'
 import { AUTO, SPOKEN_CODES } from '../../src/types/languages.ts'
 import { transcriptionPrompt } from './_lib/draft-prompt.ts'
-import { errorResponse, json } from './_lib/http.ts'
+import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
+import { planLimits } from '../../src/types/plans.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { logActivity } from './_lib/activity.ts'
@@ -45,14 +46,20 @@ export default async function handler(req: Request): Promise<Response> {
   }
   if (!(audio instanceof File) || audio.size === 0) return errorResponse(400, 'Missing audio file.')
   if (audio.size > MAX_AUDIO_BYTES) return errorResponse(413, 'That clip is too large to send.')
-  const language = typeof requested === 'string' && SPOKEN_CODES.includes(requested) ? requested : AUTO
+  const asked = typeof requested === 'string' && SPOKEN_CODES.includes(requested) ? requested : AUTO
+  // Free accounts are English only: another language is refused, and "auto" is read as English.
+  const anyLanguage = planLimits(session.user.plan).anyLanguage
+  if (!anyLanguage && asked !== AUTO && asked !== 'en') {
+    return upgradeResponse('Other spoken languages are part of the Basic plan.', 'basic')
+  }
+  const language = anyLanguage ? asked : 'en'
   if (audio.type && !audio.type.startsWith('audio/') && !audio.type.startsWith('video/')) {
     return errorResponse(415, 'Unsupported file type.')
   }
 
   // Assistant conversations send many short clips, so they are metered separately from one-off recordings.
   const forAssistant = new URL(req.url).searchParams.get('for') === 'assistant'
-  const quota = await claimQuota(session.user.id, forAssistant ? 'listen' : 'transcribe')
+  const quota = await claimQuota(session.user, forAssistant ? 'listen' : 'transcribe')
   if (!quota.ok) return quota.response
 
   const upstream = new FormData()

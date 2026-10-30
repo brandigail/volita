@@ -2,7 +2,8 @@ import type { Config } from '@netlify/functions'
 import { z } from 'zod'
 import type { Contact } from '../../src/types/memory.ts'
 import { contactInputSchema } from '../../src/types/memory-schema.ts'
-import { errorResponse, json } from './_lib/http.ts'
+import { planLimits } from '../../src/types/plans.ts'
+import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { deleteContact, saveContact, updateContact } from './_lib/memory-store.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { describeError } from './_lib/safe-log.ts'
@@ -31,15 +32,16 @@ export default async function handler(req: Request): Promise<Response> {
     if ((req.method === 'POST' && id === null) || (req.method === 'PUT' && id !== null)) {
       const input = contactInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, 'A contact needs a name, and each detail must be short.')
-      const quota = await claimQuota(userId, 'memory')
+      const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
 
       if (id !== null) {
         const contact = await updateContact(userId, id, input.data)
         return contact ? json<Contact>(contact) : errorResponse(404, 'That contact was not found.')
       }
-      const result = await saveContact(userId, input.data)
-      return result.ok ? json<Contact>(result.value.contact, result.value.created ? 201 : 200) : errorResponse(409, result.message)
+      const result = await saveContact(userId, input.data, { cap: planLimits(session.user.plan).contacts })
+      if (result.ok) return json<Contact>(result.value.contact, result.value.created ? 201 : 200)
+      return result.reason === 'plan' ? upgradeResponse(result.message, session.user.plan === 'free' ? 'basic' : 'pro') : errorResponse(409, result.message)
     }
 
     return errorResponse(405, 'Method not allowed.')

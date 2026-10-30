@@ -3,15 +3,21 @@ import type { Draft, DraftStatusUpdate, SaveDraftInput } from '../types/draft'
 import { draftSchema } from '../types/draft-schema'
 import { ApiRequestError, request } from './api'
 
-const listResponseSchema = z.object({ drafts: z.array(draftSchema) })
+const listResponseSchema = z.object({ drafts: z.array(draftSchema), hidden: z.number().optional() })
 const saveResponseSchema = z.object({ draft: draftSchema })
 
 const unexpected = () => new ApiRequestError(502, 'The server sent an unexpected response.')
 
-export async function listDrafts(): Promise<Draft[]> {
+export interface DraftList {
+  drafts: Draft[]
+  /** Older drafts kept but not shown because the plan's history is capped. */
+  hidden: number
+}
+
+export async function listDrafts(): Promise<DraftList> {
   const data = listResponseSchema.safeParse(await request('/api/drafts', { method: 'GET' }))
   if (!data.success) throw unexpected()
-  return data.data.drafts
+  return { drafts: data.data.drafts, hidden: data.data.hidden ?? 0 }
 }
 
 /** Creates the draft, or updates it if the id already exists. */

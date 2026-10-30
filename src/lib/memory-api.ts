@@ -1,10 +1,11 @@
 import { z } from 'zod'
-import { MEMORY_KINDS, type Contact, type ContactInput, type Memory, type MemoryKind, type MemoryResponse } from '../types/memory'
+import { MEMORY_KINDS, MEMORY_SOURCES, type Contact, type ContactInput, type Memory, type MemoryKind, type MemoryResponse } from '../types/memory'
 import { ApiRequestError, request } from './api'
 
 const memorySchema = z.object({
   id: z.string(),
   kind: z.enum(MEMORY_KINDS),
+  source: z.enum(MEMORY_SOURCES),
   content: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),

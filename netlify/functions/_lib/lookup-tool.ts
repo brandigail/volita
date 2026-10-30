@@ -80,7 +80,7 @@ export async function runLookupTool(name: string, args: unknown, ctx: ToolContex
   const budget = Math.min(MAX_SEARCH_MS, ctx.deadlineAt - Date.now() - 500)
   if (budget < MIN_SEARCH_MS) return JSON.stringify({ error: 'There is not enough time to search. Ask them to try again.' })
 
-  const quota = await claimQuota(ctx.userId, 'lookup')
+  const quota = await claimQuota({ id: ctx.userId, plan: ctx.plan }, 'lookup')
   if (!quota.ok) return JSON.stringify({ error: 'Too many searches for now. Say they can ask again later.' })
 
   let result = { status: 0, text: '' }

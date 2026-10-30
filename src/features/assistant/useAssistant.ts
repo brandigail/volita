@@ -4,7 +4,8 @@ import { askAssistant } from '../../lib/assistant-api'
 import { authClient } from '../../lib/auth-client'
 import { startBackgroundListening, stopBackgroundListening } from '../../lib/native-listening'
 import type { AssistantAction, AssistantTurn } from '../../types/assistant'
-import { readSpokenLanguage } from '../language/languageSettings'
+import { usePlan } from '../../providers/usePlan'
+import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
 import { SpeechPlayer } from './speech'
 
@@ -47,6 +48,8 @@ export interface UseAssistant {
 }
 
 export function useAssistant(): UseAssistant {
+  const { limits, refresh } = usePlan()
+  const anyLanguage = limits.anyLanguage
   const [phase, setPhase] = useState<AssistantPhase>('idle')
   const [lines, setLines] = useState<ChatLine[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -85,6 +88,7 @@ export function useAssistant(): UseAssistant {
     async (session: Session, text: string, language?: string) => {
       if (!isCurrent(session)) return
       setPhase('speaking')
+      session.player.startTurn(crypto.randomUUID())
       await session.player.speak(text, language)
     },
     [isCurrent],
@@ -96,10 +100,11 @@ export function useAssistant(): UseAssistant {
       session.history.push({ role: 'user', content: text })
       setPhase('thinking')
       try {
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, readSpokenLanguage())
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage))
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)
+        refresh()
         await speakReply(session, reply.reply, reply.speechLanguage)
       } catch (err) {
         if (!isCurrent(session)) return
@@ -113,14 +118,14 @@ export function useAssistant(): UseAssistant {
       }
       listenAgain(session)
     },
-    [addLine, end, isCurrent, listenAgain, speakReply],
+    [addLine, anyLanguage, end, isCurrent, listenAgain, refresh, speakReply],
   )
 
   const handleUtterance = useCallback(
     async (session: Session, utterance: Utterance) => {
       setPhase('thinking')
       try {
-        const text = await transcribeRecording(utterance.segments, utterance.mimeType, readSpokenLanguage(), true)
+        const text = await transcribeRecording(utterance.segments, utterance.mimeType, effectiveSpoken(anyLanguage), true)
         if (!isCurrent(session)) return
         if (text) {
           setError(null)
@@ -138,7 +143,7 @@ export function useAssistant(): UseAssistant {
       }
       listenAgain(session)
     },
-    [end, isCurrent, listenAgain, respond],
+    [anyLanguage, end, isCurrent, listenAgain, respond],
   )
 
   const start = useCallback(async () => {
@@ -187,6 +192,7 @@ export function useAssistant(): UseAssistant {
     const greeting = "Hi, I'm listening. What can I do for you?"
     addLine('assistant', greeting)
     setPhase('speaking')
+    session.player.startTurn(crypto.randomUUID())
     await session.player.speakGreeting(greeting)
     listenAgain(session)
   }, [addLine, end, handleUtterance, listenAgain])

@@ -42,7 +42,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!session.ok) return session.response
   const { id: userId, email, profile } = session.user
 
-  const quota = await claimQuota(userId, 'export')
+  const quota = await claimQuota(session.user, 'export')
   if (!quota.ok) return quota.response
 
   try {

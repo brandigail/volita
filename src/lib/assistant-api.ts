@@ -48,13 +48,13 @@ export function warmUp(): void {
 }
 
 /** Fetches one short piece of text (up to {@link MAX_SPEECH_CHARS} characters) as a spoken audio clip. */
-export async function fetchSpeech(text: string, voice: AssistantVoice): Promise<Blob> {
+export async function fetchSpeech(text: string, voice: AssistantVoice, turnId?: string): Promise<Blob> {
   let response: Response
   try {
     response = await fetch('/api/speak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.slice(0, MAX_SPEECH_CHARS), voice }),
+      body: JSON.stringify({ text: text.slice(0, MAX_SPEECH_CHARS), voice, turnId }),
       signal: AbortSignal.timeout(REPLY_TIMEOUT_MS),
     })
   } catch {

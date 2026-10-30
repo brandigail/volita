@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { buildSignature, profileFromUser } from '../../lib/profile'
+import { LibrarySection } from '../library/LibrarySection'
 import { MemorySection } from '../memory/MemorySection'
+import { NotificationSettings } from '../notifications/NotificationSettings'
+import { FamilySection } from '../plan/FamilySection'
+import { PlansSection } from '../plan/PlansSection'
 import { SubscriptionSection } from '../subscription/SubscriptionSection'
 import { FeedbackForm } from '../tour/FeedbackForm'
 import { AccountData } from './AccountData'
@@ -63,25 +67,13 @@ function ProfileForm({ initial, email }: { initial: Profile; email: string }) {
     setSave({ kind: 'idle' })
   }
 
-  /** Saves the profile with a new calendar address ("" disconnects). Returns whether it worked. */
-  const saveCalendar = async (calendarUrl: string): Promise<boolean> => {
-    const next = profileFromUser({ ...profile, calendarUrl })
-    try {
-      const { error } = await authClient.updateUser(next)
-      if (error) return false
-      setProfile(next)
-      return true
-    } catch {
-      return false
-    }
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const next = profileFromUser(profile)
     setSave({ kind: 'saving' })
     try {
-      const { error } = await authClient.updateUser(next)
+      // The calendar links are managed on their own (see /api/calendars); sending the old copy here would overwrite them.
+      const { error } = await authClient.updateUser({ name: next.name, businessName: next.businessName, role: next.role, phone: next.phone, signature: next.signature })
       if (error) {
         setSave({ kind: 'error', message: error.message ?? 'Could not save your profile. Please try again.' })
         return
@@ -131,7 +123,7 @@ function ProfileForm({ initial, email }: { initial: Profile; email: string }) {
         autoComplete="tel"
       />
 
-      <CalendarConnect accountEmail={email} url={profile.calendarUrl} onChange={saveCalendar} />
+      <CalendarConnect accountEmail={email} />
 
       <div>
         <label htmlFor="profile-signature" className="mb-1.5 block text-sm font-semibold">
@@ -199,7 +191,11 @@ export function ProfileView({ user, showSubscriptions, activityLogged }: Profile
       {activityLogged && <TesterNotice />}
       <InstallHelp />
       <ProfileForm key={user.id} initial={profileFromUser(user)} email={user.email} />
+      <PlansSection />
+      <FamilySection />
       <MemorySection />
+      <LibrarySection />
+      <NotificationSettings />
       {showSubscriptions && <SubscriptionSection />}
 
       <section aria-labelledby="feedback-heading" className="mt-10">

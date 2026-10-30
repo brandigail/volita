@@ -8,6 +8,9 @@ import { buildSignature } from '../../../src/lib/profile.ts'
 import { addAgendaItem, listAgenda } from './agenda.ts'
 import { loadMemoryContext } from './memory-context.ts'
 import { LOOKUP_TOOLS, runLookupTool } from './lookup-tool.ts'
+import { PRICE_TOOLS, runPriceTool } from './price-tools.ts'
+import { loadPriceContext } from './price-context.ts'
+import { planLimits, type AssistantToolLevel, type PlanId } from '../../../src/types/plans.ts'
 import { MEMORY_TOOLS, runMemoryTool } from './memory-tools.ts'
 import { openText } from './crypto.ts'
 import { encryptDraftText } from './draft-store.ts'
@@ -18,6 +21,7 @@ import { describeError } from './safe-log.ts'
 
 export interface ToolContext {
   userId: string
+  plan: PlanId
   profile: Profile
   timeZone: string
   apiKey: string
@@ -151,7 +155,23 @@ export const TOOLS: ToolDefinition[] = [
   },
   ...LOOKUP_TOOLS,
   ...MEMORY_TOOLS,
+  ...PRICE_TOOLS,
 ]
+
+/** Tools every plan has: they only read. */
+const READ_TOOL_NAMES = new Set(['get_agenda', 'find_drafts', 'get_draft'])
+
+function toolAllowed(name: string, level: AssistantToolLevel): boolean {
+  if (READ_TOOL_NAMES.has(name)) return true
+  if (name === 'look_up') return level === 'full'
+  return level !== 'read'
+}
+
+/** The tools the model is shown on this plan. Free can read; Basic can also write and remember; Pro can also search the web. */
+export function toolsFor(plan: PlanId): ToolDefinition[] {
+  const level = planLimits(plan).assistantTools
+  return TOOLS.filter((tool) => toolAllowed(tool.function.name, level))
+}
 
 const getAgendaArgs = z.object({ from_date: z.string(), to_date: z.string() })
 const addAgendaArgs = z.object({
@@ -303,6 +323,9 @@ async function createDraft(args: unknown, ctx: ToolContext): Promise<string> {
   const parsed = createDraftArgs.safeParse(args)
   if (!parsed.success) return fail('Give a category and the instruction.')
   const { category, instruction, language } = parsed.data
+  const limits = planLimits(ctx.plan)
+  if (!limits.channels.includes(category)) return fail(`The user's plan does not include ${category.toLowerCase()} drafts. Tell them kindly that it is part of the Basic plan.`)
+  if (!limits.anyLanguage && language && language !== 'en') return fail('Writing in other languages is part of the Basic plan. Tell them kindly.')
 
   const remaining = ctx.deadlineAt - Date.now()
   const result = await writeDraft({
@@ -313,7 +336,9 @@ async function createDraft(args: unknown, ctx: ToolContext): Promise<string> {
     deadlineMs: remaining,
     writeLanguage: language,
     spokenLanguage: ctx.spokenLanguage,
-    memory: await loadMemoryContext(ctx.userId, instruction),
+    footer: limits.footer,
+    memory: limits.memoryItems === 0 ? '' : await loadMemoryContext(ctx.userId, instruction),
+    prices: category === 'QUOTE' ? await loadPriceContext(ctx.userId, ctx.plan) : undefined,
   })
   if (!result.ok) return fail(result.message)
 
@@ -323,8 +348,8 @@ async function createDraft(args: unknown, ctx: ToolContext): Promise<string> {
   if (total >= 500) return fail('The user already has 500 drafts, so nothing was saved. Ask them to delete some.')
   const text = encryptDraftText(ctx.userId, { recipient: draft.recipient, subject: draft.subject, body: draft.body, transcript: instruction })
   const [saved] = (await sql.query(
-    `INSERT INTO drafts (user_id, category, recipient, subject, body, transcript, language)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    `INSERT INTO drafts (user_id, category, recipient, subject, body, transcript, language, original_body)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $5) RETURNING id`,
     [ctx.userId, draft.category, text.recipient, text.subject, text.body, text.transcript, draft.language],
   )) as { id: string }[]
 
@@ -341,6 +366,7 @@ async function createDraft(args: unknown, ctx: ToolContext): Promise<string> {
 }
 
 async function scheduleSend(args: unknown, ctx: ToolContext): Promise<string> {
+  if (!planLimits(ctx.plan).sendAtReminders) return fail('Send-at reminders are part of the Basic plan. Tell the user kindly.')
   const parsed = scheduleSendArgs.safeParse(args)
   if (!parsed.success) return fail('Give the draft id and when, as YYYY-MM-DDTHH:mm or clear.')
   const clear = parsed.data.when.trim().toLowerCase() === 'clear'
@@ -382,6 +408,9 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
   } catch {
     return fail('The tool arguments were not valid JSON.')
   }
+  if (!toolAllowed(name, planLimits(ctx.plan).assistantTools)) {
+    return fail('That is not part of the user plan. Tell them kindly it needs the Basic or Pro plan.')
+  }
   try {
     switch (name) {
       case 'get_agenda':
@@ -399,7 +428,12 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
       case 'mark_sent':
         return await markSent(args, ctx)
       default:
-        return (await runLookupTool(name, args, ctx)) ?? (await runMemoryTool(name, args, ctx)) ?? fail(`There is no tool called ${name}.`)
+        return (
+          (await runLookupTool(name, args, ctx)) ??
+          (await runMemoryTool(name, args, ctx)) ??
+          (await runPriceTool(name, args, ctx)) ??
+          fail(`There is no tool called ${name}.`)
+        )
     }
   } catch (err) {
     console.error(`Assistant tool ${name} failed:`, describeError(err))

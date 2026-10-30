@@ -1,5 +1,6 @@
 import { buildSignature, CLOSING_PHRASES } from '../../../src/lib/profile.ts'
 import type { GeneratedDraft } from '../../../src/types/draft.ts'
+import { FOOTER_TEXT } from '../../../src/types/plans.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 
 const ENGLISH_CLOSINGS =
@@ -42,4 +43,10 @@ export function stripSignOff(body: string): string {
 export function withSignature(draft: GeneratedDraft, profile: Profile): GeneratedDraft {
   if (draft.category !== 'EMAIL' && draft.category !== 'QUOTE') return draft
   return { ...draft, body: `${stripSignOff(draft.body)}\n\n${buildSignature(profile, draft.language)}` }
+}
+
+/** The free plan marks messages that go to other people (email and WhatsApp) with a short footer. */
+export function withFooter(draft: GeneratedDraft): GeneratedDraft {
+  if (draft.category !== 'EMAIL' && draft.category !== 'WHATSAPP') return draft
+  return { ...draft, body: `${draft.body.trimEnd()}\n\n${FOOTER_TEXT}` }
 }

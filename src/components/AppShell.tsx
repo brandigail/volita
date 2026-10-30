@@ -9,14 +9,16 @@ interface AppShellProps {
   signedIn: boolean
   /** Opens the guided tour. */
   onHelp: () => void
+  /** Opens the plans screen. */
+  onPlan: () => void
   children: ReactNode
 }
 
-export function AppShell({ activeTab, onTabChange, signedIn, onHelp, children }: AppShellProps) {
+export function AppShell({ activeTab, onTabChange, signedIn, onHelp, onPlan, children }: AppShellProps) {
   return (
     <div className="relative flex min-h-dvh flex-col">
       <div className="aurora" aria-hidden="true" />
-      <Header signedIn={signedIn} onHelp={onHelp} />
+      <Header signedIn={signedIn} onHelp={onHelp} onPlan={onPlan} />
       <main className="relative z-10 mx-auto w-full max-w-2xl flex-1 px-4 pt-6 pb-32">{children}</main>
       {signedIn && <TabBar active={activeTab} onChange={onTabChange} />}
     </div>

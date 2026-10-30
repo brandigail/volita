@@ -27,8 +27,10 @@ export interface Draft extends GeneratedDraft {
 /** What the client uploads when saving: the sent state is changed only through its own call. */
 export type SaveDraftInput = Omit<Draft, 'sentAt' | 'sendAt'>
 
-/** Changes to a draft's status: mark it sent (or not) and/or plan when to send it. */
+/** Changes to a draft's status: mark it sent (or not), plan when to send it and/or close its follow-up. */
 export interface DraftStatusUpdate {
   sent?: boolean
   sendAt?: string | null
+  /** The user has dealt with the follow-up nudge for this draft (a quote nobody answered). */
+  followUpDone?: boolean
 }

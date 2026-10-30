@@ -14,9 +14,11 @@
   "dependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
+    "@capacitor/local-notifications": "^8.3.1",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@neondatabase/serverless": "^1.2.0",
     "better-auth": "^1.7.12",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.61.0",
     "node-ical": "^0.27.3",
     "react": "^19.3.1",

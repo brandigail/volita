@@ -74,14 +74,44 @@ function languageBlock(writeLanguage: string | undefined, spokenLanguage: string
   return `\n\nLanguage: write the draft in the same language as the dictation${hint}. If the speaker mixes languages, use the main one. Do not translate to English.`
 }
 
+/** Optional extras that shape a draft beyond the channel, language and sender. */
+export interface PromptExtras {
+  /** Rewrite instruction from tones.ts, or null for the natural voice. */
+  tone?: string | null
+  /** The user's saved prices (see price-context.ts), used on quotes. */
+  prices?: string
+  /** A saved phrase or template the user wants this message to follow. */
+  style?: string
+}
+
 export function systemPrompt(
   category: DraftCategory,
   profile: Profile,
   writeLanguage?: string,
   spokenLanguage?: string,
   memory = '',
+  extras: PromptExtras = {},
 ): string {
-  return BASE_PROMPT + CHANNEL_GUIDE[category] + languageBlock(writeLanguage, spokenLanguage) + senderBlock(profile) + memoryBlock(memory)
+  return (
+    BASE_PROMPT +
+    CHANNEL_GUIDE[category] +
+    languageBlock(writeLanguage, spokenLanguage) +
+    senderBlock(profile) +
+    memoryBlock(memory) +
+    priceBlock(category, extras.prices) +
+    toneBlock(extras.tone)
+  )
+}
+
+/** Saved prices are used for a quote only when the speaker did not give a price of their own. */
+function priceBlock(category: DraftCategory, prices: string | undefined): string {
+  if (category !== 'QUOTE' || !prices) return ''
+  return `\n\nThe sender's saved price list (use a price from here only when the dictation names that item without a price; a price said in the dictation always wins; if an item has no price anywhere, write "price to be confirmed" and never guess one):\n${prices}`
+}
+
+function toneBlock(tone: string | null | undefined): string {
+  if (!tone) return ''
+  return `\n\nTone: write this ${tone}. This changes only the wording and warmth, never a fact, name, number, price or date.`
 }
 
 /** Remembered preferences shape the wording; a remembered person is used only when the dictation is about them. */
@@ -90,8 +120,11 @@ function memoryBlock(memory: string): string {
   return `\n\n${memory}\nHow to use this: follow the preferences in the way you write. Use a person's details only when the dictation is about them: write their full name as the recipient, and for an EMAIL use their email address as the recipient (for SMS or WHATSAPP their phone number) when one is saved. Use a saved fact only where it belongs, such as a standing price or term. Never add a detail the speaker did not ask for, and if the dictation disagrees with this, follow the dictation.`
 }
 
-export function userPrompt(transcript: string): string {
-  return `<dictation>\n${transcript}\n</dictation>`
+export function userPrompt(transcript: string, withPhoto = false): string {
+  const photo = withPhoto
+    ? 'The speaker also shared the attached photo. Mention or describe only what is clearly visible in it, and never guess brands, prices or people.\n'
+    : ''
+  return `${photo}<dictation>\n${transcript}\n</dictation>`
 }
 
 export function retryPrompt(problem: string): string {

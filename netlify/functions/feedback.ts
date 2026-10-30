@@ -20,7 +20,7 @@ export default async function handler(req: Request): Promise<Response> {
   const request = requestSchema.safeParse(await req.json().catch(() => null))
   if (!request.success) return errorResponse(400, 'Write a few words (up to 2,000 characters).')
 
-  const quota = await claimQuota(session.user.id, 'feedback')
+  const quota = await claimQuota(session.user, 'feedback')
   if (!quota.ok) return quota.response
 
   try {
