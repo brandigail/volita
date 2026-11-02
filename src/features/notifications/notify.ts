@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import { LocalNotifications } from '@capacitor/local-notifications'
 import { NAVIGATE_EVENT } from './prefs'
 import type { Tab } from '../../components/TabBar'
 
@@ -29,13 +30,18 @@ function idFor(key: string): number {
   return Math.abs(hash) % 2_000_000_000
 }
 
-async function localNotifications() {
-  return (await import('@capacitor/local-notifications')).LocalNotifications
+
+/**
+ * Android silently drops a notification whose channel does not exist, so every path that shows one makes sure the
+ * channel is there first (creating an existing channel is a no-op). Importance 5 makes reminders pop up on screen.
+ */
+async function ensureChannel(plugin: typeof LocalNotifications): Promise<void> {
+  await plugin.createChannel({ id: CHANNEL_ID, name: 'Reminders', description: 'Send reminders, meetings and your briefing', importance: 5, visibility: 1, vibration: true })
 }
 
 export async function permissionState(): Promise<PermissionState> {
   if (isNativeApp) {
-    const { display } = await (await localNotifications()).checkPermissions()
+    const { display } = await LocalNotifications.checkPermissions()
     return display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'prompt'
   }
   if (!('Notification' in window)) return 'unsupported'
@@ -45,11 +51,10 @@ export async function permissionState(): Promise<PermissionState> {
 /** Asks for permission. Call from a tap, at a moment the person understands why. */
 export async function requestPermission(): Promise<PermissionState> {
   if (isNativeApp) {
-    const plugin = await localNotifications()
+    const plugin = LocalNotifications
     const { display } = await plugin.requestPermissions()
     if (display === 'granted') {
-      // Android's pop-up channel: high importance so reminders actually appear on screen instead of sitting silently in the shade.
-      await plugin.createChannel({ id: CHANNEL_ID, name: 'Reminders', description: 'Send reminders, meetings and your briefing', importance: 5, visibility: 1, vibration: true }).catch(() => undefined)
+      await ensureChannel(plugin).catch(() => undefined)
       // Android 12 and up needs this switch for reminders to arrive on time.
       const exact = await plugin.checkExactNotificationSetting().catch(() => null)
       if (exact && exact.exact_alarm !== 'granted') await plugin.changeExactNotificationSetting().catch(() => undefined)
@@ -64,7 +69,9 @@ export async function requestPermission(): Promise<PermissionState> {
 /** Shows one right now. Used by the "send test notification" button. */
 export async function showNow(title: string, body: string): Promise<void> {
   if (isNativeApp) {
-    await (await localNotifications()).schedule({
+    const plugin = LocalNotifications
+    await ensureChannel(plugin)
+    await plugin.schedule({
       notifications: [{ id: idFor(`test-${Date.now()}`), title, body, channelId: CHANNEL_ID, schedule: { at: new Date(Date.now() + 1_000), allowWhileIdle: true } }],
     })
     return
@@ -87,7 +94,8 @@ let webTimers: number[] = []
  */
 export async function schedule(planned: PlannedNotification[]): Promise<void> {
   if (isNativeApp) {
-    const plugin = await localNotifications()
+    const plugin = LocalNotifications
+    await ensureChannel(plugin)
     const pending = await plugin.getPending()
     if (pending.notifications.length > 0) await plugin.cancel({ notifications: pending.notifications })
     if (planned.length === 0) return
@@ -120,7 +128,7 @@ export async function schedule(planned: PlannedNotification[]): Promise<void> {
 /** Opens the right tab when a notification is tapped on the phone app. */
 export async function listenForTaps(): Promise<() => void> {
   if (!isNativeApp) return () => undefined
-  const handle = await (await localNotifications()).addListener('localNotificationActionPerformed', (event) => {
+  const handle = await LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
     const tab = (event.notification.extra as { tab?: Tab } | undefined)?.tab
     if (tab) window.dispatchEvent(new CustomEvent<Tab>(NAVIGATE_EVENT, { detail: tab }))
   })

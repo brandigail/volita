@@ -9,9 +9,28 @@ export interface NotificationPrefs {
   time: string
   /** A daily nudge about quotes nobody has answered (Basic and up). */
   followUps: boolean
+  /** How many minutes before a meeting or a send time to be told. 0 means exactly at that time. */
+  leadMinutes: number
 }
 
-export const DEFAULT_PREFS: NotificationPrefs = { sendAt: true, meetings: true, briefing: true, time: '08:00', followUps: true }
+export const DEFAULT_PREFS: NotificationPrefs = { sendAt: true, meetings: true, briefing: true, time: '08:00', followUps: true, leadMinutes: 10 }
+
+/** The lead times offered in settings. */
+export const LEAD_OPTIONS: readonly { minutes: number; label: string }[] = [
+  { minutes: 0, label: 'At the time' },
+  { minutes: 10, label: '10 minutes before' },
+  { minutes: 30, label: '30 minutes before' },
+  { minutes: 60, label: '1 hour before' },
+  { minutes: 180, label: '3 hours before' },
+  { minutes: 1440, label: '1 day before' },
+]
+
+/** "10 minutes", "1 hour", "1 day": how a lead time reads inside a notification. */
+export function leadPhrase(minutes: number): string {
+  if (minutes % 1440 === 0) return minutes === 1440 ? '1 day' : `${minutes / 1440} days`
+  if (minutes % 60 === 0) return minutes === 60 ? '1 hour' : `${minutes / 60} hours`
+  return `${minutes} minutes`
+}
 
 const KEY = 'apex-voice-notification-prefs'
 /** Fired when preferences change or the schedule needs rebuilding (a send time was set, a draft was sent). */

@@ -2,7 +2,7 @@ import { Bell, BellRing } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { usePlan } from '../../providers/usePlan'
 import { isNativeApp, permissionState, requestPermission, showNow, type PermissionState } from './notify'
-import { readPrefs, writePrefs, type NotificationPrefs } from './prefs'
+import { LEAD_OPTIONS, readPrefs, writePrefs, type NotificationPrefs } from './prefs'
 
 interface ToggleProps {
   id: string
@@ -92,9 +92,23 @@ export function NotificationSettings() {
         )}
 
         <Toggle id="notify-send" label="Time to send" hint={limits.sendAtReminders ? 'At the time you set on a draft.' : 'Part of the Basic plan.'} checked={prefs.sendAt && limits.sendAtReminders} disabled={!limits.sendAtReminders} onChange={(sendAt) => update({ sendAt })} />
-        <Toggle id="notify-meetings" label="Meetings" hint="Ten minutes before something on your agenda." checked={prefs.meetings} onChange={(meetings) => update({ meetings })} />
+        <Toggle id="notify-meetings" label="Meetings" hint="Before something on your agenda, at the lead time below." checked={prefs.meetings} onChange={(meetings) => update({ meetings })} />
         <Toggle id="notify-briefing" label="Morning briefing" hint={limits.morningBriefing ? 'Once a day at the time below.' : 'Part of the Pro plan.'} checked={prefs.briefing && limits.morningBriefing} disabled={!limits.morningBriefing} onChange={(briefing) => update({ briefing })} />
         <Toggle id="notify-followups" label="Quotes waiting for an answer" hint={limits.followUps ? 'A daily nudge when a quote has had no reply for three days.' : 'Part of the Basic plan.'} checked={prefs.followUps && limits.followUps} disabled={!limits.followUps} onChange={(followUps) => update({ followUps })} />
+
+        <div>
+          <label htmlFor="notify-lead" className="mb-1.5 block text-sm font-semibold">
+            Tell me
+          </label>
+          <select id="notify-lead" value={prefs.leadMinutes} onChange={(e) => update({ leadMinutes: Number(e.target.value) })} className="field w-auto cursor-pointer">
+            {LEAD_OPTIONS.map((option) => (
+              <option key={option.minutes} value={option.minutes}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="muted mt-1 text-xs">Applies to meetings and to the time to send a draft.</p>
+        </div>
 
         {(limits.morningBriefing || limits.followUps) && (
           <div>

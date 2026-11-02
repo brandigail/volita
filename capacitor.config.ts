@@ -22,6 +22,10 @@ const config: CapacitorConfig = {
     // Shown instead of Chrome's error page when the phone has no connection (public/app-offline.html).
     errorPath: 'app-offline.html',
   },
+  plugins: {
+    // The small icon in the status bar and notification header: the app's voice bars instead of Android's default circle.
+    LocalNotifications: { smallIcon: 'ic_stat_apex', iconColor: '#7c3aed' },
+  },
   android: {
     backgroundColor: '#07060f',
     allowMixedContent: false,

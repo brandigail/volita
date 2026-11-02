@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon for notifications: the seven voice bars of the app logo as a white silhouette (Android tints it). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M103,223 a15,15 0 0 1 30,0 v66 a15,15 0 0 1 -30,0 z
+                          M149,187 a15,15 0 0 1 30,0 v138 a15,15 0 0 1 -30,0 z
+                          M195,145 a15,15 0 0 1 30,0 v222 a15,15 0 0 1 -30,0 z
+                          M241,85 a15,15 0 0 1 30,0 v342 a15,15 0 0 1 -30,0 z
+                          M287,145 a15,15 0 0 1 30,0 v222 a15,15 0 0 1 -30,0 z
+                          M333,187 a15,15 0 0 1 30,0 v138 a15,15 0 0 1 -30,0 z
+                          M379,223 a15,15 0 0 1 30,0 v66 a15,15 0 0 1 -30,0 z" />
+</vector>

@@ -40,6 +40,7 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const { items, status, error, calendarLinked, calendarError, add, remove } = useAgenda()
   const [title, setTitle] = useState('')
   const [when, setWhen] = useState('')
+  const [note, setNote] = useState('')
   const [adding, setAdding] = useState(false)
 
   const days = useMemo(() => {
@@ -52,10 +53,11 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
     event.preventDefault()
     if (!title.trim() || !when) return
     setAdding(true)
-    const ok = await add({ title: title.trim(), startsAt: new Date(when).toISOString(), endsAt: null, notes: '' })
+    const ok = await add({ title: title.trim(), startsAt: new Date(when).toISOString(), endsAt: null, notes: note.trim() })
     setAdding(false)
     if (ok) {
       setTitle('')
+      setNote('')
       setWhen('')
     }
   }
@@ -104,9 +106,18 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
             id="agenda-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Meeting with Mr Smith"
+            placeholder="Meeting with Mr Smith, or: give Adrian a quote"
             maxLength={200}
             className="field"
+          />
+          <input
+            id="agenda-note"
+            aria-label="Extra words for the reminder (optional)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Optional: extra words for the reminder"
+            maxLength={200}
+            className="field mt-2"
           />
         </div>
         <div>

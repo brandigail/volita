@@ -3,9 +3,8 @@ import { listAgenda } from '../../lib/agenda-api'
 import { fetchBriefing } from '../../lib/plan-api'
 import { usePlan } from '../../providers/usePlan'
 import { listenForTaps, permissionState, schedule, type PlannedNotification } from './notify'
-import { RESCHEDULE_EVENT, readPrefs } from './prefs'
+import { RESCHEDULE_EVENT, leadPhrase, readPrefs } from './prefs'
 
-const MEETING_LEAD_MS = 10 * 60_000
 const HORIZON_MS = 7 * 24 * 60 * 60_000
 const REFRESH_MS = 15 * 60_000
 /** The next time the clock reads this HH:MM, today if it has not passed yet, otherwise tomorrow. */
@@ -40,11 +39,17 @@ export function useNotificationScheduler(signedIn: boolean): void {
       const agenda = await listAgenda(now, new Date(now.getTime() + HORIZON_MS))
       for (const item of agenda.items) {
         const startsAt = new Date(item.startsAt)
+        const remindAt = new Date(startsAt.getTime() - prefs.leadMinutes * 60_000)
+        if (remindAt <= now) continue
         if (item.source === 'draft') {
-          if (prefs.sendAt && sendAtReminders && startsAt > now) planned.push({ key: `send-${item.id}-${item.startsAt}`, title: 'Time to send', body: item.title, at: startsAt, tab: 'history' })
+          if (prefs.sendAt && sendAtReminders) {
+            const title = prefs.leadMinutes === 0 ? 'Time to send' : `Send in ${leadPhrase(prefs.leadMinutes)}`
+            planned.push({ key: `send-${item.id}-${item.startsAt}`, title, body: item.title, at: remindAt, tab: 'history' })
+          }
         } else if (prefs.meetings && !item.allDay) {
-          const lead = new Date(startsAt.getTime() - MEETING_LEAD_MS)
-          if (lead > now) planned.push({ key: `meeting-${item.id}-${item.startsAt}`, title: 'Starting in 10 minutes', body: item.title, at: lead, tab: 'agenda' })
+          const title = prefs.leadMinutes === 0 ? 'Reminder' : `Reminder: in ${leadPhrase(prefs.leadMinutes)}`
+          const body = item.notes ? `${item.title}. ${item.notes}` : item.title
+          planned.push({ key: `meeting-${item.id}-${item.startsAt}`, title, body, at: remindAt, tab: 'agenda' })
         }
       }
 
