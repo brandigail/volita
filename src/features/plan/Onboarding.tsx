@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { authClient } from '../../lib/auth-client'
 import { finishOnboarding } from '../../lib/plan-api'
 import { usePlan } from '../../providers/usePlan'
@@ -12,22 +13,17 @@ export function Onboarding() {
   const [work, setWork] = useState('')
   const [audience, setAudience] = useState('')
   const [tone, setTone] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
 
-  if (!state || state.onboarded) return null
+  if (!state || state.onboarded || dismissed) return null
   const remembers = limits.memoryItems !== 0
 
-  const finish = async (skip: boolean) => {
-    setSaving(true)
-    try {
-      if (!skip && work.trim()) await authClient.updateUser({ role: work.trim().slice(0, 80) })
-      await finishOnboarding(skip ? {} : { audience: audience.trim() || undefined, tone: tone || undefined })
-    } catch {
-      // The welcome is a nicety; if it cannot be saved it simply shows again next time.
-    } finally {
-      setSaving(false)
-      refresh()
-    }
+  /** Closes the welcome at once and saves in the background; if saving fails it simply shows again next time. */
+  const finish = (skip: boolean) => {
+    setDismissed(true)
+    const saves = [finishOnboarding(skip ? {} : { audience: audience.trim() || undefined, tone: tone || undefined })]
+    if (!skip && work.trim()) saves.push(authClient.updateUser({ role: work.trim().slice(0, 80) }).then(() => undefined))
+    void Promise.allSettled(saves).then(refresh)
   }
 
   const questions = [
@@ -68,8 +64,9 @@ export function Onboarding() {
   const question = questions[step]
   const last = step === questions.length - 1
 
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="onboard-title">
+  // Rendered on the page body: inside the page area it would sit under the floating tab bar and hide the Next button.
+  return createPortal(
+    <div className="fixed inset-0 z-40 flex items-end justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="onboard-title">
       <div className="surface w-full max-w-md p-6">
         <p className="muted text-xs font-semibold">Welcome to Volita · {step + 1} of {questions.length}</p>
         <h2 id="onboard-title" className="mt-1 text-2xl font-extrabold tracking-tight">
@@ -78,14 +75,15 @@ export function Onboarding() {
         <p className="muted mt-1 mb-4 text-sm">{question.hint}</p>
         {question.body}
         <div className="mt-6 flex items-center justify-between gap-3">
-          <button type="button" onClick={() => void finish(true)} disabled={saving} className="muted text-sm underline underline-offset-2 hover:text-(--ink)">
+          <button type="button" onClick={() => finish(true)} className="muted text-sm underline underline-offset-2 hover:text-(--ink)">
             Skip for now
           </button>
-          <button type="button" onClick={() => (last ? void finish(false) : setStep(step + 1))} disabled={saving} className="btn btn-primary">
-            {last ? (saving ? 'Saving…' : 'Done') : 'Next'}
+          <button type="button" onClick={() => (last ? finish(false) : setStep(step + 1))} className="btn btn-primary">
+            {last ? 'Done' : 'Next'}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

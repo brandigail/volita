@@ -6,10 +6,13 @@ const STORAGE_KEY = 'volita-assistant-voice'
 export const DEVICE_VOICE = 'device'
 export type VoiceChoice = AssistantVoice | typeof DEVICE_VOICE
 
-/** Free and instant, so it is what everyone starts with; the natural voices are an optional upgrade. */
-export const DEFAULT_VOICE: VoiceChoice = DEVICE_VOICE
+/** The Android app's web view has no built-in speech at all, so the device voice would be silent there. */
+export const deviceVoiceAvailable = typeof window !== 'undefined' && 'speechSynthesis' in window
 
-export const VOICE_OPTIONS: readonly { id: VoiceChoice; label: string }[] = [
+/** Free and instant, so it is what everyone starts with where it exists; otherwise the natural voice. */
+export const DEFAULT_VOICE: VoiceChoice = deviceVoiceAvailable ? DEVICE_VOICE : 'diana'
+
+const ALL_VOICE_OPTIONS: readonly { id: VoiceChoice; label: string }[] = [
   { id: DEVICE_VOICE, label: 'Device voice (free, instant)' },
   { id: 'diana', label: 'Diana (female)' },
   { id: 'hannah', label: 'Hannah (female)' },
@@ -19,11 +22,13 @@ export const VOICE_OPTIONS: readonly { id: VoiceChoice; label: string }[] = [
   { id: 'troy', label: 'Troy (male)' },
 ]
 
+export const VOICE_OPTIONS = ALL_VOICE_OPTIONS.filter((option) => deviceVoiceAvailable || option.id !== DEVICE_VOICE)
+
 /** The voice chosen on this device, or the default. */
 export function readStoredVoice(): VoiceChoice {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === DEVICE_VOICE) return DEVICE_VOICE
+    if (stored === DEVICE_VOICE && deviceVoiceAvailable) return DEVICE_VOICE
     return ASSISTANT_VOICES.find((voice) => voice === stored) ?? DEFAULT_VOICE
   } catch {
     return DEFAULT_VOICE

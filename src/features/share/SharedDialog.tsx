@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { UpgradeNote } from '../../components/UpgradeNote'
 import { ApiRequestError, generateDraft, transcribeAudio } from '../../lib/api'
 import { CHANNELS } from '../../lib/channels'
@@ -60,8 +61,8 @@ export function SharedDialog({ shared, onClose, onSaved, onSeePlans }: SharedDia
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="shared-title">
+  return createPortal(
+    <div className="fixed inset-0 z-40 flex items-end justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="shared-title">
       <div className="surface w-full max-w-md p-6">
         <h2 id="shared-title" className="text-xl font-extrabold tracking-tight">
           Reply to this
@@ -95,6 +96,7 @@ export function SharedDialog({ shared, onClose, onSaved, onSeePlans }: SharedDia
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
