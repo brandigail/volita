@@ -66,7 +66,7 @@ const sealContact = (userId: string, input: ContactInput): ContactInput => ({
   notes: encryptText(userId, 'contacts.notes', input.notes),
 })
 
-/** Everything the user has asked Apex to remember, newest first. Text is encrypted at rest, so it is opened here. */
+/** Everything the user has asked Volita to remember, newest first. Text is encrypted at rest, so it is opened here. */
 export async function listMemories(userId: string): Promise<Memory[]> {
   const rows = (await sql().query(
     `SELECT id, kind, source, content, created_at, updated_at FROM memories WHERE user_id = $1 ORDER BY created_at DESC LIMIT ${MEMORY_LIMITS.memories}`,
@@ -83,7 +83,7 @@ export async function listContacts(userId: string): Promise<Contact[]> {
   return rows.map((row) => toContact(userId, row))
 }
 
-/** Saves a memory. Telling Apex the same thing twice keeps one copy. */
+/** Saves a memory. Telling Volita the same thing twice keeps one copy. */
 export async function addMemory(
   userId: string,
   kind: MemoryKind,

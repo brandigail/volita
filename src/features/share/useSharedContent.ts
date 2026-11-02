@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 
-/** Something another app handed to Apex Voice: a message to reply to, or a voice note to turn into text. */
+/** Something another app handed to Volita: a message to reply to, or a voice note to turn into text. */
 export type SharedItem = { kind: 'text'; text: string } | { kind: 'audio'; mimeType: string; base64: string }
 
-/** The Android app fires these when WhatsApp (or any app) shares a message or voice note into Apex. */
-export const SHARED_AUDIO_EVENT = 'apex:shared-audio'
-export const SHARED_TEXT_EVENT = 'apex:shared-text'
+/** The Android app fires these when WhatsApp (or any app) shares a message or voice note into Volita. */
+export const SHARED_AUDIO_EVENT = 'volita:shared-audio'
+export const SHARED_TEXT_EVENT = 'volita:shared-text'
 
 const MAX_TEXT = 4_000
 
@@ -15,12 +15,12 @@ interface AudioDetail {
 }
 
 interface ParkedWindow {
-  __apexShared?: SharedItem
+  __volitaShared?: SharedItem
 }
 
 /** What was shared before the page finished loading: in the address (the installed web app's share target) or parked by the Android app. */
 function readInitial(): SharedItem | null {
-  const parked = (window as unknown as ParkedWindow).__apexShared
+  const parked = (window as unknown as ParkedWindow).__volitaShared
   if (parked) return parked
   const params = new URLSearchParams(window.location.search)
   if (!params.has('text') && !params.has('url') && !params.has('title')) return null
@@ -34,7 +34,7 @@ export function useSharedContent(signedIn: boolean): { shared: SharedItem | null
 
   useEffect(() => {
     // The share is held in state now, so the address and the parked copy are no longer needed.
-    delete (window as unknown as ParkedWindow).__apexShared
+    delete (window as unknown as ParkedWindow).__volitaShared
     const params = new URLSearchParams(window.location.search)
     if (['title', 'text', 'url'].some((key) => params.has(key))) {
       for (const key of ['title', 'text', 'url']) params.delete(key)

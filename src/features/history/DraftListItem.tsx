@@ -55,7 +55,7 @@ export function DraftListItem({ draft, onDelete, onUpdateStatus }: DraftListItem
               </span>
               <span className="flex items-center gap-2">
                 {draft.language !== 'en' && (
-                  <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-xs font-semibold text-sky-500">
+                  <span className="rounded-full bg-lagoon-500/15 px-2 py-0.5 text-xs font-semibold text-lagoon-500">
                     {languageName(draft.language)}
                   </span>
                 )}

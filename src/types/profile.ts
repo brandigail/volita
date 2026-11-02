@@ -1,4 +1,4 @@
-/** What a user tells Apex about themselves so drafts are written and signed in their name. */
+/** What a user tells Volita about themselves so drafts are written and signed in their name. */
 export interface Profile {
   name: string
   businessName: string

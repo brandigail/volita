@@ -3,7 +3,7 @@
 # `npm run build` checks it still matches and fails if the script changes, so the page can never be silently broken.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-VZcg1gjkvs4qqeCz9lagMKyP3/6Clwxwvj1Y5T7A7HY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://sandbox.payfast.co.za https://www.payfast.co.za; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-GBoWI6/HGEEKZ00syaqiTLhWMGg2iG4NdArUXrJDo5U='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://sandbox.payfast.co.za https://www.payfast.co.za; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin

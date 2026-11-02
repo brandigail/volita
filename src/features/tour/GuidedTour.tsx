@@ -49,7 +49,7 @@ export function GuidedTour({ open, step, onStep, onFinish, onShow }: GuidedTourP
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-(--c1) to-(--c2) text-white shadow-lg">
               <Icon className="size-6" aria-hidden="true" />
             </span>
-            <button type="button" onClick={onFinish} aria-label="Close the tour" className="inline-flex size-9 items-center justify-center rounded-full hover:bg-violet-500/15">
+            <button type="button" onClick={onFinish} aria-label="Close the tour" className="inline-flex size-9 items-center justify-center rounded-full hover:bg-brand-500/15">
               <X className="size-5" aria-hidden="true" />
             </button>
           </div>
@@ -71,7 +71,7 @@ export function GuidedTour({ open, step, onStep, onFinish, onShow }: GuidedTourP
             ))}
             {current.id === 'assistant' && isIPhone && (
               <li className="flex gap-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-                On an iPhone: open Apex from the Home Screen icon, and set Settings, Display &amp; Brightness, Auto-Lock to Never while you use the assistant.
+                On an iPhone: open Volita from the Home Screen icon, and set Settings, Display &amp; Brightness, Auto-Lock to Never while you use the assistant.
               </li>
             )}
           </ul>
@@ -104,7 +104,7 @@ export function GuidedTour({ open, step, onStep, onFinish, onShow }: GuidedTourP
         <div className="border-t border-(--line) p-4">
           <div className="mb-3 flex justify-center gap-1.5" aria-hidden="true">
             {TOUR_STEPS.map((s, i) => (
-              <span key={s.id} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-violet-500' : 'w-1.5 bg-(--line)'}`} />
+              <span key={s.id} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-brand-500' : 'w-1.5 bg-(--line)'}`} />
             ))}
           </div>
           <div className="flex items-center gap-2">

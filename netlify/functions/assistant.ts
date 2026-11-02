@@ -134,7 +134,7 @@ export default async function handler(req: Request): Promise<Response> {
       if (role === 'user' || !actions?.length) return { role, content }
       const done = actions.map((a) => `${a.type} id=${a.id} (${a.label})`).join('; ')
       return { role, content: `${content}
-[Apex did this: ${done}]` }
+[Volita did this: ${done}]` }
     }),
   ]
 

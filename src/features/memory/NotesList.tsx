@@ -79,7 +79,7 @@ function NoteRow({ memory, onEdit, onRemove }: { memory: Memory; onEdit: NotesLi
   )
 }
 
-/** Things Apex has been told to remember. They can be added here by typing or by telling the assistant out loud. */
+/** Things Volita has been told to remember. They can be added here by typing or by telling the assistant out loud. */
 export function NotesList({ memories, onAdd, onEdit, onRemove }: NotesListProps) {
   const [kind, setKind] = useState<MemoryKind>('fact')
   const [text, setText] = useState('')

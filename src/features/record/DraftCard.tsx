@@ -57,7 +57,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
   const [sendAt, setSendAt] = useState<string | null>(null)
   const sendPrompt = useSendPrompt()
   const resetTimer = useRef<number | null>(null)
-  /** The text as Apex first wrote it, so the tester's own changes show how they would have said it. */
+  /** The text as Volita first wrote it, so the tester's own changes show how they would have said it. */
   const [original] = useState(() => ({ body: draft.body, subject: draft.subject }))
 
   /** Records what the tester did with the draft, with the final wording next to the first version. */
@@ -101,7 +101,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
     resetTimer.current = window.setTimeout(() => setCopyState('idle'), 2000)
   }
 
-  /** Pro: once a few edited drafts have gone out, Apex quietly studies them for the person's writing style. */
+  /** Pro: once a few edited drafts have gone out, Volita quietly studies them for the person's writing style. */
   const learnFromEdits = () => {
     if (limits.writingStyle) void learnStyle().catch(() => undefined)
   }
@@ -191,7 +191,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
             <h2 className="text-lg leading-tight font-bold">
               Your {channel.label} draft
               {draft.language !== 'en' && (
-                <span className="ml-2 rounded-full bg-sky-500/15 px-2 py-0.5 align-middle text-xs font-semibold text-sky-500">
+                <span className="ml-2 rounded-full bg-lagoon-500/15 px-2 py-0.5 align-middle text-xs font-semibold text-lagoon-500">
                   {languageName(draft.language)}
                 </span>
               )}

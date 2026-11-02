@@ -1,8 +1,8 @@
-const STORAGE_KEY = 'apex-voice-assistant-patience'
+const STORAGE_KEY = 'volita-assistant-patience'
 
 export type Patience = 'quick' | 'normal' | 'patient'
 
-/** How long Apex waits in silence before it decides you have finished speaking. */
+/** How long Volita waits in silence before it decides you have finished speaking. */
 export const PATIENCE_OPTIONS: readonly { id: Patience; label: string; silenceMs: number }[] = [
   { id: 'quick', label: 'Quick (answers sooner, may cut in on pauses)', silenceMs: 1_200 },
   { id: 'normal', label: 'Normal', silenceMs: 2_200 },

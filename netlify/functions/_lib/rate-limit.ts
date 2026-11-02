@@ -159,7 +159,7 @@ function denial(counts: UsageCounts, limits: QuotaLimits, endpoint: MeteredEndpo
     return upgrade ? upgradeResponse(message, upgrade, 429) : errorResponse(429, message)
   }
   if (counts.global_count >= limits.globalPerDay) {
-    return errorResponse(429, 'Apex Voice has reached its daily usage limit. Please try again later.')
+    return errorResponse(429, 'Volita has reached its daily usage limit. Please try again later.')
   }
   const response = errorResponse(429, 'You are going a little fast. Wait a minute and try again.')
   response.headers.set('Retry-After', '60')

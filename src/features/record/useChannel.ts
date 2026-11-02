@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { CHANNELS } from '../../lib/channels'
 import type { DraftCategory } from '../../types/draft'
 
-const STORAGE_KEY = 'apex-voice-channel'
+const STORAGE_KEY = 'volita-channel'
 
 function readStored(): DraftCategory {
   try {

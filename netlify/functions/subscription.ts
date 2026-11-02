@@ -119,7 +119,7 @@ async function checkout(
       email_address: user.email,
       m_payment_id: mPaymentId,
       amount: amountZar,
-      item_name: `Apex Voice ${plan.name}`,
+      item_name: `Volita ${plan.name}`,
       item_description: 'Monthly subscription',
       subscription_type: '1',
       billing_date: new Date().toISOString().slice(0, 10),

@@ -1,6 +1,6 @@
 import { describeError, describeUpstream } from './safe-log.ts'
 const RESEND_URL = 'https://api.resend.com/emails'
-const DEFAULT_FROM = 'Apex Voice <onboarding@resend.dev>'
+const DEFAULT_FROM = 'Volita <onboarding@resend.dev>'
 
 export interface Email {
   to: string

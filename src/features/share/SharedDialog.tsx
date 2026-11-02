@@ -21,7 +21,7 @@ function blobFromBase64(base64: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType })
 }
 
-/** Turns something shared into Apex (a customer's message, or a WhatsApp voice note) into a draft reply. */
+/** Turns something shared into Volita (a customer's message, or a WhatsApp voice note) into a draft reply. */
 export function SharedDialog({ shared, onClose, onSaved, onSeePlans }: SharedDialogProps) {
   const { limits } = usePlan()
   const [text, setText] = useState(shared.kind === 'text' ? shared.text : '')

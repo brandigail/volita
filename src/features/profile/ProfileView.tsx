@@ -99,7 +99,7 @@ function ProfileForm({ initial, email }: { initial: Profile; email: string }) {
       <TextField
         id="profile-business"
         label="Business name (optional)"
-        hint="Not a business? Leave this blank and Apex will sign off with just your name."
+        hint="Not a business? Leave this blank and Volita will sign off with just your name."
         value={profile.businessName}
         max={PROFILE_LIMITS.businessName}
         onChange={set('businessName')}

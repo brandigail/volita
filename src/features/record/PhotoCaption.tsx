@@ -28,7 +28,7 @@ interface PhotoCaptionProps {
   onSeePlans: () => void
 }
 
-/** Start from a photo instead of a recording: pick or take one, optionally say what it is, and Apex writes the post. */
+/** Start from a photo instead of a recording: pick or take one, optionally say what it is, and Volita writes the post. */
 export function PhotoCaption({ category, onDraft, onSeePlans }: PhotoCaptionProps) {
   const { limits, refresh } = usePlan()
   const input = useRef<HTMLInputElement>(null)

@@ -96,7 +96,7 @@ function ContactRow({ contact, onEdit, onRemove }: { contact: Contact; onEdit: (
   )
 }
 
-/** The people Apex knows, so "email Sipho" comes out addressed to the right person. */
+/** The people Volita knows, so "email Sipho" comes out addressed to the right person. */
 export function ContactsList({ contacts, onSave, onRemove }: ContactsListProps) {
   const [editing, setEditing] = useState<string | 'new' | null>(null)
   const stopEditing = () => setEditing(null)

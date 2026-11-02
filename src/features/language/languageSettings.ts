@@ -1,7 +1,7 @@
 import { AUTO, SAME, SPOKEN_CODES, WRITE_CODES } from '../../types/languages'
 
-const SPOKEN_KEY = 'apex-voice-spoken-language'
-const WRITE_KEY = 'apex-voice-write-language'
+const SPOKEN_KEY = 'volita-spoken-language'
+const WRITE_KEY = 'volita-write-language'
 
 function read(key: string, allowed: readonly string[], fallback: string): string {
   try {

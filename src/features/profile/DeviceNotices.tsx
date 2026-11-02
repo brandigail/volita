@@ -12,7 +12,7 @@ export function TesterNotice() {
         You are a tester
       </h2>
       <p className="muted mt-1 text-sm">
-        While you test, Apex keeps a private record of what you say, the drafts it writes and any errors, so Brandon can
+        While you test, Volita keeps a private record of what you say, the drafts it writes and any errors, so Brandon can
         find and fix problems and make drafts sound more like you. Nobody else can see it. Please never say bank or card
         numbers.
       </p>
@@ -20,7 +20,7 @@ export function TesterNotice() {
   )
 }
 
-/** On an iPhone opened in a browser, explains how to put Apex on the home screen (only Safari can do it). */
+/** On an iPhone opened in a browser, explains how to put Volita on the home screen (only Safari can do it). */
 export function InstallHelp() {
   const [open, setOpen] = useState(false)
   useEffect(() => {
@@ -30,9 +30,9 @@ export function InstallHelp() {
   return (
     <section aria-labelledby="install-heading" className="surface mt-6 p-5 text-left">
       <h2 id="install-heading" className="text-lg font-bold">
-        Put Apex on your iPhone
+        Put Volita on your iPhone
       </h2>
-      <p className="muted mt-1 text-sm">Apex installs from Safari, not from other browsers.</p>
+      <p className="muted mt-1 text-sm">Volita installs from Safari, not from other browsers.</p>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="btn btn-ghost mt-3">
         {open ? 'Hide steps' : 'Show steps'}
       </button>
@@ -42,7 +42,7 @@ export function InstallHelp() {
           <li>Open Safari and paste the address.</li>
           <li>Tap the Share button (square with an arrow).</li>
           <li>Tap Add to Home Screen, then Add.</li>
-          <li>Open Apex from your home screen and sign in once.</li>
+          <li>Open Volita from your home screen and sign in once.</li>
         </ol>
       )}
     </section>

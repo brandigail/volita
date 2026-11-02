@@ -102,7 +102,7 @@ export async function fetchBriefing(timeZone: string): Promise<Briefing> {
   return data.data
 }
 
-/** Asks Apex to learn the writing style from edited, sent drafts (Pro). */
+/** Asks Volita to learn the writing style from edited, sent drafts (Pro). */
 export async function learnStyle(): Promise<{ learned: number; message: string }> {
   const data = z.object({ learned: z.number(), message: z.string() }).safeParse(await request('/api/style', { method: 'POST' }))
   if (!data.success) throw unexpected()

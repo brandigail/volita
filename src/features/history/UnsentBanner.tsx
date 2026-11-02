@@ -7,7 +7,7 @@ const SENDABLE = ['EMAIL', 'QUOTE', 'WHATSAPP', 'SMS']
 const GRACE_MS = 10 * 60_000
 /** Older than this is probably a test or a draft given up on, so it does not nag. */
 const MAX_AGE_MS = 7 * 24 * 60 * 60_000
-const DISMISS_KEY = 'apex-unsent-dismissed'
+const DISMISS_KEY = 'volita-unsent-dismissed'
 
 function dismissedToday(): boolean {
   try {
@@ -21,7 +21,7 @@ interface UnsentBannerProps {
   onReview: () => void
 }
 
-/** Reminds the person, when they open Apex, of messages they wrote but never marked as sent. */
+/** Reminds the person, when they open Volita, of messages they wrote but never marked as sent. */
 export function UnsentBanner({ onReview }: UnsentBannerProps) {
   const [count, setCount] = useState(0)
   const [hidden, setHidden] = useState(dismissedToday)

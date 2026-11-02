@@ -39,7 +39,7 @@ export function HistoryView({ initialStatus = 'ALL' }: HistoryViewProps) {
             aria-selected={section === id}
             onClick={() => setSection(id)}
             className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold ${
-              section === id ? 'bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-md' : 'muted hover:bg-violet-500/10'
+              section === id ? 'bg-linear-to-r from-ember-700 via-ember-600 to-ember-500 text-white shadow-md' : 'muted hover:bg-brand-500/10'
             }`}
           >
             {label}

@@ -12,7 +12,7 @@ const BROWSERS = [
 const browser = BROWSERS.find(existsSync)
 if (!browser) throw new Error('Install Chrome or Edge to render the icons')
 
-// Heights of the sound bars; together they form a summit (the "apex").
+// Heights of the sound bars; together they form a summit (the summit of a mountain).
 const BARS = [96, 168, 252, 372, 252, 168, 96]
 const STEP = 46
 const BAR_W = 30
@@ -33,11 +33,11 @@ function svg({ shape, scale }) {
   const base = shape === 'none' ? '' : '<rect width="512" height="512" fill="url(#bg)"/>'
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
 <defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14103a"/><stop offset="1" stop-color="#05050f"/></linearGradient>
-  <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#a5f3fc"/><stop offset="1" stop-color="#c084fc"/></linearGradient>
-  <radialGradient id="g1" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#6366f1" stop-opacity=".95"/><stop offset="1" stop-color="#6366f1" stop-opacity="0"/></radialGradient>
-  <radialGradient id="g2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ec4899" stop-opacity=".85"/><stop offset="1" stop-color="#ec4899" stop-opacity="0"/></radialGradient>
-  <radialGradient id="g3" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#22d3ee" stop-opacity=".8"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12302b"/><stop offset="1" stop-color="#050a09"/></linearGradient>
+  <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff8e6"/><stop offset=".45" stop-color="#ffcb52"/><stop offset="1" stop-color="#ff8a68"/></linearGradient>
+  <radialGradient id="g1" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#17a090" stop-opacity=".95"/><stop offset="1" stop-color="#17a090" stop-opacity="0"/></radialGradient>
+  <radialGradient id="g2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff8a68" stop-opacity=".85"/><stop offset="1" stop-color="#ff8a68" stop-opacity="0"/></radialGradient>
+  <radialGradient id="g3" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2fbfae" stop-opacity=".8"/><stop offset="1" stop-color="#2fbfae" stop-opacity="0"/></radialGradient>
   <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>
   <clipPath id="clip">${clip}</clipPath>
 </defs>
@@ -47,15 +47,15 @@ function svg({ shape, scale }) {
   <circle cx="430" cy="90" r="230" fill="url(#g2)"/>
   <circle cx="440" cy="440" r="170" fill="url(#g3)"/>
   <g transform="translate(256 256) scale(${scale}) translate(-256 -256)">
-    <g fill="#7c3aed" opacity=".65" filter="url(#soft)">${bars}</g>
+    <g fill="#e89a0c" opacity=".65" filter="url(#soft)">${bars}</g>
     <g fill="url(#bar)">${bars}</g>
-    <circle cx="256" cy="${256 - BARS[3] / 2 - 34}" r="13" fill="#fff"/>
+    <circle cx="256" cy="${256 - BARS[3] / 2 - 34}" r="13" fill="#fff8e6"/>
   </g>
 </g>
 </svg>`
 }
 
-const work = mkdtempSync(join(tmpdir(), 'apex-icons-'))
+const work = mkdtempSync(join(tmpdir(), 'volita-icons-'))
 function render(variant, size, outPath) {
   const html = join(work, `${Math.random().toString(36).slice(2)}.html`)
   const png = join(work, 'out.png')

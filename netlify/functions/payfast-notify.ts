@@ -73,16 +73,16 @@ export default async function handler(req: Request): Promise<Response> {
       const sandbox = config.live ? '' : ' This was a TEST payment: no real money was taken.'
       const result = await sendEmail({
         to: subscription.email,
-        subject: `Your Apex Voice ${plan?.name ?? ''} subscription is active`.replace('  ', ' '),
+        subject: `Your Volita ${plan?.name ?? ''} subscription is active`.replace('  ', ' '),
         text: [
           `Hi ${subscription.name.trim().split(/\s+/)[0] || 'there'},`,
           '',
-          `Thank you! We received your payment of ${money(paid)} for Apex Voice ${plan?.name ?? 'subscription'}.${sandbox}`,
+          `Thank you! We received your payment of ${money(paid)} for Volita ${plan?.name ?? 'subscription'}.${sandbox}`,
           '',
           `Reference: ${pfPaymentId}`,
-          'Your plan renews every month. You can cancel any time in Apex Voice, under Profile, Subscription.',
+          'Your plan renews every month. You can cancel any time in Volita, under Profile, Subscription.',
           '',
-          'Apex Voice',
+          'Volita',
         ].join('\n'),
       })
       await sql.query('UPDATE payments SET emailed = $2 WHERE pf_payment_id = $1', [pfPaymentId, result.sent])

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
 /**
- * Apex cannot see whether a message was really sent from WhatsApp or a mail app. So when someone taps a send button and
- * then comes back to Apex, it asks them. `begin` is called on the tap; `asking` turns true when they return.
+ * Volita cannot see whether a message was really sent from WhatsApp or a mail app. So when someone taps a send button and
+ * then comes back to Volita, it asks them. `begin` is called on the tap; `asking` turns true when they return.
  */
 export function useSendPrompt() {
   const [waiting, setWaiting] = useState(false)

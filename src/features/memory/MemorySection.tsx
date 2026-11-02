@@ -8,7 +8,7 @@ import { ContactsList } from './ContactsList'
 import { NotesList } from './NotesList'
 import { useMemory } from './useMemory'
 
-/** Everything Apex has been told to remember, in one place the person can read, correct and delete. */
+/** Everything Volita has been told to remember, in one place the person can read, correct and delete. */
 export function MemorySection() {
   const { memories, contacts, error, addNote, editNote, removeNote, saveContact, removeContact } = useMemory()
   const { limits } = usePlan()
@@ -31,7 +31,7 @@ export function MemorySection() {
   return (
     <section aria-labelledby="memory-heading" className="mt-10">
       <h2 id="memory-heading" className="text-2xl font-extrabold tracking-tight">
-        What Apex knows about you
+        What Volita knows about you
       </h2>
       <p className="muted mt-1 text-sm">
         Tell the assistant things once and it keeps them: how you like your messages written, your prices, the people you deal with. Drafts and answers use this

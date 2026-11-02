@@ -34,8 +34,8 @@ export function TabBar({ active, onChange }: TabBarProps) {
                 aria-label={label}
                 className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-semibold ${
                   isActive
-                    ? 'bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/40'
-                    : 'muted hover:bg-violet-500/15 hover:text-(--ink)'
+                    ? 'bg-linear-to-r from-ember-700 via-ember-600 to-ember-500 text-white shadow-lg shadow-ember-600/40'
+                    : 'muted hover:bg-brand-500/15 hover:text-(--ink)'
                 }`}
               >
                 <Icon className="size-5 shrink-0" aria-hidden="true" />

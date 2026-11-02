@@ -17,7 +17,7 @@ export const agendaItemSchema = z.object({
   endsAt: z.iso.datetime({ offset: true }).nullable(),
   notes: z.string(),
   allDay: z.boolean(),
-  source: z.enum(['apex', 'calendar', 'draft']),
+  source: z.enum(['volita', 'calendar', 'draft']),
 }) satisfies z.ZodType<AgendaItem>
 
 export const agendaResponseSchema = z.object({

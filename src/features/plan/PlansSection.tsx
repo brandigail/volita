@@ -6,13 +6,13 @@ const money = (usd: number) => (usd === 0 ? 'Free' : `$${usd}`)
 
 function PlanCard({ plan, current }: { plan: Plan; current: boolean }) {
   return (
-    <div className={`surface flex flex-col gap-3 p-5 ${current ? 'ring-2 ring-violet-500' : ''}`}>
+    <div className={`surface flex flex-col gap-3 p-5 ${current ? 'ring-2 ring-brand-500' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-bold">{plan.name}</h3>
           <p className="muted text-xs">{plan.pitch}</p>
         </div>
-        {current && <span className="rounded-full bg-violet-500 px-2.5 py-0.5 text-xs font-bold text-white">Your plan</span>}
+        {current && <span className="rounded-full bg-brand-500 px-2.5 py-0.5 text-xs font-bold text-white">Your plan</span>}
       </div>
       <p className="text-3xl font-extrabold tracking-tight">
         {money(plan.usdPerMonth)}
@@ -45,8 +45,8 @@ export function PlansSection() {
         <p className="muted mt-1 text-sm">
           {state.source === 'owner' && (
             <>
-              <Crown className="mr-1 inline size-4 text-fuchsia-400" aria-hidden="true" />
-              You run Apex Voice, so you always have Pro.
+              <Crown className="mr-1 inline size-4 text-ember-400" aria-hidden="true" />
+              You run Volita, so you always have Pro.
             </>
           )}
           {state.source === 'grant' && 'Your plan was given to you for free by the owner.'}

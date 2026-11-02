@@ -94,7 +94,7 @@ for (const e of events) {
   const line =
     e.kind === 'transcribed' ? `said: ${clip(d.text)}`
     : e.kind === 'draft_written' ? `${String(d.category)} draft: ${clip((d.draft as Detail | undefined)?.body)}`
-    : e.kind === 'assistant_turn' ? `said: ${clip(d.said)} | Apex: ${clip(d.reply)} | ${clip(d.actions)} | ${String(d.ms)}ms`
+    : e.kind === 'assistant_turn' ? `said: ${clip(d.said)} | Volita: ${clip(d.reply)} | ${clip(d.actions)} | ${String(d.ms)}ms`
     : e.kind === 'draft_action' ? `${String(d.action)} (${String(d.category)})`
     : clip(d)
   console.log(`  ${time(e.at)}  ${e.kind.padEnd(18)} ${line}`)

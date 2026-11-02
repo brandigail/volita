@@ -1,4 +1,4 @@
-package com.brandigail.apexvoice;
+package com.brandigail.volita;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -18,10 +18,10 @@ import androidx.core.app.NotificationCompat;
 /**
  * Keeps the app alive while a hands-free conversation is running. Android only lets an app use the microphone in
  * the background if a foreground service of type "microphone" is running, and that service must show a
- * notification so the user always knows Apex is listening.
+ * notification so the user always knows Volita is listening.
  */
 public class ListeningService extends Service {
-    private static final String CHANNEL_ID = "apex_listening";
+    private static final String CHANNEL_ID = "volita_listening";
     private static final int NOTIFICATION_ID = 1001;
     /** Safety net: a conversation never needs the CPU held awake for longer than this. */
     private static final long MAX_WAKE_MS = 4L * 60 * 60 * 1000;
@@ -40,7 +40,7 @@ public class ListeningService extends Service {
                 this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Apex is listening")
+                .setContentTitle("Volita is listening")
                 .setContentText("Tap to open the conversation. End it in the app to stop listening.")
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
                 .setContentIntent(tap)
@@ -57,7 +57,7 @@ public class ListeningService extends Service {
 
         if (wakeLock == null) {
             PowerManager power = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ApexVoice:listening");
+            wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Volita:listening");
             wakeLock.acquire(MAX_WAKE_MS);
         }
         running = true;
@@ -82,7 +82,7 @@ public class ListeningService extends Service {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationChannel channel =
                 new NotificationChannel(CHANNEL_ID, "Hands-free listening", NotificationManager.IMPORTANCE_LOW);
-        channel.setDescription("Shown while the Apex assistant is listening.");
+        channel.setDescription("Shown while the Volita assistant is listening.");
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
     }
 }

@@ -26,7 +26,7 @@ export function RecordTimer({ elapsedMs, maxSeconds }: RecordTimerProps) {
       >
         <div
           className={`h-full rounded-full transition-[width] ${
-            nearLimit ? 'bg-red-500' : 'bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500'
+            nearLimit ? 'bg-red-500' : 'bg-linear-to-r from-ember-700 via-ember-600 to-ember-500'
           }`}
           style={{ width: `${percent}%` }}
         />

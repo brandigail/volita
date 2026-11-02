@@ -70,7 +70,7 @@ export function DraftTools({ draft, transcript, onChange, onSeePlans }: DraftToo
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
-          <Wand2 className="size-4 text-fuchsia-400" aria-hidden="true" />
+          <Wand2 className="size-4 text-ember-400" aria-hidden="true" />
           Rewrite
         </span>
         {TONES.map((tone) => (
@@ -79,7 +79,7 @@ export function DraftTools({ draft, transcript, onChange, onSeePlans }: DraftToo
             type="button"
             disabled={busy !== null}
             onClick={() => (limits.toneRewrite ? void rewrite(tone.id) : setMessage({ text: 'Rewriting in a different tone is part of the Pro plan.', upgrade: 'pro' }))}
-            className={`rounded-full border px-3 py-1 text-xs font-semibold hover:border-violet-500 ${limits.toneRewrite ? 'border-(--line) bg-(--surface)' : 'border-(--line) bg-(--surface) opacity-60'}`}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold hover:border-brand-500 ${limits.toneRewrite ? 'border-(--line) bg-(--surface)' : 'border-(--line) bg-(--surface) opacity-60'}`}
           >
             {busy === tone.id ? <Loader2 className="inline size-3 animate-spin" aria-label="Rewriting" /> : tone.label}
           </button>

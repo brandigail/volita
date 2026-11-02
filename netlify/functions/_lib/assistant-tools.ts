@@ -52,7 +52,7 @@ export const TOOLS: ToolDefinition[] = [
     function: {
       name: 'get_agenda',
       description:
-        "Look up the user's meetings and agenda items (from Apex and their linked calendar). Use it for any question about what is on, when something is, or whether they are free.",
+        "Look up the user's meetings and agenda items (from Volita and their linked calendar). Use it for any question about what is on, when something is, or whether they are free.",
       parameters: {
         type: 'object',
         properties: {
@@ -67,7 +67,7 @@ export const TOOLS: ToolDefinition[] = [
     type: 'function',
     function: {
       name: 'add_agenda_item',
-      description: "Add a meeting, reminder or deadline to the user's Apex agenda. Only call it once the day and time are clear.",
+      description: "Add a meeting, reminder or deadline to the user's Volita agenda. Only call it once the day and time are clear.",
       parameters: {
         type: 'object',
         properties: {
@@ -240,10 +240,10 @@ async function getAgenda(args: unknown, ctx: ToolContext): Promise<string> {
       source: item.source,
     })),
     note: agenda.calendarError
-      ? `The linked calendar could not be read (${agenda.calendarError}). Only Apex items are shown; say so.`
+      ? `The linked calendar could not be read (${agenda.calendarError}). Only Volita items are shown; say so.`
       : agenda.calendarLinked
         ? undefined
-        : 'No calendar is linked, so this is only what was added in Apex.',
+        : 'No calendar is linked, so this is only what was added in Volita.',
   })
 }
 

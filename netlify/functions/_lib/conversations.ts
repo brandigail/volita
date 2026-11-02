@@ -10,7 +10,7 @@ const PRUNE_ONE_IN = 20
 const LIST_CONVERSATIONS = 40
 const LIST_MESSAGES = 2000
 
-/** Saves one exchange (what the user said and what Apex answered) to the user's assistant history. Never throws. */
+/** Saves one exchange (what the user said and what Volita answered) to the user's assistant history. Never throws. */
 export async function rememberTurn(
   userId: string,
   conversationId: string,

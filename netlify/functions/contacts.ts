@@ -15,7 +15,7 @@ function idFrom(req: Request): string | null {
   return id?.replace(/\.html?$/, '') ?? null
 }
 
-/** The people Apex knows: add, correct or delete one. */
+/** The people Volita knows: add, correct or delete one. */
 export default async function handler(req: Request): Promise<Response> {
   const session = await requireUser(req)
   if (!session.ok) return session.response

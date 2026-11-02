@@ -24,8 +24,8 @@ const CATEGORY_OPTIONS: readonly { id: CategoryFilter; label: string }[] = [
 const chip = (selected: boolean) =>
   `shrink-0 rounded-full border px-4 py-1.5 text-sm font-semibold ${
     selected
-      ? 'border-transparent bg-linear-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-md shadow-violet-500/30'
-      : 'border-(--line) bg-(--surface) hover:border-violet-400/70'
+      ? 'border-transparent bg-linear-to-r from-ember-700 via-ember-600 to-ember-500 text-white shadow-md shadow-ember-600/30'
+      : 'border-(--line) bg-(--surface) hover:border-brand-400/70'
   }`
 
 export function HistoryFilters({ query, onQuery, category, onCategory, status, onStatus, unsentCount }: HistoryFiltersProps) {

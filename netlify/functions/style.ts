@@ -91,7 +91,7 @@ export default async function handler(req: Request): Promise<Response> {
        ON CONFLICT (user_id) DO UPDATE SET style_learned_at = now()`,
       [user.id],
     )
-    return json({ learned, message: learned > 0 ? `Learned ${learned} thing${learned === 1 ? '' : 's'} about your style. Check them under What Apex knows.` : 'No clear pattern yet. Keep editing and I will keep watching.' })
+    return json({ learned, message: learned > 0 ? `Learned ${learned} thing${learned === 1 ? '' : 's'} about your style. Check them under What Volita knows.` : 'No clear pattern yet. Keep editing and I will keep watching.' })
   } catch (err) {
     console.error('Style learning failed:', describeError(err))
     return errorResponse(500, 'Could not learn your style right now. Please try again.')

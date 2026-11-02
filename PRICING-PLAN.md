@@ -1,4 +1,4 @@
-# Apex Voice: Pricing and plan limits (draft for Claude Code)
+# Volita: Pricing and plan limits (draft for Claude Code)
 
 Status: NOT approved to build yet. Brandon will say "go" when ready to market. Until then, change nothing.
 When he says go: read this file, then implement section 6 (in the revised order from section 8.5) step by step, tick each step in PLAN.md, and run build, lint and `tsc --noEmit` after each step.
@@ -18,7 +18,7 @@ When he says go: read this file, then implement section 6 (in the revised order 
 | Draft history | Last 20 drafts | Unlimited, search + filters | Unlimited |
 | "Send at" reminders | No | Yes | Yes |
 | Calendar link (iCal) | No (manual agenda only) | Yes, 1 calendar | Yes, up to 3 calendars |
-| Signature footer | "Written with Apex Voice" added | Your own sign-off only | Your own sign-off only |
+| Signature footer | "Written with Volita" added | Your own sign-off only | Your own sign-off only |
 | Download / delete my data | Yes (always free) | Yes | Yes |
 | Support | Feedback box | Email | Priority email |
 
@@ -33,14 +33,14 @@ Rule: the free plan must be good enough to prove the idea in one sitting, and an
 - Premium voice for the first 200 turns a month.
 - Memory: it remembers clients and preferences; saved contacts fill in email and phone.
 - "Send at" reminders and calendar link so drafts show up on the agenda at the right time.
-- No Apex footer on your drafts.
+- No Volita footer on your drafts.
 
 **Pro ($12): "it runs my admin."**
 - 5 minute recordings, 100 drafts a day, 100 assistant turns a day.
 - 600 premium voice turns a month.
 - Unlimited memory.
 - Web lookup in the assistant.
-- Features that make it a daily habit (to be built, see section 4): morning briefing, learns your writing style, regenerate in a different tone, send from inside Apex, inbox awareness.
+- Features that make it a daily habit (to be built, see section 4): morning briefing, learns your writing style, regenerate in a different tone, send from inside Volita, inbox awareness.
 - Several calendars, priority support.
 
 ## 3. Price check against similar tools (US list prices, found 2026-10-29)
@@ -51,11 +51,11 @@ Rule: the free plan must be good enough to prove the idea in one sitting, and an
 | Willow Voice (dictation) | 2,000 words/week | $15/mo or $12/mo billed yearly |
 | Superwhisper (dictation) | Free tier, small models, no numeric cap found | $8.49/mo, $84.99/yr, $249.99 lifetime |
 | Otter.ai (meeting notes) | 300 min/month | Pro $16.99/mo or $99.99/yr; Business $30/mo (figures from a competitor's blog, unverified) |
-| Apex Voice (proposed) | 3 drafts/day | Basic $5, Pro $12 ($99/yr) |
+| Volita (proposed) | 3 drafts/day | Basic $5, Pro $12 ($99/yr) |
 
 Not verified: ChatGPT / Gemini pricing. Check before quoting it.
 
-## 4. How Apex is different and better
+## 4. How Volita is different and better
 
 Dictation tools (Wispr, Willow, Superwhisper) type words into any app. Otter writes meeting notes. General chat assistants answer questions. None of them are built around the whole job of a small business owner: speak a note, get a finished message in the right style for the right channel, send it, track that it was sent, remind me later, and remember who the client is.
 
@@ -67,10 +67,10 @@ What to push:
 5. **Price:** Basic is about a third of what Wispr or Willow charge for the main plan.
 
 Honest weaknesses to fix or be upfront about:
-- Wispr and Superwhisper type into every app on a computer. Apex does not (it is its own app).
+- Wispr and Superwhisper type into every app on a computer. Volita does not (it is its own app).
 - Encryption, security headers and delete-account are built but not deployed yet (see SECURITY.md). Deploy them before taking any money.
 - Groq free quota will not carry paying users. Move to paid Groq before launch.
-- Pro features in section 4 of PLAN.md (C5, C6, C7, send-from-Apex) are not built. Do not advertise a feature until it ships.
+- Pro features in section 4 of PLAN.md (C5, C6, C7, send-from-Volita) are not built. Do not advertise a feature until it ships.
 
 ## 5. Cost check (rough, from Groq list prices, Oct 2026; verify with the activity log)
 
@@ -90,11 +90,11 @@ So premium voice is the expensive part, which is why it is a monthly pool and no
 3. Make `rate-limit.ts` `limitsFor(endpoint)` take the user's plan. Add monthly counters for premium voice turns (migration 013).
 4. Enforce server-side only (never trust the client): channels and languages in `generate.ts` and `transcribe.ts`, recording length in `transcribe.ts`, tool lists per plan in `assistant-tools.ts`, memory caps in `memory.ts` and `contacts.ts`, calendar count in `calendar.ts`, history length in `db-sync.ts`.
 5. `speak.ts`: when the premium pool is used up (or plan is free), return a flag so the client uses the browser voice instead of failing.
-6. Free plan: append "Written with Apex Voice" to drafts; hide locked channels with a clear upgrade prompt, not an error.
+6. Free plan: append "Written with Volita" to drafts; hide locked channels with a clear upgrade prompt, not an error.
 7. Upgrade UI: show remaining drafts and assistant turns today, and a plan comparison screen with the three plans.
 8. Subscriptions: make Free the default plan for new accounts; upgrade, downgrade and cancel via PayFast; downgrade keeps data but locks features above the plan.
 9. Finish B7b (own PayFast merchant, live mode, privacy / terms / refund pages) before charging anyone.
-10. Then build the Pro features: C6 morning briefing, C5 writing style, regenerate in a different tone, send from inside Apex, C7 inbox awareness.
+10. Then build the Pro features: C6 morning briefing, C5 writing style, regenerate in a different tone, send from inside Volita, C7 inbox awareness.
 11. Update README, PLAN.md and SECURITY.md. Run build, lint and `tsc --noEmit`. Test each plan with a test account on the live site.
 
 ## 8. Review against the real app (added 2026-10-30, still NOT approved to build)
@@ -112,7 +112,7 @@ Checked by reading the code: `plans.ts`, `rate-limit.ts`, `features.ts`, `transc
 2. **An assistant turn is several calls** (`listen`, `assistant`, then one `speak` per sentence). Define one turn as one `assistant` call, and have the client send the turn's id on its `speak` calls, so the premium pool counts turns, not sentences.
 3. **Monthly counters need their own table.** `api_usage` is pruned after 3 days and its windows are rolling 24 hours, not calendar days. Add migration 013 with a per-user, per-month counter. Say "in 24 hours" in the UI, or reset at local midnight; pick one before building the usage meter.
 4. **Downgrade rule: lock, never delete.** Over-cap memory, contacts, history and calendars become read-only; the user can still view, download and delete them. Add this to step 8.
-5. **The free footer is editable.** The draft card is editable, so a user can delete "Written with Apex Voice". Accept that, and add the footer server-side in `generate` so it is on by default.
+5. **The free footer is editable.** The draft card is editable, so a user can delete "Written with Volita". Accept that, and add the footer server-side in `generate` so it is on by default.
 6. **Plan resolution lives in one place:** `getPlan(userId)` in `_lib/`, reading a `plan` column plus an `OWNER_EMAILS` env override (dad gets Pro free, same pattern as `features.ts`). Every function calls it; the client only displays.
 
 ### 8.3 Blockers that are not code
@@ -139,10 +139,10 @@ Checked by reading the code: `plans.ts`, `rate-limit.ts`, `features.ts`, `transc
 | Quote to PDF | Yes, small | Client-side PDF library, no server cost |
 | Follow-up nudges | Yes, after notifications | Needs notification stage 1; the sent state already exists |
 | WhatsApp list for tomorrow's reminders | Yes, small | `wa.me` links built from the To send list |
-| Share a WhatsApp message or voice note into Apex | Android only | Web Share Target in the manifest plus an intent filter in the Capacitor app. iPhone Safari does not support it. Voice notes are `.opus`, which Whisper accepts |
+| Share a WhatsApp message or voice note into Volita | Android only | Web Share Target in the manifest plus an intent filter in the Capacitor app. iPhone Safari does not support it. Voice notes are `.opus`, which Whisper accepts |
 | Payment link on quotes | Later | Needs the live PayFast merchant and a per-quote payment page |
 | Inbox awareness (C7) | Later, blocked | Needs the security deploy and two-step login first |
-| Send from inside Apex | Later | Gmail API needs Google app verification (weeks). Resend with reply-to is the quick route |
+| Send from inside Volita | Later | Gmail API needs Google app verification (weeks). Resend with reply-to is the quick route |
 | Annual billing | Yes | PayFast subscriptions have a frequency field; Basic $50 and Pro $99 are separate yearly products. Sandbox first |
 
 ### 8.5 Revised build order (replaces the order in section 6)
@@ -153,7 +153,7 @@ Each stage is shippable alone; run build, lint and `tsc --noEmit` after each.
 - **Stage 3, notifications:** Android local notifications, Settings toggles with a test button, in-app reminders on web. Test on a real phone with battery saver on.
 - **Stage 4, money:** B7b merchant, live mode, legal pages, upgrade, downgrade, cancel, annual plans.
 - **Stage 5, Pro habit features:** C6 morning briefing, tone regenerate, C5 writing style, templates, price list, quote to PDF, WhatsApp list.
-- **Stage 6, later:** photo to caption, share into Apex, follow-up nudges, web push, send from inside Apex, C7, payment links.
+- **Stage 6, later:** photo to caption, share into Volita, follow-up nudges, web push, send from inside Volita, C7, payment links.
 
 Do not advertise any stage 5 or 6 item until it ships.
 
@@ -161,4 +161,4 @@ Do not advertise any stage 5 or 6 item until it ships.
 
 Decisions made while building: Pro is $12 / $99 a year with **100 drafts and 100 assistant turns a day** (changed from 40 and 80 on Brandon's say-so); the daily time for the briefing and the quote nudge can be any minute (for example 08:03); refusals for plan limits use HTTP 402 and carry the plan that unlocks them; accounts that existed before plans were introduced were given Pro by migration 013; the owner screen can also give a plan to an email address before that person signs up (`plan_invites`), so about 20 family and friends can be approved in one paste.
 
-Built: sections 6 steps 1 to 7 and 10 (plan tiers and limits in one shared file, `getPlan` on the server, enforcement in every function, premium voice pool per assistant turn with device-voice fallback, free footer, usage meter and plan screen, locked-feature prompts instead of errors, morning briefing, tone rewrite, writing style, templates, price list, quote PDF, photo to caption, follow-up nudges, WhatsApp list for tomorrow, three-question welcome, source-tagged memory, share into Apex, pop-up notifications). Not built, on purpose: step 8 billing (upgrade, cancel, annual checkout), step 9 (own PayFast merchant, legal pages), web push, send from inside Apex, inbox awareness, payment links on quotes.
+Built: sections 6 steps 1 to 7 and 10 (plan tiers and limits in one shared file, `getPlan` on the server, enforcement in every function, premium voice pool per assistant turn with device-voice fallback, free footer, usage meter and plan screen, locked-feature prompts instead of errors, morning briefing, tone rewrite, writing style, templates, price list, quote PDF, photo to caption, follow-up nudges, WhatsApp list for tomorrow, three-question welcome, source-tagged memory, share into Volita, pop-up notifications). Not built, on purpose: step 8 billing (upgrade, cancel, annual checkout), step 9 (own PayFast merchant, legal pages), web push, send from inside Volita, inbox awareness, payment links on quotes.

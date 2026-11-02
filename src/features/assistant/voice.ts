@@ -1,6 +1,6 @@
 import { ASSISTANT_VOICES, type AssistantVoice } from '../../types/assistant'
 
-const STORAGE_KEY = 'apex-voice-assistant-voice'
+const STORAGE_KEY = 'volita-assistant-voice'
 
 /** The phone's or computer's own voice: free, starts instantly and never runs out, but sounds less natural. */
 export const DEVICE_VOICE = 'device'

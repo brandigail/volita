@@ -19,7 +19,7 @@ export function highlight(target: string): void {
   look()
 }
 
-const key = (userId: string) => `apex-voice-tour-seen-${userId}`
+const key = (userId: string) => `volita-tour-seen-${userId}`
 
 /** Whether this person has already been through (or skipped) the tour on this device. */
 export function hasSeenTour(userId: string): boolean {

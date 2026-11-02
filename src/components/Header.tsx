@@ -3,7 +3,7 @@ import { authClient } from '../lib/auth-client'
 import { useTheme } from '../providers/useTheme'
 import { PlanChip } from './PlanChip'
 
-const iconButton = 'inline-flex size-10 items-center justify-center rounded-full hover:bg-violet-500/15'
+const iconButton = 'inline-flex size-10 items-center justify-center rounded-full hover:bg-brand-500/15'
 
 export function Header({ signedIn, onHelp, onPlan }: { signedIn: boolean; onHelp: () => void; onPlan: () => void }) {
   const { theme, toggleTheme } = useTheme()
@@ -13,11 +13,11 @@ export function Header({ signedIn, onHelp, onPlan }: { signedIn: boolean; onHelp
     <header className="sticky top-0 z-20 border-b border-(--line) bg-(--page)/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-2xl items-center justify-between px-4">
         <div className="flex items-center gap-2.5 text-lg font-extrabold tracking-tight">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/40">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white shadow-lg shadow-ember-600/40">
             <AudioWaveform className="size-5" aria-hidden="true" />
           </span>
           <span>
-            Apex <span className="text-gradient">Voice</span>
+            <span className="text-gradient">Volita</span>
           </span>
         </div>
         <div className="flex items-center">

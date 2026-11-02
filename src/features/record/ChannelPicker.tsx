@@ -42,7 +42,7 @@ export function ChannelPicker({ value, onChange, allowed, onLocked }: ChannelPic
                 <ChannelIcon category={channel.id} className="size-5" />
               </span>
               {channel.label}
-              {locked && <Lock className="absolute top-1.5 right-1.5 size-3 text-violet-400" aria-label="Part of a paid plan" />}
+              {locked && <Lock className="absolute top-1.5 right-1.5 size-3 text-brand-400" aria-label="Part of a paid plan" />}
             </button>
           )
         })}

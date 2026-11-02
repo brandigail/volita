@@ -11,11 +11,11 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Apex Voice',
-        short_name: 'Apex Voice',
+        name: 'Volita',
+        short_name: 'Volita',
         description: 'Speak a note and get a ready-to-send email, quote or message.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#0a1110',
+        background_color: '#0a1110',
         display: 'standalone',
         start_url: '/',
         // Lets the installed app appear in the phone's share sheet, so a customer's message can be shared straight in.

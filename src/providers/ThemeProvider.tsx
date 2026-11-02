@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ThemeContext, type Theme } from './theme-context'
 
-const STORAGE_KEY = 'apex-voice-theme'
+const STORAGE_KEY = 'volita-theme'
 
 function readInitialTheme(): Theme {
   try {
@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle('dark', theme === 'dark')
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff')
+      ?.setAttribute('content', theme === 'dark' ? '#0a1110' : '#ffffff')
     try {
       localStorage.setItem(STORAGE_KEY, theme)
     } catch {

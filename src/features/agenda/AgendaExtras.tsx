@@ -39,11 +39,11 @@ export function EnableReminders() {
   }
 
   return (
-    <button type="button" onClick={() => void turnOn()} className="surface mt-5 flex w-full items-center gap-3 p-4 text-left hover:border-violet-400/60">
+    <button type="button" onClick={() => void turnOn()} className="surface mt-5 flex w-full items-center gap-3 p-4 text-left hover:border-brand-400/60">
       <Bell className="size-5 shrink-0 text-amber-400" aria-hidden="true" />
       <span className="text-sm">
         <span className="font-semibold">Get pop-up reminders</span>
-        <span className="muted block">Apex can nudge you when it is time to send something and before meetings.</span>
+        <span className="muted block">Volita can nudge you when it is time to send something and before meetings.</span>
       </span>
     </button>
   )

@@ -1,7 +1,7 @@
 import { Bell, BellRing } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { usePlan } from '../../providers/usePlan'
-import { isNativeApp, permissionState, requestPermission, showNow, type PermissionState } from './notify'
+import { askForExactAlarms, exactAlarmsAllowed, isNativeApp, permissionState, requestPermission, showNow, type PermissionState } from './notify'
 import { LEAD_OPTIONS, readPrefs, writePrefs, type NotificationPrefs } from './prefs'
 
 interface ToggleProps {
@@ -16,7 +16,7 @@ interface ToggleProps {
 function Toggle({ id, label, hint, checked, disabled, onChange }: ToggleProps) {
   return (
     <div className={`flex items-start gap-3 ${disabled ? 'opacity-50' : ''}`}>
-      <input id={id} type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="mt-1 size-5 cursor-pointer accent-violet-500" />
+      <input id={id} type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="mt-1 size-5 cursor-pointer accent-brand-500" />
       <label htmlFor={id} className="flex-1 cursor-pointer text-sm">
         <span className="font-semibold">{label}</span>
         <span className="muted block text-xs">{hint}</span>
@@ -27,7 +27,7 @@ function Toggle({ id, label, hint, checked, disabled, onChange }: ToggleProps) {
 
 const STATE_TEXT: Record<PermissionState, string> = {
   granted: 'Notifications are on.',
-  denied: 'Notifications are blocked. Turn them on for Apex Voice in your phone or browser settings.',
+  denied: 'Notifications are blocked. Turn them on for Volita in your phone or browser settings.',
   prompt: 'Notifications are off. Turn them on to get reminders.',
   unsupported: 'This browser cannot show notifications.',
 }
@@ -38,9 +38,17 @@ export function NotificationSettings() {
   const [prefs, setPrefs] = useState<NotificationPrefs>(readPrefs)
   const [permission, setPermission] = useState<PermissionState>('prompt')
   const [testNote, setTestNote] = useState<string | null>(null)
+  const [exactAllowed, setExactAllowed] = useState(true)
 
   useEffect(() => {
-    void permissionState().then(setPermission)
+    const refresh = () => {
+      void permissionState().then(setPermission)
+      void exactAlarmsAllowed().then(setExactAllowed)
+    }
+    refresh()
+    // Coming back from Android's settings screen should update what this panel says.
+    document.addEventListener('visibilitychange', refresh)
+    return () => document.removeEventListener('visibilitychange', refresh)
   }, [])
 
   const update = (patch: Partial<NotificationPrefs>) => {
@@ -61,7 +69,7 @@ export function NotificationSettings() {
         return
       }
     }
-    await showNow('Apex Voice', 'This is a test notification. Reminders will look like this.')
+    await showNow('Volita', 'This is a test notification. Reminders will look like this.')
     setTestNote('Sent. It should pop up in a second or two.')
   }
 
@@ -85,6 +93,14 @@ export function NotificationSettings() {
             Send a test notification
           </button>
         </div>
+        {permission === 'granted' && !exactAllowed && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <p>Android may deliver reminders a few minutes late until you allow exact times for Volita.</p>
+            <button type="button" onClick={() => void askForExactAlarms()} className="btn btn-ghost mt-2">
+              Allow exact times
+            </button>
+          </div>
+        )}
         {testNote && (
           <p role="status" className="muted text-sm">
             {testNote}
@@ -122,8 +138,8 @@ export function NotificationSettings() {
 
         <p className="muted text-xs">
           {isNativeApp
-            ? 'On this phone the system delivers reminders even when Apex is closed. If they arrive late, set battery use for Apex Voice to "Unrestricted" in the phone settings.'
-            : 'In a browser, reminders appear while Apex is open or installed. For reminders with the app closed, use the Android app.'}
+            ? 'On this phone the system delivers reminders even when Volita is closed. If they arrive late, set battery use for Volita to "Unrestricted" in the phone settings.'
+            : 'In a browser, reminders appear while Volita is open or installed. For reminders with the app closed, use the Android app.'}
         </p>
       </div>
     </section>

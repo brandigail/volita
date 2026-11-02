@@ -23,7 +23,7 @@ export function SentPrompt({ recipient, onSent, onNotYet }: SentPromptProps) {
             Did you send it{recipient.trim() ? ` to ${recipient.trim()}` : ""}?
           </h2>
           <p className="muted mt-1 text-sm">
-            Apex can&apos;t see inside your other apps, so tell it. Unsent
+            Volita can&apos;t see inside your other apps, so tell it. Unsent
             messages stay on your To send list.
           </p>
           <div className="mt-4 flex gap-2">

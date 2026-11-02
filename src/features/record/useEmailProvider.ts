@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { EMAIL_PROVIDERS, type EmailProvider } from '../../lib/share'
 
-const STORAGE_KEY = 'apex-voice-email-provider'
+const STORAGE_KEY = 'volita-email-provider'
 
 function readStored(): EmailProvider {
   try {

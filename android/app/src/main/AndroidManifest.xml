@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Share a message or a WhatsApp voice note into Apex Voice from any app's share sheet. -->
+            <!-- Share a message or a WhatsApp voice note into Volita from any app's share sheet. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

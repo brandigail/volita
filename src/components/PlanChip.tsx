@@ -3,8 +3,8 @@ import { planFor } from '../types/plans'
 
 const TONE = {
   free: 'border-(--line) bg-(--surface)',
-  basic: 'border-sky-400/50 bg-sky-500/10 text-sky-600 dark:text-sky-300',
-  pro: 'border-fuchsia-400/50 bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-300',
+  basic: 'border-lagoon-400/50 bg-lagoon-500/10 text-lagoon-600 dark:text-lagoon-300',
+  pro: 'border-ember-400/50 bg-ember-500/10 text-ember-600 dark:text-ember-300',
 } as const
 
 /** The current plan in the header; tapping it opens the plans screen. */

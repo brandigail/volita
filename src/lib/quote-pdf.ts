@@ -41,7 +41,7 @@ export async function buildQuotePdf(draft: GeneratedDraft, profile: Profile): Pr
   write(`Date: ${new Intl.DateTimeFormat('en-GB', { dateStyle: 'long' }).format(new Date())}`, 11, false, 8)
 
   write(draft.body, 11)
-  return new File([doc.output('blob')], `quote-${(draft.recipient || 'apex').replace(/[^\w-]+/g, '-').toLowerCase()}.pdf`, { type: 'application/pdf' })
+  return new File([doc.output('blob')], `quote-${(draft.recipient || 'volita').replace(/[^\w-]+/g, '-').toLowerCase()}.pdf`, { type: 'application/pdf' })
 }
 
 /** Shares the PDF with the device share sheet when it can, otherwise downloads it. */

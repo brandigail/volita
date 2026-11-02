@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.brandigail.apexvoice"
+    namespace = "com.brandigail.volita"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.brandigail.apexvoice"
+        applicationId "com.brandigail.volita"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 5
@@ -17,8 +17,8 @@ android {
         }
     }
     // The release signing key lives outside the repository (never commit it). Updates to an installed app must be
-    // signed with the same key, so back up ~/.apex-voice-signing.
-    def signingFile = new File(System.getProperty('user.home'), '.apex-voice-signing/keystore.properties')
+    // signed with the same key, so back up ~/.volita-signing.
+    def signingFile = new File(System.getProperty('user.home'), '.volita-signing/keystore.properties')
     if (signingFile.exists()) {
         def signing = new Properties()
         signingFile.withInputStream { signing.load(it) }

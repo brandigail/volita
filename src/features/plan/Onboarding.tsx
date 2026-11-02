@@ -34,19 +34,19 @@ export function Onboarding() {
     {
       id: 'onboard-work',
       title: 'What do you do?',
-      hint: 'For example "Plumber", "Bakery owner" or "Estate agent". It helps Apex pick the right words.',
+      hint: 'For example "Plumber", "Bakery owner" or "Estate agent". It helps Volita pick the right words.',
       body: <input id="onboard-work" className="field" value={work} maxLength={80} onChange={(e) => setWork(e.target.value)} autoFocus />,
     },
     {
       id: 'onboard-audience',
       title: 'Who do you write to most?',
-      hint: remembers ? 'For example "customers", "my team" or "suppliers". Apex remembers this.' : 'For example "customers" or "my team".',
+      hint: remembers ? 'For example "customers", "my team" or "suppliers". Volita remembers this.' : 'For example "customers" or "my team".',
       body: <input id="onboard-audience" className="field" value={audience} maxLength={100} onChange={(e) => setAudience(e.target.value)} autoFocus />,
     },
     {
       id: 'onboard-tone',
       title: 'How should your messages sound?',
-      hint: remembers ? 'Pick one. Apex remembers it and you can change it any time.' : 'Pick one. Saving it is part of the Basic plan.',
+      hint: remembers ? 'Pick one. Volita remembers it and you can change it any time.' : 'Pick one. Saving it is part of the Basic plan.',
       body: (
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Tone">
           {TONES.map((option) => (
@@ -56,7 +56,7 @@ export function Onboarding() {
               role="radio"
               aria-checked={tone === option}
               onClick={() => setTone(option)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold ${tone === option ? 'border-violet-500 bg-violet-500/20' : 'border-(--line) bg-(--surface) hover:border-violet-500'}`}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold ${tone === option ? 'border-brand-500 bg-brand-500/20' : 'border-(--line) bg-(--surface) hover:border-brand-500'}`}
             >
               {option}
             </button>
@@ -71,7 +71,7 @@ export function Onboarding() {
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-labelledby="onboard-title">
       <div className="surface w-full max-w-md p-6">
-        <p className="muted text-xs font-semibold">Welcome to Apex Voice · {step + 1} of {questions.length}</p>
+        <p className="muted text-xs font-semibold">Welcome to Volita · {step + 1} of {questions.length}</p>
         <h2 id="onboard-title" className="mt-1 text-2xl font-extrabold tracking-tight">
           <label htmlFor={question.id}>{question.title}</label>
         </h2>

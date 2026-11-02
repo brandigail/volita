@@ -35,7 +35,7 @@ interface AgendaRow {
 
 const iso = (value: string | Date | null) => (value ? new Date(value).toISOString() : null)
 
-/** Everything Apex holds about the signed-in person, opened and handed back as one file they can keep. */
+/** Everything Volita holds about the signed-in person, opened and handed back as one file they can keep. */
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'GET') return errorResponse(405, 'Method not allowed.')
   const session = await requireUser(req)
@@ -66,7 +66,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     const data = {
       exportedAt: new Date().toISOString(),
-      note: 'Everything Apex Voice stores about you. Voice recordings are never stored.',
+      note: 'Everything Volita stores about you. Voice recordings are never stored.',
       account: { email, name: profile.name, businessName: profile.businessName, role: profile.role, phone: profile.phone, signature: profile.signature, calendarLinked: profile.calendarUrl !== '' },
       drafts: drafts.map((d) => ({
         id: d.id,
@@ -92,8 +92,8 @@ export default async function handler(req: Request): Promise<Response> {
         starts: iso(a.starts_at),
         ends: iso(a.ends_at),
       })),
-      whatApexRemembers: memories.map((m) => ({ type: m.kind, note: m.content, savedAt: m.createdAt })),
-      peopleApexKnows: contacts.map(({ name, email, phone, relationship, notes }) => ({ name, email, phone, relationship, notes })),
+      whatVolitaRemembers: memories.map((m) => ({ type: m.kind, note: m.content, savedAt: m.createdAt })),
+      peopleVolitaKnows: contacts.map(({ name, email, phone, relationship, notes }) => ({ name, email, phone, relationship, notes })),
       feedbackYouSent: feedback.map((f) => ({ message: f.message, screen: f.screen, at: iso(f.created_at) })),
       subscription: subscription.map((s) => ({ plan: s.plan, status: s.status, amountZar: Number(s.amount_zar), lastPaymentAt: iso(s.last_payment_at) })),
     }
@@ -101,7 +101,7 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(JSON.stringify(data, null, 2), {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': 'attachment; filename="apex-voice-my-data.json"',
+        'Content-Disposition': 'attachment; filename="volita-my-data.json"',
         'Cache-Control': 'no-store',
       },
     })

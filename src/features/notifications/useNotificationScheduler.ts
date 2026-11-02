@@ -54,7 +54,7 @@ export function useNotificationScheduler(signedIn: boolean): void {
       }
 
       if (prefs.briefing && morningBriefing) {
-        planned.push({ key: 'briefing', title: 'Your Apex briefing', body: 'Tap to see your day.', at: nextAt(prefs.time, now), tab: 'assistant', daily: true })
+        planned.push({ key: 'briefing', title: 'Your Volita briefing', body: 'Tap to see your day.', at: nextAt(prefs.time, now), tab: 'assistant', daily: true })
       }
       if (prefs.followUps && followUps) {
         const waiting = (await fetchBriefing(Intl.DateTimeFormat().resolvedOptions().timeZone)).followUps?.length ?? 0

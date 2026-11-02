@@ -50,9 +50,9 @@ function ActionChip({ action, onNavigate }: { action: AssistantAction; onNavigat
     <button
       type="button"
       onClick={() => onNavigate(config.tab)}
-      className="mt-2 inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1.5 text-xs font-semibold hover:border-violet-400/70"
+      className="mt-2 inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1.5 text-xs font-semibold hover:border-brand-400/70"
     >
-      <Icon className="size-3.5 text-violet-400" aria-hidden="true" />
+      <Icon className="size-3.5 text-brand-400" aria-hidden="true" />
       {config.text}
     </button>
   )
@@ -70,13 +70,13 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
     <section aria-labelledby="assistant-heading" className="flex flex-col items-center gap-5 text-center">
       <div className="animate-rise">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1 text-xs font-semibold backdrop-blur">
-          <Sparkles className="size-3.5 text-fuchsia-400" aria-hidden="true" />
+          <Sparkles className="size-3.5 text-ember-400" aria-hidden="true" />
           Hands-free assistant
         </p>
         <h1 id="assistant-heading" className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl">
           Just talk.
           <br />
-          <span className="text-gradient">Apex handles it.</span>
+          <span className="text-gradient">Volita handles it.</span>
         </h1>
       </div>
 
@@ -123,7 +123,7 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
               <p
                 className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[0.95rem] leading-relaxed whitespace-pre-wrap ${
                   line.role === 'user'
-                    ? 'bg-linear-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25'
+                    ? 'bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white shadow-lg shadow-ember-600/25'
                     : 'surface rounded-2xl!'
                 }`}
               >

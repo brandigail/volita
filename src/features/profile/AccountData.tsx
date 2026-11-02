@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Download, Trash2 } from 'lucide-react'
 import { authClient } from '../../lib/auth-client'
 
-/** Lets a person take a copy of everything Apex holds about them, or erase their account and all of it. */
+/** Lets a person take a copy of everything Volita holds about them, or erase their account and all of it. */
 export function AccountData() {
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +22,7 @@ export function AccountData() {
       const url = URL.createObjectURL(await response.blob())
       const link = document.createElement('a')
       link.href = url
-      link.download = 'apex-voice-my-data.json'
+      link.download = 'volita-my-data.json'
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -62,7 +62,7 @@ export function AccountData() {
             <Download className="size-4" aria-hidden="true" />
             {downloading ? 'Preparing…' : 'Download my data'}
           </button>
-          <p className="muted mt-2 text-xs">A single file with everything Apex holds about you, in a readable form.</p>
+          <p className="muted mt-2 text-xs">A single file with everything Volita holds about you, in a readable form.</p>
         </div>
 
         <div className="border-t border-(--line) pt-4">

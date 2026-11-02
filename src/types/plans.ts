@@ -30,7 +30,7 @@ export interface PlanLimits {
   sendAtReminders: boolean
   /** How many iCal calendars can be linked. */
   calendars: number
-  /** Free drafts carry a "Written with Apex Voice" line. */
+  /** Free drafts carry a "Written with Volita" line. */
   footer: boolean
   templates: boolean
   priceList: boolean
@@ -55,7 +55,7 @@ export interface Plan {
   limits: PlanLimits
 }
 
-export const FOOTER_TEXT = 'Written with Apex Voice'
+export const FOOTER_TEXT = 'Written with Volita'
 
 const LOCKED_CHANNELS: readonly DraftCategory[] = ['EMAIL', 'WHATSAPP', 'NOTE']
 
@@ -149,7 +149,7 @@ export const PLANS: readonly (Plan & { id: PaidPlanId })[] = [
       'Assistant that writes drafts, schedules sends and adds meetings: 30 turns a day',
       'Premium voice for 200 turns a month',
       'Memory for 25 notes and 25 people, templates, a price list and quote PDFs',
-      '"Send at" reminders, one linked calendar, no Apex footer',
+      '"Send at" reminders, one linked calendar, no Volita footer',
     ],
     limits: BASIC,
   },

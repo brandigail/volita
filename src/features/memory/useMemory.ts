@@ -5,7 +5,7 @@ import type { Contact, ContactInput, Memory, MemoryKind } from '../../types/memo
 
 const messageFrom = (err: unknown) => (err instanceof ApiRequestError ? err.message : 'Something went wrong. Please try again.')
 
-/** Loads what Apex remembers and offers add, edit and delete. Every change is confirmed by the server before it shows. */
+/** Loads what Volita remembers and offers add, edit and delete. Every change is confirmed by the server before it shows. */
 export function useMemory() {
   const [memories, setMemories] = useState<Memory[] | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])

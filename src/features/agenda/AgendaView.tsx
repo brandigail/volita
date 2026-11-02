@@ -81,9 +81,9 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         <button
           type="button"
           onClick={() => onNavigate('profile')}
-          className="surface mt-5 flex w-full items-center gap-3 p-4 text-left hover:border-violet-400/60"
+          className="surface mt-5 flex w-full items-center gap-3 p-4 text-left hover:border-brand-400/60"
         >
-          <Link2 className="size-5 shrink-0 text-violet-400" aria-hidden="true" />
+          <Link2 className="size-5 shrink-0 text-brand-400" aria-hidden="true" />
           <span className="text-sm">
             <span className="font-semibold">Link your calendar</span>
             <span className="muted block">Add its private iCal address in your profile and your meetings show up here.</span>
@@ -163,7 +163,7 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
                 <li key={item.id} className="surface flex items-center gap-3 p-3">
                   <span
                     className={`h-10 w-1 shrink-0 rounded-full ${
-                      item.source === 'calendar' ? 'bg-cyan-400' : item.source === 'draft' ? 'bg-amber-400' : 'bg-linear-to-b from-indigo-500 to-fuchsia-500'
+                      item.source === 'calendar' ? 'bg-lagoon-400' : item.source === 'draft' ? 'bg-amber-400' : 'bg-linear-to-b from-ember-700 to-ember-500'
                     }`}
                     aria-hidden="true"
                   />
@@ -174,7 +174,7 @@ export function AgendaView({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
                       {item.source === 'calendar' ? ' · from your calendar' : item.source === 'draft' ? ' · planned send' : ''}
                     </span>
                   </span>
-                  {item.source === 'apex' && (
+                  {item.source === 'volita' && (
                     <button
                       type="button"
                       onClick={() => void remove(item.id)}

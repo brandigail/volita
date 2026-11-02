@@ -42,7 +42,7 @@ export function AuthScreen() {
 
   return (
     <section aria-labelledby="auth-heading" className="mx-auto max-w-sm text-center">
-      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-xl shadow-violet-500/40">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white shadow-xl shadow-ember-600/40">
         <AudioWaveform className="size-8" aria-hidden="true" />
       </span>
       <h1 id="auth-heading" className="mt-5 text-3xl font-extrabold tracking-tight">
@@ -135,7 +135,7 @@ export function AuthScreen() {
         <button
           type="button"
           onClick={switchMode}
-          className="font-semibold text-violet-500 underline hover:text-fuchsia-400"
+          className="font-semibold text-brand-700 dark:text-brand-400 underline hover:text-ember-400"
         >
           {signingUp ? 'Sign in' : 'Create an account'}
         </button>

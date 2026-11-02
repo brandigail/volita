@@ -1,4 +1,4 @@
-# Apex Voice: security and privacy review
+# Volita: security and privacy review
 
 Written 2026-10-26 from the code and the live system, not from memory. Everything marked "checked" was run against the real site or database that day. This document says what is protected, what is **not**, and where to look to verify each claim yourself.
 
@@ -11,11 +11,11 @@ Written 2026-10-26 from the code and the live system, not from memory. Everythin
 | What | Where | Who could read it | Protection | Kept for |
 |---|---|---|---|---|
 | Name, email, **password** | Neon database (Amazon Web Services, Ohio, USA) | Anyone with database access | The password is stored only as a salted one-way hash (scrypt). It cannot be read back, even by us. | Until the account is deleted (there is no delete button yet) |
-| **Drafts** (recipient, subject, text, the transcript of what was said) | Neon database | Anyone with database access | Encrypted on disk by Neon (AES-256). **From the next deploy also encrypted by Apex itself** (see the status above); until then it is plain text to anyone who can open the database | Until you delete it |
+| **Drafts** (recipient, subject, text, the transcript of what was said) | Neon database | Anyone with database access | Encrypted on disk by Neon (AES-256). **From the next deploy also encrypted by Volita itself** (see the status above); until then it is plain text to anyone who can open the database | Until you delete it |
 | **Assistant conversations** | Neon database | Same | Same | Latest 1,000 messages per person, or until deleted |
 | Agenda items, profile, **calendar link** | Neon database | Same | Same. The calendar link works like a password to the whole calendar and is stored as plain text | Until changed or removed |
-| Subscription and payments | Neon database | Same | Only plan, amount, status and PayFast's payment reference. **No card numbers ever touch Apex** (PayFast handles those) | |
-| **Voice recordings** | Not stored by Apex. Held in the phone or browser's memory, sent to Groq to turn into text, then discarded | | Sent over HTTPS | Not kept on our side |
+| Subscription and payments | Neon database | Same | Only plan, amount, status and PayFast's payment reference. **No card numbers ever touch Volita** (PayFast handles those) | |
+| **Voice recordings** | Not stored by Volita. Held in the phone or browser's memory, sent to Groq to turn into text, then discarded | | Sent over HTTPS | Not kept on our side |
 | **Text sent to the AI** (what was said, drafts, the assistant's questions, agenda and draft contents it looks up) | Groq, USA | Groq | HTTPS. See section 3 | See section 3 |
 | App code and the server functions | Netlify (Ohio, USA) | You | HTTPS | |
 | Server logs | Netlify | You | See gap G3: a log line can contain message fragments | Netlify's log retention |
@@ -64,7 +64,7 @@ Neon says it encrypts customer data at rest with AES-256 and enforces TLS 1.2+ i
 
 | # | Gap | Why it matters | Fix | Effort |
 |---|---|---|---|---|
-| G1 | Messages, transcripts and the calendar link are stored as plain text in the database | Anyone who gets the database address, or Neon or Netlify account access, can read clients' information. Disk encryption does not stop that | Encrypt the sensitive fields inside Apex before saving (AES-256-GCM, key kept only in the server's settings, one key per person) | 1 day |
+| G1 | Messages, transcripts and the calendar link are stored as plain text in the database | Anyone who gets the database address, or Neon or Netlify account access, can read clients' information. Disk encryption does not stop that | Encrypt the sensitive fields inside Volita before saving (AES-256-GCM, key kept only in the server's settings, one key per person) | 1 day |
 | G2 | No browser security headers except HSTS (checked live): no Content-Security-Policy, no clickjacking protection, no content-type protection, no referrer policy, no microphone/camera permission policy | A bug elsewhere would be easier to exploit. Standard hardening | Add them in `netlify.toml` | 1 hour (needs a deploy to take effect) |
 | G3 | When the AI service rejects a request, the server logs its reply, which can contain fragments of the message (see [groq-chat.ts](netlify/functions/_lib/groq-chat.ts), also `transcribe.ts`, `speak.ts`) | Client names or prices could end up in Netlify's logs | Log only the status and error code | 30 minutes |
 | G4 | No password reset, no email check at sign-up, no two-step login | A forgotten password locks someone out for good; a stolen password has no second barrier | Email reset links (needs the email service), optional authenticator-app login | 1 day |
@@ -91,7 +91,7 @@ Reading a client's email is the most sensitive thing this app could do, so these
 ## 6. How to check this yourself
 
 - Open the files linked above; each is short and commented.
-- Security headers: `curl -I https://apex-voice-app.netlify.app` (you will see only the HSTS line).
+- Security headers: `curl -I https://volita.netlify.app` (you will see only the HSTS line).
 - Who can access the data: the Neon console (database), Netlify (settings and logs), Groq console (data controls).
 - Search the git history for secrets: `git log --all -p | grep -E "gsk_|postgres://"` (should print nothing).
 - Packages: `npm audit --omit=dev`.

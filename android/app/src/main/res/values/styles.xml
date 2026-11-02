@@ -14,7 +14,7 @@
         <item name="android:background">@null</item>
     </style>
 
-    <!-- Dark splash with the Apex mark, matching the app's own background so there is no white flash. -->
+    <!-- Dark splash with the Volita mark, matching the app's own background so there is no white flash. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#07060F</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>

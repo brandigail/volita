@@ -23,7 +23,7 @@ export function UsageMeter({ kind }: UsageMeterProps) {
       title="Counted over the last 24 hours"
     >
       <span className="h-1.5 w-12 overflow-hidden rounded-full bg-(--line)" aria-hidden="true">
-        <span className="block h-full rounded-full bg-linear-to-r from-indigo-500 to-fuchsia-500" style={{ width: `${Math.min(100, (used / Math.max(1, limit)) * 100)}%` }} />
+        <span className="block h-full rounded-full bg-linear-to-r from-ember-700 to-ember-500" style={{ width: `${Math.min(100, (used / Math.max(1, limit)) * 100)}%` }} />
       </span>
       {left} of {limit} {noun} left
     </p>

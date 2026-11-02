@@ -16,7 +16,7 @@ function idFrom(req: Request): string | null {
   return id?.replace(/\.html?$/, '') ?? null
 }
 
-/** What Apex remembers about the signed-in person: read it, add to it, correct it or delete it. */
+/** What Volita remembers about the signed-in person: read it, add to it, correct it or delete it. */
 export default async function handler(req: Request): Promise<Response> {
   const session = await requireUser(req)
   if (!session.ok) return session.response

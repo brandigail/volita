@@ -20,11 +20,11 @@ export interface TourStep {
 export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Apex Voice',
-    summary: 'Talk instead of type. Apex turns what you say into a finished message, and keeps track of your day.',
+    title: 'Welcome to Volita',
+    summary: 'Talk instead of type. Volita turns what you say into a finished message, and keeps track of your day.',
     icon: Sparkles,
-    from: '#6366f1',
-    to: '#d946ef',
+    from: '#17a090',
+    to: '#f2693f',
     points: [
       'Record a message for email, a quote, WhatsApp, SMS or a social post.',
       'Talk to your assistant while you work. It answers you out loud.',
@@ -35,12 +35,12 @@ export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'record',
     title: 'Record a message',
-    summary: 'Say what you want to send. Apex writes it properly.',
+    summary: 'Say what you want to send. Volita writes it properly.',
     icon: Mic,
     from: '#22c55e',
     to: '#14b8a6',
     points: [
-      '1. Pick where it is going: Email, Quote, WhatsApp, SMS… Apex writes it in the right style. WhatsApp is a friendly chat message, an email gets a subject line and your signature.',
+      '1. Pick where it is going: Email, Quote, WhatsApp, SMS… Volita writes it in the right style. WhatsApp is a friendly chat message, an email gets a subject line and your signature.',
       '2. Tap the big round button and speak. You can talk for up to 5 minutes and pause whenever you like.',
       '3. Tap it again to stop. In a few seconds your draft appears. Change anything you want.',
       '4. Send it with "Open in mail", WhatsApp or SMS, or tap Copy.',
@@ -56,7 +56,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     from: '#38bdf8',
     to: '#3b82f6',
     points: [
-      'Under the record button, "I will speak" tells Apex which language you are using. Naming it, for example Afrikaans, makes it hear you much better.',
+      'Under the record button, "I will speak" tells Volita which language you are using. Naming it, for example Afrikaans, makes it hear you much better.',
       '"Write it in" is the language of the finished message. Speak English and send Afrikaans, or the other way round. Names and prices stay exactly as you said them.',
       'The sign-off changes too, for example "Vriendelike groete".',
       'Zulu and Xhosa can be written but not understood when spoken yet.',
@@ -73,7 +73,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     points: [
       'Every draft is saved automatically. You will find it in History.',
       'Set a "Send at" time on a draft. It then shows on your Agenda as a reminder, and turns red if it is overdue.',
-      'Apex never sends anything by itself. You press send when you are ready.',
+      'Volita never sends anything by itself. You press send when you are ready.',
       'Tap "Mark as sent" once it has gone. Then the assistant can tell you what is still waiting, and you can look at the "To send" list in History.',
     ],
     show: { tab: 'history', target: 'history-tabs', label: 'Show me History' },
@@ -83,8 +83,8 @@ export const TOUR_STEPS: readonly TourStep[] = [
     title: 'Your hands-free assistant',
     summary: 'Just talk. It waits until you have finished, then answers out loud.',
     icon: Sparkles,
-    from: '#6366f1',
-    to: '#8b5cf6',
+    from: '#17a090',
+    to: '#e89a0c',
     points: [
       'Tap the glowing circle, allow the microphone, and speak naturally. Take your time: it only answers once you stop.',
       'It can tell you what is on your agenda, check whether you already sent a quote, write a draft, add a meeting or set a send time.',
@@ -101,7 +101,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     summary: 'Your meetings and reminders in one place.',
     icon: CalendarDays,
     from: '#38bdf8',
-    to: '#6366f1',
+    to: '#17a090',
     points: [
       'Add things by typing here, or just tell the assistant "add a meeting tomorrow at ten".',
       'Connect your own calendar in Profile (Google, Outlook or Apple) and your real meetings appear here, in blue.',
@@ -114,8 +114,8 @@ export const TOUR_STEPS: readonly TourStep[] = [
     title: 'History',
     summary: 'Everything you have made, and everything you have said to the assistant.',
     icon: History,
-    from: '#a855f7',
-    to: '#ec4899',
+    from: '#f7b32b',
+    to: '#ff8a68',
     points: [
       'Drafts: search by a name, or filter by type. "To send" shows what is waiting, soonest first. "Sent" shows what has gone.',
       'Tap a draft to read it, copy it, change when to send it, or delete it.',
@@ -129,7 +129,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     summary: 'A minute here makes every message sound like you.',
     icon: UserRound,
     from: '#f43f5e',
-    to: '#d946ef',
+    to: '#f2693f',
     points: [
       'Your name, phone and business are used to sign your emails and quotes. The business name is optional if you are not a business.',
       'Connect your calendar, and choose how the assistant sounds. Try the voices with "Hear it" on the Assistant screen.',
@@ -140,10 +140,10 @@ export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'plans',
     title: 'Your plan',
-    summary: 'Apex has Free, Basic and Pro. The little badge at the top shows yours.',
+    summary: 'Volita has Free, Basic and Pro. The little badge at the top shows yours.',
     icon: Crown,
-    from: '#a855f7',
-    to: '#ec4899',
+    from: '#f7b32b',
+    to: '#ff8a68',
     points: [
       'The counter on the Record and Assistant screens shows how much you have left in the last 24 hours.',
       'A lock means the feature is part of a bigger plan. Nothing you saved is ever deleted if a plan changes.',
@@ -153,13 +153,13 @@ export const TOUR_STEPS: readonly TourStep[] = [
   {
     id: 'notifications',
     title: 'Pop-up reminders',
-    summary: 'Apex can nudge you when it is time to send something, before meetings, and with a morning briefing.',
+    summary: 'Volita can nudge you when it is time to send something, before meetings, and with a morning briefing.',
     icon: Bell,
     from: '#f59e0b',
     to: '#ef4444',
     points: [
       'Turn them on under Notifications on your profile, and use the test button to check they appear.',
-      'On the Android app they arrive even when Apex is closed.',
+      'On the Android app they arrive even when Volita is closed.',
     ],
     show: { tab: 'profile', target: 'notifications', label: 'Show me notifications' },
   },
@@ -181,7 +181,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     title: 'Tell us what you think',
     summary: 'You are one of the first people to use this, so your opinion really matters.',
     icon: MessageSquareHeart,
-    from: '#f472b6',
+    from: '#ff8a68',
     to: '#f43f5e',
     points: ['What was easy? What was slow or confusing? What is missing? Write anything below, even one line.'],
   },

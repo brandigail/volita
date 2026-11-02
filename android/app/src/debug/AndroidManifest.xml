@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <!-- Debug (test) builds only: let the app talk to the developer's computer over the USB cable (http://localhost:8888). -->
     <application
-        android:label="Apex Voice (test)"
+        android:label="Volita (test)"
         android:usesCleartextTraffic="true"
         tools:replace="android:label" />
 </manifest>

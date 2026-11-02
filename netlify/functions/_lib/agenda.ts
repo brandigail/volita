@@ -23,7 +23,7 @@ function toItem(userId: string, row: AgendaRow): AgendaItem {
     endsAt: row.ends_at ? new Date(row.ends_at).toISOString() : null,
     notes: openText(userId, 'agenda_items.notes', row.notes),
     allDay: false,
-    source: 'apex',
+    source: 'volita',
   }
 }
 
@@ -56,7 +56,7 @@ function dueDraftItem(userId: string, row: DueDraftRow): AgendaItem {
   }
 }
 
-/** Apex items plus, when the user linked one, events from their calendar, soonest first. */
+/** Volita items plus, when the user linked one, events from their calendar, soonest first. */
 export async function listAgenda(userId: string, calendarUrl: string, from: Date, to: Date): Promise<AgendaResponse> {
   const sql = neon(process.env.DATABASE_URL ?? '')
   const [rows, dueDrafts, calendar] = await Promise.all([

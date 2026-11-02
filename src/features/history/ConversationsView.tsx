@@ -96,7 +96,7 @@ export function ConversationsView() {
               <li key={conversation.id} className="surface animate-rise overflow-hidden">
                 <details className="group">
                   <summary className="flex items-start gap-3 p-4">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-fuchsia-500 text-white shadow-md">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-ember-700 to-ember-500 text-white shadow-md">
                       <MessagesSquare className="size-5" aria-hidden="true" />
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -111,7 +111,7 @@ export function ConversationsView() {
                       <div key={index} className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <p
                           className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                            message.role === 'user' ? 'bg-linear-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white' : 'bg-(--surface) border border-(--line)'
+                            message.role === 'user' ? 'bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white' : 'bg-(--surface) border border-(--line)'
                           }`}
                         >
                           {message.content}

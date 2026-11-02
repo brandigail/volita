@@ -79,7 +79,7 @@ export function RecordView({ onNavigate }: RecordViewProps) {
     <section aria-labelledby="record-heading" className="flex flex-col items-center gap-6 text-center">
       <div className="animate-rise">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1 text-xs font-semibold backdrop-blur">
-          <Sparkles className="size-3.5 text-fuchsia-400" aria-hidden="true" />
+          <Sparkles className="size-3.5 text-ember-400" aria-hidden="true" />
           Voice in, finished message out
         </p>
         <h1 id="record-heading" className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl">

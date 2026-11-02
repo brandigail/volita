@@ -1,6 +1,6 @@
-/** One thing on the user's schedule: typed in Apex (or dictated to the assistant) or read from their linked calendar. */
+/** One thing on the user's schedule: typed in Volita (or dictated to the assistant) or read from their linked calendar. */
 export interface AgendaItem {
-  /** Calendar events get a synthetic id; only Apex items can be deleted. */
+  /** Calendar events get a synthetic id; only Volita items can be deleted. */
   id: string
   title: string
   /** ISO 8601, always with an offset. */
@@ -10,7 +10,7 @@ export interface AgendaItem {
   /** True for all-day calendar events, which have no meaningful clock time. */
   allDay: boolean
   /** "draft" items are saved drafts with a planned send time that are not sent yet. */
-  source: 'apex' | 'calendar' | 'draft'
+  source: 'volita' | 'calendar' | 'draft'
 }
 
 export interface AgendaResponse {

@@ -163,7 +163,7 @@ export function SubscriptionSection() {
   return (
     <section aria-labelledby="subscription-heading" className="mt-10">
       <h2 id="subscription-heading" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-        <Sparkles className="size-6 text-fuchsia-400" aria-hidden="true" />
+        <Sparkles className="size-6 text-ember-400" aria-hidden="true" />
         Subscription
       </h2>
       <p className="muted mt-1 text-sm">Preview, visible only to your account.</p>
@@ -181,7 +181,7 @@ export function SubscriptionSection() {
         </p>
       )}
       {waiting && (
-        <p role="status" className="mt-3 rounded-xl border border-violet-500/40 bg-violet-500/10 p-3 text-sm">
+        <p role="status" className="mt-3 rounded-xl border border-brand-500/40 bg-brand-500/10 p-3 text-sm">
           Thanks! Waiting for PayFast to confirm your payment…
         </p>
       )}

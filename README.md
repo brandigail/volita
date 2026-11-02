@@ -1,8 +1,10 @@
-# Apex Voice
+# Volita
 
-Talk to your business. Apex Voice turns a spoken note into a finished email, quote, WhatsApp, SMS or social post, and doubles as a hands-free voice assistant that knows your agenda and what you have already sent. It runs in the browser (installable PWA) and as an Android app.
+Talk to your business. Volita turns a spoken note into a finished email, quote, WhatsApp, SMS or social post, and doubles as a hands-free voice assistant that knows your agenda and what you have already sent. It runs in the browser (installable PWA) and as an Android app.
 
-**Live demo:** https://apex-voice-app.netlify.app
+**Live demo:** https://volita.netlify.app
+
+> **Naming note:** the product was renamed from "Apex Voice" to Volita. One thing keeps the old name on purpose: the data-encryption salt (`netlify/functions/_lib/crypto.ts`), because changing it would make every saved draft unreadable.
 
 ## What to demo to a recruiter
 1. **Record for a channel.** Pick WhatsApp, Instagram, Quote and so on, say what you want, and get a draft written in that channel's style (a casual chat message, a caption with hashtags, a priced quote with your signature).
@@ -14,7 +16,7 @@ Talk to your business. Apex Voice turns a spoken note into a finished email, quo
 - Eight channels: email, quote, WhatsApp, SMS, Instagram, Facebook, TikTok, note
 - Voice assistant with tool calling (agenda, draft search, create draft, mark as sent), silence-based turn taking, spoken replies (Groq Orpheus) with a browser-voice fallback
 - Personal memory: the assistant remembers preferences, facts and people between conversations (`remember`, `save_contact`, `recall`, `forget` tools). Only what is relevant to each request is added to the prompt, drafts use it (a saved contact fills in the recipient's email or phone), everything is encrypted at rest, and a Profile section lets the user read, edit and delete it
-- Agenda: items added in Apex or by voice, plus a read-only link to a private iCal calendar (Google, Outlook, Apple)
+- Agenda: items added in Volita or by voice, plus a read-only link to a private iCal calendar (Google, Outlook, Apple)
 - Per-user accounts (Better Auth, email and password on Neon), profile and automatic signature, draft history with search, filter and "sent" tracking
 - Send options: default mail app, Gmail, Outlook, Yahoo, SMS, WhatsApp, device share sheet
 - PWA with update prompt, light and dark themes, Android app (Capacitor)
@@ -24,12 +26,12 @@ Talk to your business. Apex Voice turns a spoken note into a finished email, quo
 - A subscription preview, switched on per account with `FEATURE_SUBSCRIPTIONS`: plans with live currency conversion and PayFast checkout (sandbox by default), payment confirmation via PayFast's signed notifications, cancel, and a confirmation email
 - A guided tour (opens on first sign-in, reopened by the "?" button) with a step for each part, example sentences, a "Show me" button that highlights the real control, and a feedback box whose notes are saved for the owner
 - Per-user rate limits and daily quotas, with a tighter cap for the assistant, to protect the free Groq quota
-- Three plans (Free, Basic $5, Pro $12), enforced on the server only (`src/types/plans.ts` holds every limit, `netlify/functions/_lib/plan.ts` decides who is on which plan): draft and assistant limits, recording length, channels, languages, assistant tools, memory caps, history length, calendars, a monthly premium-voice pool counted per assistant turn, and a "Written with Apex Voice" footer on Free. A downgrade locks features but never deletes data. Billing is not open yet: the owner gives plans out by hand
+- Three plans (Free, Basic $5, Pro $12), enforced on the server only (`src/types/plans.ts` holds every limit, `netlify/functions/_lib/plan.ts` decides who is on which plan): draft and assistant limits, recording length, channels, languages, assistant tools, memory caps, history length, calendars, a monthly premium-voice pool counted per assistant turn, and a "Written with Volita" footer on Free. A downgrade locks features but never deletes data. Billing is not open yet: the owner gives plans out by hand
 - A family screen (owner only, `OWNER_EMAILS`) to choose who gets Basic or Pro for free, plus a usage meter, a plan chip and upgrade prompts instead of errors
 - Pop-up notifications: Android local notifications (high-importance channel, work with the app closed) for send-at reminders, meetings, a daily briefing and unanswered-quote nudges, with per-type switches and a test button; in a browser they work while the app is open
 - Pro habit features: a morning briefing, rewrite in a different tone, and writing style learned from the drafts you edit before sending. Basic and up: saved templates, a price list used on quotes (the assistant asks when a price is missing), quote as PDF, photo to caption, follow-up nudges for unanswered quotes, and a one-tap WhatsApp list for tomorrow
 - Memory is tagged "you said" or "I guessed"; guessed items can be confirmed or corrected
-- Share a customer's message (or a WhatsApp voice note, on Android) into Apex to get a drafted reply; a three-question welcome for new accounts
+- Share a customer's message (or a WhatsApp voice note, on Android) into Volita to get a drafted reply; a three-question welcome for new accounts
 
 ## Stack
 React 19, Vite, TypeScript (strict), Tailwind CSS v4, zod, vite-plugin-pwa, Netlify Functions, Neon Postgres, Better Auth, Groq (Whisper, `openai/gpt-oss` for the assistant, Qwen for drafts, Orpheus for speech), Capacitor (Android).
@@ -66,13 +68,13 @@ npm run build && npx cap sync android
 cd android
 # debug build
 ./gradlew assembleDebug
-# signed release build (needs ~/.apex-voice-signing/keystore.properties, never committed)
+# signed release build (needs ~/.volita-signing/keystore.properties, never committed)
 ./gradlew assembleRelease
 ```
 Install the release APK by copying it to the phone and opening it (allow "install unknown apps" for your file manager or browser). The first conversation asks for microphone and notification permission. iPhone users use the web app.
 
 ## Android test build (USB)
-The release app loads the live site, so new features reach it only after a deploy. To try changes first, plug the phone in (USB debugging on) and run `scripts/phone-test.ps1`: it builds a separate "Apex Voice (test)" app that talks to the dev server on the computer over the cable, and installs it next to the real one.
+The release app loads the live site, so new features reach it only after a deploy. To try changes first, plug the phone in (USB debugging on) and run `scripts/phone-test.ps1`: it builds a separate "Volita (test)" app that talks to the dev server on the computer over the cable, and installs it next to the real one.
 
 ## Phase 2
-Paid plans and billing (PayFast live merchant, upgrade and cancel, yearly prices), web push for closed-browser reminders, send from inside Apex (Gmail API or Resend), inbox awareness, payment links on quotes, offline queue, iOS app.
+Paid plans and billing (PayFast live merchant, upgrade and cancel, yearly prices), web push for closed-browser reminders, send from inside Volita (Gmail API or Resend), inbox awareness, payment links on quotes, offline queue, iOS app.

@@ -1,12 +1,12 @@
 import { Capacitor, registerPlugin } from '@capacitor/core'
 
-interface ApexListeningPlugin {
+interface VolitaListeningPlugin {
   start: () => Promise<{ running: boolean }>
   stop: () => Promise<{ running: boolean }>
 }
 
 /** Implemented in android/ (ListeningService). It only exists inside the Android app, never in a browser. */
-const Native = registerPlugin<ApexListeningPlugin>('ApexListening')
+const Native = registerPlugin<VolitaListeningPlugin>('VolitaListening')
 
 export const isAndroidApp = Capacitor.getPlatform() === 'android'
 

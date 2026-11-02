@@ -45,13 +45,13 @@ export interface DraftRequest {
   /** A language code to write in, or "same" / undefined to write in the language that was spoken. */
   writeLanguage?: string
   spokenLanguage?: string
-  /** What Apex remembers that is relevant to this dictation (see loadMemoryContext), or empty. */
+  /** What Volita remembers that is relevant to this dictation (see loadMemoryContext), or empty. */
   memory?: string
   /** The user's saved prices, for quotes. */
   prices?: string
   /** A tone id from tones.ts to rewrite in. */
   tone?: string
-  /** Free plan: add the "Written with Apex Voice" footer. */
+  /** Free plan: add the "Written with Volita" footer. */
   footer?: boolean
   /** A photo (data URL) the draft should be about, for photo-to-caption. */
   image?: string

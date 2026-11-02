@@ -61,7 +61,7 @@ const PROVIDERS: readonly Provider[] = [
     id: 'other',
     name: 'Something else',
     steps: ['Most calendar apps can publish a private address ending in .ics.', 'Copy that address.'],
-    accent: '#8b5cf6',
+    accent: '#e89a0c',
   },
 ]
 
@@ -81,7 +81,7 @@ function googleSettingsUrl(email: string): string {
 }
 
 interface CalendarConnectProps {
-  /** The email the user signed up to Apex with; used as the starting guess for their Google account. */
+  /** The email the user signed up to Volita with; used as the starting guess for their Google account. */
   accountEmail: string
 }
 
@@ -215,7 +215,7 @@ export function CalendarConnect({ accountEmail }: CalendarConnectProps) {
             <h2 id="calendar-dialog-title" className="text-xl font-bold">
               {provider ? provider.name : 'Which calendar do you use?'}
             </h2>
-            <button type="button" onClick={close} aria-label="Close" className="inline-flex size-9 items-center justify-center rounded-full hover:bg-violet-500/15">
+            <button type="button" onClick={close} aria-label="Close" className="inline-flex size-9 items-center justify-center rounded-full hover:bg-brand-500/15">
               <X className="size-5" aria-hidden="true" />
             </button>
           </div>
@@ -227,7 +227,7 @@ export function CalendarConnect({ accountEmail }: CalendarConnectProps) {
                   key={option.id}
                   type="button"
                   onClick={() => setProvider(option)}
-                  className="surface flex flex-col items-start gap-2 p-4 text-left font-semibold hover:border-violet-400/70"
+                  className="surface flex flex-col items-start gap-2 p-4 text-left font-semibold hover:border-brand-400/70"
                 >
                   <span className="size-3 rounded-full" style={{ background: option.accent }} aria-hidden="true" />
                   {option.name}

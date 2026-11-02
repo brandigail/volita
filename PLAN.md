@@ -1,4 +1,4 @@
-# Apex Voice: Build Plan
+# Volita: Build Plan
 
 - [x] 1. Scaffold Vite React TS, Tailwind v4 plugin, lucide-react, zod, `.env.example`, `.gitignore`, `netlify.toml`
 - [x] 2. Provider setup in `main.tsx`; layout, theme, mobile-first shell
@@ -24,7 +24,7 @@
 - [x] A1. Channel picker before recording (email, quote, WhatsApp, SMS, Instagram, Facebook, TikTok, note) and a redesign
 - [x] A2. `assistant` function with tool calling: agenda, drafts, sent state, create draft; own model and token budget
 - [x] A3. `speak` function (Groq Orpheus voice) with browser-voice fallback; hands-free listener with silence detection
-- [x] A4. Agenda tab (Apex items plus linked iCal calendar) and "Mark as sent"
+- [x] A4. Agenda tab (Volita items plus linked iCal calendar) and "Mark as sent"
 - [x] A5. Groq accepts the Orpheus terms (console), then tune the voice and reply speed on the live site
 - [x] A6. Android app (Capacitor shell, foreground microphone service, signed release APK); iPhone stays on the web app
 
@@ -40,7 +40,7 @@
 - [ ] B8. One-tap calendar sign-in with Google or Microsoft (needs OAuth credentials)
 
 ## Personal assistant memory (added 2026-10-28)
-- [x] C1. `memories` and `contacts` tables (encrypted text, per user), store, REST functions and a "What Apex knows about you" section on the Profile tab
+- [x] C1. `memories` and `contacts` tables (encrypted text, per user), store, REST functions and a "What Volita knows about you" section on the Profile tab
 - [x] C2. Assistant tools `remember`, `save_contact`, `recall`, `forget`; relevant memory is added to the assistant prompt on every turn
 - [x] C3. Drafts use preferences and saved people (recipient email or phone filled in from a saved contact)
 - [ ] C4. Check on a real phone and with dad's real wording; tune the prompts
@@ -57,8 +57,8 @@
 - [x] D5. Pop-up notifications: Android local notifications, Settings toggles with test button, in-app reminders on web
 - [ ] D6. (postponed by Brandon) Billing: B7b merchant, live mode, legal pages, upgrade / downgrade (lock, never delete) / cancel, annual plans
 - [x] D7. Pro habit features: C6, tone regenerate, C5, templates, price list, quote to PDF, WhatsApp list
-- [~] D8. Later (photo to caption, share into Apex and follow-up nudges are built; the rest waits): photo to caption, share into Apex (Android), follow-up nudges, web push, send from Apex, C7, payment links
+- [~] D8. Later (photo to caption, share into Volita and follow-up nudges are built; the rest waits): photo to caption, share into Volita (Android), follow-up nudges, web push, send from Volita, C7, payment links
 
 ## Phase 2
-- Send from inside Apex (Gmail API as the user, or Resend free tier with reply-to)
+- Send from inside Volita (Gmail API as the user, or Resend free tier with reply-to)
 - Offline queue, re-generate with a different tone, team or shared business profiles

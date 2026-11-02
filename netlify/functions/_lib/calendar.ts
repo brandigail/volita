@@ -131,7 +131,7 @@ function expand(event: VEvent, from: Date, to: Date): AgendaItem[] {
 /**
  * Google exports "repeats every year" birthdays as FREQ=YEARLY with a day of the month but no month. Read strictly,
  * that means the 14th of EVERY month, yet Google itself (and the person who made the event) means once a year, in
- * the month the event starts. Add that month so Apex agrees with Google.
+ * the month the event starts. Add that month so Volita agrees with Google.
  */
 function withYearlyMonth(text: string): string {
   return text.replace(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g, (block) => {

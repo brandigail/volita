@@ -1,4 +1,4 @@
-package com.brandigail.apexvoice;
+package com.brandigail.volita;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -23,7 +23,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        registerPlugin(ApexListeningPlugin.class);
+        registerPlugin(VolitaListeningPlugin.class);
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         if (isShare(intent)) {
@@ -53,16 +53,16 @@ public class MainActivity extends BridgeActivity {
             String text = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (text != null && !text.trim().isEmpty()) {
                 String quoted = JSONObject.quote(text);
-                script = "window.__apexShared={kind:'text',text:" + quoted + "};"
-                    + "window.dispatchEvent(new CustomEvent('apex:shared-text',{detail:" + quoted + "}));";
+                script = "window.__volitaShared={kind:'text',text:" + quoted + "};"
+                    + "window.dispatchEvent(new CustomEvent('volita:shared-text',{detail:" + quoted + "}));";
             }
         } else if (type.startsWith("audio/")) {
             Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
             String base64 = uri == null ? null : readBase64(uri);
             if (base64 != null) {
                 String mime = JSONObject.quote(type);
-                script = "window.__apexShared={kind:'audio',mimeType:" + mime + ",base64:'" + base64 + "'};"
-                    + "window.dispatchEvent(new CustomEvent('apex:shared-audio',{detail:{mimeType:" + mime + ",base64:'" + base64 + "'}}));";
+                script = "window.__volitaShared={kind:'audio',mimeType:" + mime + ",base64:'" + base64 + "'};"
+                    + "window.dispatchEvent(new CustomEvent('volita:shared-audio',{detail:{mimeType:" + mime + ",base64:'" + base64 + "'}}));";
             }
         }
         if (script != null) webView.evaluateJavascript(script, null);

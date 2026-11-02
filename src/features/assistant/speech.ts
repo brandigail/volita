@@ -83,7 +83,7 @@ export type SpeechEngine = 'voice' | 'browser'
 type ClipName = 'sample' | 'greeting' | 'readback'
 const clipUrl = (voice: string, name: ClipName) => `/voice/${voice}/${name}.wav`
 
-const SAMPLE_TEXT = "Hi, I'm Apex. This is how I'll sound when we talk."
+const SAMPLE_TEXT = "Hi, I'm Volita. This is how I'll sound when we talk."
 let hostedPausedUntil = 0
 
 /** Speaks replies out loud: recorded clips for fixed phrases, the hosted natural voice for the rest, the device voice as a fallback. */

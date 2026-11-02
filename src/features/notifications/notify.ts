@@ -3,7 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications'
 import { NAVIGATE_EVENT } from './prefs'
 import type { Tab } from '../../components/TabBar'
 
-/** One notification Apex wants shown at a time. */
+/** One notification Volita wants shown at a time. */
 export interface PlannedNotification {
   /** Stable key: the same thing always gets the same id, so rebuilding the schedule never doubles it. */
   key: string
@@ -19,7 +19,7 @@ export interface PlannedNotification {
 export type PermissionState = 'granted' | 'denied' | 'prompt' | 'unsupported'
 
 export const isNativeApp = Capacitor.isNativePlatform()
-const CHANNEL_ID = 'apex-reminders'
+const CHANNEL_ID = 'volita-reminders'
 /** Timers longer than this overflow, so the browser only schedules what is due within a day. */
 const MAX_TIMER_MS = 24 * 60 * 60 * 1000
 
@@ -39,6 +39,22 @@ async function ensureChannel(plugin: typeof LocalNotifications): Promise<void> {
   await plugin.createChannel({ id: CHANNEL_ID, name: 'Reminders', description: 'Send reminders, meetings and your briefing', importance: 5, visibility: 1, vibration: true })
 }
 
+/**
+ * Whether Android lets Volita fire reminders at the exact minute. When it does not, scheduling an exact reminder makes
+ * Android open its "Alarms & reminders" screen and wait there, so every schedule call asks this first and only
+ * requests exact times when they are allowed.
+ */
+export async function exactAlarmsAllowed(): Promise<boolean> {
+  if (!isNativeApp) return true
+  const exact = await LocalNotifications.checkExactNotificationSetting().catch(() => null)
+  return exact === null || exact.exact_alarm === 'granted'
+}
+
+/** Opens Android's "Alarms & reminders" screen for Volita. Call from a tap. */
+export async function askForExactAlarms(): Promise<void> {
+  if (isNativeApp) await LocalNotifications.changeExactNotificationSetting().catch(() => undefined)
+}
+
 export async function permissionState(): Promise<PermissionState> {
   if (isNativeApp) {
     const { display } = await LocalNotifications.checkPermissions()
@@ -56,8 +72,7 @@ export async function requestPermission(): Promise<PermissionState> {
     if (display === 'granted') {
       await ensureChannel(plugin).catch(() => undefined)
       // Android 12 and up needs this switch for reminders to arrive on time.
-      const exact = await plugin.checkExactNotificationSetting().catch(() => null)
-      if (exact && exact.exact_alarm !== 'granted') await plugin.changeExactNotificationSetting().catch(() => undefined)
+      if (!(await exactAlarmsAllowed())) await askForExactAlarms()
     }
     return display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'prompt'
   }
@@ -72,7 +87,9 @@ export async function showNow(title: string, body: string): Promise<void> {
     const plugin = LocalNotifications
     await ensureChannel(plugin)
     await plugin.schedule({
-      notifications: [{ id: idFor(`test-${Date.now()}`), title, body, channelId: CHANNEL_ID, schedule: { at: new Date(Date.now() + 1_000), allowWhileIdle: true } }],
+      notifications: [
+        { id: idFor(`test-${Date.now()}`), title, body, channelId: CHANNEL_ID, isExactNotification: await exactAlarmsAllowed(), schedule: { at: new Date(Date.now() + 1_000), allowWhileIdle: true } },
+      ],
     })
     return
   }
@@ -89,7 +106,7 @@ async function showWeb(title: string, body: string): Promise<void> {
 let webTimers: number[] = []
 
 /**
- * Replaces everything scheduled with this list. On the phone app the system delivers them even when Apex is closed.
+ * Replaces everything scheduled with this list. On the phone app the system delivers them even when Volita is closed.
  * In a browser they can only fire while the page is open (full web push needs a push service, which is not set up).
  */
 export async function schedule(planned: PlannedNotification[]): Promise<void> {
@@ -99,12 +116,14 @@ export async function schedule(planned: PlannedNotification[]): Promise<void> {
     const pending = await plugin.getPending()
     if (pending.notifications.length > 0) await plugin.cancel({ notifications: pending.notifications })
     if (planned.length === 0) return
+    const exact = await exactAlarmsAllowed()
     await plugin.schedule({
       notifications: planned.map((item) => ({
         id: idFor(item.key),
         title: item.title,
         body: item.body,
         channelId: CHANNEL_ID,
+        isExactNotification: exact,
         extra: { tab: item.tab },
         schedule: item.daily
           ? { on: { hour: item.at.getHours(), minute: item.at.getMinutes() }, allowWhileIdle: true }

@@ -6,7 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
  * Groq's free voice allows only 100 requests a day and about 15 seconds of speech a minute, so this goes slowly on purpose.
  */
 const CLIPS = {
-  sample: "Hi, I'm Apex. This is how I'll sound when we talk.",
+  sample: "Hi, I'm Volita. This is how I'll sound when we talk.",
   greeting: "Hi, I'm listening. What can I do for you?",
   readback: 'Would you like me to read you back your draft?',
 }

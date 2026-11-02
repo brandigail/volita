@@ -5,7 +5,7 @@ import { SpeechPlayer } from './speech'
 import { PATIENCE_OPTIONS, readStoredPatience, writeStoredPatience, type Patience } from './patience'
 import { VOICE_OPTIONS, readStoredVoice, writeStoredVoice, type VoiceChoice } from './voice'
 
-/** Lets the user choose how Apex sounds and hear it before starting a conversation. */
+/** Lets the user choose how Volita sounds and hear it before starting a conversation. */
 export function VoicePicker() {
   const [voice, setVoice] = useState<VoiceChoice>(readStoredVoice)
   const [patience, setPatience] = useState<Patience>(readStoredPatience)
@@ -40,7 +40,7 @@ export function VoicePicker() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
       <div className="flex-1">
         <label htmlFor="assistant-voice" className="mb-1.5 block text-sm font-semibold">
-          Apex's voice
+          Volita's voice
         </label>
         <select id="assistant-voice" value={voice} onChange={(e) => choose(e.target.value as VoiceChoice)} className="field">
           {VOICE_OPTIONS.map((option) => (

@@ -32,11 +32,11 @@ export function leadPhrase(minutes: number): string {
   return `${minutes} minutes`
 }
 
-const KEY = 'apex-voice-notification-prefs'
+const KEY = 'volita-notification-prefs'
 /** Fired when preferences change or the schedule needs rebuilding (a send time was set, a draft was sent). */
-export const RESCHEDULE_EVENT = 'apex:reschedule'
+export const RESCHEDULE_EVENT = 'volita:reschedule'
 /** Fired when tapping a notification should open a tab. */
-export const NAVIGATE_EVENT = 'apex:navigate'
+export const NAVIGATE_EVENT = 'volita:navigate'
 
 export function readPrefs(): NotificationPrefs {
   try {
