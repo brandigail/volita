@@ -2,7 +2,7 @@ import { extensionForMime } from '../../src/lib/audio-mime.ts'
 import type { TranscribeResponse } from '../../src/types/api.ts'
 import { AUTO, SPOKEN_CODES } from '../../src/types/languages.ts'
 import { transcriptionPrompt } from './_lib/draft-prompt.ts'
-import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
+import { errorResponse, json, upgradeResponse, warmUpResponse } from './_lib/http.ts'
 import { planLimits } from '../../src/types/plans.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
@@ -24,6 +24,8 @@ interface GroqTranscription {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  const warm = warmUpResponse(req)
+  if (warm) return warm
   if (req.method !== 'POST') return errorResponse(405, 'Method not allowed.')
 
   const session = await requireUser(req)

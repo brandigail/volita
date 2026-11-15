@@ -24,7 +24,7 @@ const CHANNEL_GUIDE: Record<DraftCategory, string> = {
 - recipient: always "".
 - subject: always "".
 - body: the full caption. The first line is a short scroll-stopping hook under 70 characters, then 2 to 4 short lines in an energetic, personal voice, a clear call to action (for example "Message us for a quote"), a blank line, then 5 to 10 relevant hashtags. A few emoji are welcome. Use only facts the speaker gave.`,
-  FACEBOOK: `FACEBOOK: a Facebook post.
+  FACEBOOK: `FACEBOOK: a Facebook post (never add services, examples or offers the speaker did not mention).
 - recipient: always "".
 - subject: always "".
 - body: start with a short headline line, then a friendly post a little longer than Instagram, in short paragraphs, speaking to the local community or customers. Include a clear call to action and 2 to 3 hashtags at the end. One or two emoji are fine. Use only facts the speaker gave.`,

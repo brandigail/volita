@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
-import { runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
+import { TOOLS, runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
 import { assistantSystemPrompt } from './_lib/assistant-prompt.ts'
 import { chat, type ChatMessage } from './_lib/groq-chat.ts'
-import { errorResponse, json } from './_lib/http.ts'
+import { errorResponse, json, warmUpResponse } from './_lib/http.ts'
 import { loadMemoryContext } from './_lib/memory-context.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
@@ -75,6 +75,8 @@ const CONFIRMATIONS: Record<AssistantAction['type'], string> = {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  const warm = warmUpResponse(req)
+  if (warm) return warm
   if (req.method !== 'POST') return errorResponse(405, 'Method not allowed.')
 
   const session = await requireUser(req)
@@ -138,14 +140,21 @@ export default async function handler(req: Request): Promise<Response> {
     }),
   ]
 
+  /**
+   * A model that asks for a tool this plan does not show it (for example a Free user asking for an email) makes Groq
+   * reject the call with 400. After that every tool is shown: runTool still refuses what the plan lacks, with a
+   * kind message the model can relay, so the user hears that it is part of a paid plan instead of a time-out.
+   */
+  let offered = tools
+
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const remaining = ctx.deadlineAt - Date.now()
     if (remaining < MIN_ROUND_MS) break
 
-    let result = await chat(apiKey, messages, remaining, { tools, temperature: 0.5, model: models[0] })
+    let result = await chat(apiKey, messages, remaining, { tools: offered, temperature: 0.5, model: models[0] })
     for (const fallback of models.slice(1)) {
       if (result.ok || result.status !== 429) break
-      result = await chat(apiKey, messages, ctx.deadlineAt - Date.now(), { tools, temperature: 0.5, model: fallback })
+      result = await chat(apiKey, messages, ctx.deadlineAt - Date.now(), { tools: offered, temperature: 0.5, model: fallback })
     }
     if (!result.ok) {
       // If a tool already ran, say what was done instead of an error that hides it.
@@ -155,7 +164,10 @@ export default async function handler(req: Request): Promise<Response> {
       }
       if (result.status === 429) break
       // The model sometimes makes a malformed tool call, which Groq rejects with 400. Asking again usually works.
-      if (result.status === 400) continue
+      if (result.status === 400) {
+        offered = TOOLS
+        continue
+      }
       break
     }
 

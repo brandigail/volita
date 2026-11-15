@@ -9,6 +9,14 @@ export function errorResponse(status: number, error: string): Response {
   return json<ApiError>({ error }, status)
 }
 
+/**
+ * The app sends a HEAD request to a function just to wake it (see warmUp in assistant-api.ts). It answers 204 at once,
+ * before any sign-in or quota work, so the wake-up costs nothing and never shows as an error in the browser console.
+ */
+export function warmUpResponse(req: Request): Response | null {
+  return req.method === 'HEAD' ? new Response(null, { status: 204 }) : null
+}
+
 /** A refusal because the person's plan does not include this; `needs` is the plan that does, so the app can offer it. */
 export function upgradeResponse(message: string, needs: PlanId, status = 402): Response {
   return json<ApiError>({ error: message, upgrade: needs }, status)

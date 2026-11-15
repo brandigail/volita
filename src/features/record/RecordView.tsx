@@ -4,7 +4,7 @@ import type { Tab } from '../../components/TabBar'
 import { UpgradeNote } from '../../components/UpgradeNote'
 import { usePlan } from '../../providers/usePlan'
 import { planForChannel } from '../../types/plans'
-import type { DraftCategory } from '../../types/draft'
+import { DRAFT_CATEGORIES, type DraftCategory } from '../../types/draft'
 import { UsageMeter } from '../plan/UsageMeter'
 import { PhotoCaption } from './PhotoCaption'
 import { ChannelIcon } from '../../components/ChannelIcon'
@@ -30,11 +30,14 @@ interface RecordViewProps {
 }
 
 export function RecordView({ onNavigate }: RecordViewProps) {
-  const { limits, refresh } = usePlan()
+  const { state, limits, refresh } = usePlan()
+  // Until the plan has loaded, limits are the Free defaults. Showing them would flash locks and a 60 second limit at
+  // someone on a paid plan (slow on a phone), so nothing is locked or fallen back until the real plan is known.
+  const planReady = state !== null
   const [storedCategory, setCategory] = useChannel()
   const [lockedChannel, setLockedChannel] = useState<DraftCategory | null>(null)
   // A channel the plan does not include (after a downgrade, or a stored choice) falls back to the first one it does.
-  const category = limits.channels.includes(storedCategory) ? storedCategory : limits.channels[0]
+  const category = !planReady || limits.channels.includes(storedCategory) ? storedCategory : limits.channels[0]
   const note = useVoiceNote(category)
   const recorder = useAudioRecorder(note.run, limits.recordingSeconds)
   const seePlans = () => onNavigate('profile')
@@ -97,7 +100,7 @@ export function RecordView({ onNavigate }: RecordViewProps) {
               setLockedChannel(null)
               setCategory(next)
             }}
-            allowed={limits.channels}
+            allowed={planReady ? limits.channels : DRAFT_CATEGORIES}
             onLocked={setLockedChannel}
           />
           {lockedChannel && (
@@ -126,7 +129,7 @@ export function RecordView({ onNavigate }: RecordViewProps) {
               <p className="muted -mt-2 text-sm">
                 {requesting
                   ? 'Allow microphone access to begin.'
-                  : `Tap to record for ${channel.label}. Up to ${limits.recordingSeconds >= 120 ? `${limits.recordingSeconds / 60} minutes` : `${limits.recordingSeconds} seconds`}.`}
+                  : `Tap to record for ${channel.label}.${planReady ? ` Up to ${limits.recordingSeconds >= 120 ? `${limits.recordingSeconds / 60} minutes` : `${limits.recordingSeconds} seconds`}.` : ''}`}
               </p>
             )
           )}

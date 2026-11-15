@@ -4,6 +4,10 @@ import { describeError } from './safe-log.ts'
 
 const MAX_FACTS = 6
 const MAX_CONTACTS = 3
+/** "What do you remember about me?" has no keyword to match, so it is answered from everything saved (still capped). */
+const ASKS_WHAT_IS_KNOWN = /\bwhat\b.{0,25}\b(remember|know|saved|have on)\b.{0,25}\b(me|about)\b|\bremember about me\b/i
+const ALL_FACTS = 20
+const ALL_CONTACTS = 10
 /** The assistant's model has a small per-minute token budget, so what is added to every turn stays short. */
 const MAX_PREFERENCE_CHARS = 1_200
 
@@ -26,6 +30,9 @@ export interface MemorySelection {
  * are included only when the request mentions something they are about, so the prompt stays small however much is stored.
  */
 export function selectMemory(memories: Memory[], contacts: Contact[], text: string): MemorySelection {
+  if (ASKS_WHAT_IS_KNOWN.test(text)) {
+    return { preferences: memories.filter((m) => m.kind === 'preference'), facts: memories.filter((m) => m.kind === 'fact').slice(0, ALL_FACTS), contacts: contacts.slice(0, ALL_CONTACTS) }
+  }
   const wanted = keywords(text)
 
   let used = 0

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ASSISTANT_VOICES, MAX_SPEECH_CHARS } from '../../src/types/assistant.ts'
-import { errorResponse } from './_lib/http.ts'
+import { errorResponse, warmUpResponse } from './_lib/http.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { claimVoiceTurn } from './_lib/voice-pool.ts'
 import { requireUser } from './_lib/session.ts'
@@ -21,6 +21,8 @@ const requestSchema = z.object({
 
 /** Turns one short piece of text into a natural-sounding voice clip. The client sends a reply a sentence or two at a time. */
 export default async function handler(req: Request): Promise<Response> {
+  const warm = warmUpResponse(req)
+  if (warm) return warm
   if (req.method !== 'POST') return errorResponse(405, 'Method not allowed.')
 
   const session = await requireUser(req)

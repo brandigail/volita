@@ -164,7 +164,8 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
       target={external ? '_blank' : undefined}
       rel="noopener noreferrer"
       aria-disabled={!canSend}
-      onClick={() => {
+      onClick={(e) => {
+        if (!canSend) return e.preventDefault()
         reportAction(`open_${label}`)
         sendPrompt.begin()
       }}
@@ -311,7 +312,8 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-disabled={!canSend}
-                onClick={() => {
+                onClick={(e) => {
+                  if (!canSend) return e.preventDefault()
                   void handleCopy()
                   sendPrompt.begin()
                 }}
@@ -335,7 +337,8 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-disabled={!canSend}
-                onClick={() => {
+                onClick={(e) => {
+                  if (!canSend) return e.preventDefault()
                   reportAction('open_quote_whatsapp')
                   sendPrompt.begin()
                 }}

@@ -95,15 +95,16 @@ async function recall(args: unknown, ctx: ToolContext): Promise<string> {
   const needle = parsed.data.query?.toLowerCase()
   const [memories, contacts] = await Promise.all([listMemories(ctx.userId), listContacts(ctx.userId)])
   const matches = (...texts: string[]) => !needle || texts.some((t) => t.toLowerCase().includes(needle))
+  const foundMemories = memories.filter((m) => matches(m.content))
+  const foundContacts = contacts.filter((c) => matches(c.name, c.relationship, c.email, c.notes))
+  // A vague query such as "me" or "everything" matches no text; listing what is saved beats claiming nothing is.
+  const exact = foundMemories.length + foundContacts.length > 0
+  const shownMemories = exact ? foundMemories : memories
+  const shownContacts = exact ? foundContacts : contacts
   return JSON.stringify({
-    memories: memories
-      .filter((m) => matches(m.content))
-      .slice(0, RECALL_LIMIT)
-      .map((m) => ({ id: m.id, kind: m.kind, text: m.content })),
-    contacts: contacts
-      .filter((c) => matches(c.name, c.relationship, c.email, c.notes))
-      .slice(0, RECALL_LIMIT)
-      .map(({ id, name, email, phone, relationship, notes }) => ({ id, name, email, phone, relationship, notes })),
+    ...(!exact && memories.length + contacts.length > 0 && { note: 'Nothing matched that exact word, so everything saved is listed.' }),
+    memories: shownMemories.slice(0, RECALL_LIMIT).map((m) => ({ id: m.id, kind: m.kind, text: m.content })),
+    contacts: shownContacts.slice(0, RECALL_LIMIT).map(({ id, name, email, phone, relationship, notes }) => ({ id, name, email, phone, relationship, notes })),
   })
 }
 
