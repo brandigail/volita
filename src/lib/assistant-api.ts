@@ -41,10 +41,10 @@ export async function askAssistant(
 
 /**
  * Server functions start cold the first time they are used after a quiet spell, which adds a second or two. A harmless
- * HEAD request to each one (they answer 204 straight away, with no error) wakes them before the user needs them.
+ * marked request to each one (they answer 204 straight away, with no error) wakes them before the user needs them.
  */
 export function warmUp(): void {
-  for (const path of ['/api/speak', '/api/assistant', '/api/transcribe']) void fetch(path, { method: 'HEAD' }).catch(() => undefined)
+  for (const path of ['/api/speak', '/api/assistant', '/api/transcribe']) void fetch(path, { headers: { 'x-volita-warmup': '1' } }).catch(() => undefined)
 }
 
 /** Fetches one short piece of text (up to {@link MAX_SPEECH_CHARS} characters) as a spoken audio clip. */

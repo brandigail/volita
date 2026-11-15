@@ -9,12 +9,16 @@ export function errorResponse(status: number, error: string): Response {
   return json<ApiError>({ error }, status)
 }
 
+/** Sent by the app's wake-up requests. Netlify turns HEAD into GET, so a header is the reliable signal. */
+export const WARM_UP_HEADER = 'x-volita-warmup'
+
 /**
- * The app sends a HEAD request to a function just to wake it (see warmUp in assistant-api.ts). It answers 204 at once,
- * before any sign-in or quota work, so the wake-up costs nothing and never shows as an error in the browser console.
+ * The app sends a request with the warm-up header to a function just to wake it (see warmUp in assistant-api.ts).
+ * It answers 204 at once, before any sign-in or quota work, so the wake-up costs nothing and never shows as an error
+ * in the browser console.
  */
 export function warmUpResponse(req: Request): Response | null {
-  return req.method === 'HEAD' ? new Response(null, { status: 204 }) : null
+  return req.headers.has(WARM_UP_HEADER) ? new Response(null, { status: 204 }) : null
 }
 
 /** A refusal because the person's plan does not include this; `needs` is the plan that does, so the app can offer it. */
