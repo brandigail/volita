@@ -6,6 +6,7 @@ import type { AssistantAction } from '../../types/assistant'
 import { UsageMeter } from '../plan/UsageMeter'
 import { AssistantOrb } from './AssistantOrb'
 import { BriefingCard } from './BriefingCard'
+import { EmailCard } from './EmailCard'
 import { VoicePicker } from './VoicePicker'
 import { useAssistant, type AssistantPhase } from './useAssistant'
 
@@ -59,7 +60,7 @@ function ActionChip({ action, onNavigate }: { action: AssistantAction; onNavigat
 }
 
 export function AssistantView({ onNavigate }: AssistantViewProps) {
-  const { phase, lines, error, orbRef, tapOrb, end, clear } = useAssistant()
+  const { phase, lines, error, orbRef, tapOrb, end, clear, email } = useAssistant()
   // The voice and listening services start cold; waking them now means they are ready when the user taps the orb.
   useEffect(() => {
     warmUp()
@@ -85,6 +86,8 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
       <p role="status" aria-live="polite" className="muted -mt-2 min-h-6 max-w-sm text-sm">
         {STATUS[phase]}
       </p>
+
+      <EmailCard email={email} />
 
       <UsageMeter kind="assistant" />
       {!active && <VoicePicker />}
@@ -129,7 +132,9 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
               >
                 {line.text}
               </p>
-              {line.actions.map((action) => (
+              {line.actions
+                .filter((action) => action.type !== 'email_ready')
+                .map((action) => (
                 <ActionChip key={action.id} action={action} onNavigate={onNavigate} />
               ))}
             </div>

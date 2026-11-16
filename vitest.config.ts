@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     test: {
       environment: 'node',
-      include: ['netlify/tests/**/*.test.ts'],
+      include: ['netlify/tests/**/*.test.ts', 'src/**/*.test.ts'],
       testTimeout: 30_000,
       env: {
         DATABASE_URL: local.DATABASE_URL ?? '',

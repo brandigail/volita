@@ -7,7 +7,9 @@ import type { AssistantAction, AssistantTurn } from '../../types/assistant'
 import { usePlan } from '../../providers/usePlan'
 import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
+import { classifyApproval } from './approval'
 import { SpeechPlayer } from './speech'
+import { usePendingEmail, type UsePendingEmail } from './usePendingEmail'
 
 export type AssistantPhase = 'idle' | 'starting' | 'listening' | 'hearing' | 'thinking' | 'speaking'
 
@@ -45,6 +47,8 @@ export interface UseAssistant {
   tapOrb: () => void
   end: () => void
   clear: () => void
+  /** The email waiting for approval, with the buttons that send or cancel it. */
+  email: UsePendingEmail
 }
 
 export function useAssistant(): UseAssistant {
@@ -56,6 +60,15 @@ export function useAssistant(): UseAssistant {
   const orbRef = useRef<HTMLDivElement | null>(null)
   const sessionRef = useRef<Session | null>(null)
   const nextIdRef = useRef(1)
+  const email = usePendingEmail(limits.email)
+  const { send: sendEmail, cancel: cancelEmail, refresh: refreshEmail } = email
+  /** The email waiting for approval, readable from callbacks that outlive a render. */
+  const pendingRef = useRef(email.pending)
+  /** True only straight after the assistant said an email is ready: that is when a bare "yes" may approve it. */
+  const readyRef = useRef(false)
+  useEffect(() => {
+    pendingRef.current = email.pending
+  }, [email.pending])
 
   /** A reply or recording that finishes after the user ended the session (or started a new one) is ignored. */
   const isCurrent = useCallback((session: Session) => sessionRef.current?.id === session.id, [])
@@ -94,16 +107,43 @@ export function useAssistant(): UseAssistant {
     [isCurrent],
   )
 
+  /**
+   * "Send it" or "cancel" said while an email is waiting. It is handled here, on the person's own words, and never by the
+   * assistant, so nothing an email says can make it send. Returns false when the words were not an approval.
+   */
+  const handleApproval = useCallback(
+    async (session: Session, text: string): Promise<boolean> => {
+      const waiting = pendingRef.current
+      const approval = waiting ? classifyApproval(text, readyRef.current) : null
+      if (!waiting || !approval) return false
+      setPhase('thinking')
+      const outcome = approval === 'send' ? await sendEmail(waiting.id) : await cancelEmail(waiting.id)
+      readyRef.current = false
+      if (!isCurrent(session)) return true
+      session.history.push({ role: 'assistant', content: outcome.message })
+      addLine('assistant', outcome.message)
+      await speakReply(session, outcome.message)
+      return true
+    },
+    [addLine, cancelEmail, isCurrent, sendEmail, speakReply],
+  )
+
   const respond = useCallback(
     async (session: Session, text: string) => {
       addLine('user', text)
       session.history.push({ role: 'user', content: text })
       setPhase('thinking')
       try {
+        if (await handleApproval(session, text)) {
+          listenAgain(session)
+          return
+        }
         const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage))
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)
+        readyRef.current = reply.actions.some((a) => a.type === 'email_ready')
+        if (readyRef.current) void refreshEmail()
         refresh()
         await speakReply(session, reply.reply, reply.speechLanguage)
       } catch (err) {
@@ -118,7 +158,7 @@ export function useAssistant(): UseAssistant {
       }
       listenAgain(session)
     },
-    [addLine, anyLanguage, end, isCurrent, listenAgain, refresh, speakReply],
+    [addLine, anyLanguage, end, handleApproval, isCurrent, listenAgain, refresh, refreshEmail, speakReply],
   )
 
   const handleUtterance = useCallback(
@@ -209,5 +249,5 @@ export function useAssistant(): UseAssistant {
 
   const clear = useCallback(() => setLines([]), [])
 
-  return { phase, lines, error, orbRef, tapOrb, end, clear }
+  return { phase, lines, error, orbRef, tapOrb, end, clear, email }
 }

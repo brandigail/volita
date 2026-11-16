@@ -10,6 +10,7 @@ import { FeedbackForm } from '../tour/FeedbackForm'
 import { AccountData } from './AccountData'
 import { InstallHelp, TesterNotice } from './DeviceNotices'
 import { CalendarConnect } from './CalendarConnect'
+import { GmailConnect } from './GmailConnect'
 import { authClient } from '../../lib/auth-client'
 import { PROFILE_LIMITS, type Profile, type ProfileSource } from '../../types/profile'
 
@@ -176,9 +177,11 @@ interface ProfileViewProps {
   showSubscriptions: boolean
   /** True for testers whose activity is recorded; they are told so. */
   activityLogged: boolean
+  /** The result code Google's connection page sent the person back with, shown once. */
+  gmailReturn?: string
 }
 
-export function ProfileView({ user, showSubscriptions, activityLogged }: ProfileViewProps) {
+export function ProfileView({ user, showSubscriptions, activityLogged, gmailReturn }: ProfileViewProps) {
   return (
     <section aria-labelledby="profile-heading">
       <h1 id="profile-heading" className="text-3xl font-extrabold tracking-tight">
@@ -193,6 +196,7 @@ export function ProfileView({ user, showSubscriptions, activityLogged }: Profile
       <ProfileForm key={user.id} initial={profileFromUser(user)} email={user.email} />
       <PlansSection />
       <FamilySection />
+      <GmailConnect returnCode={gmailReturn} />
       <MemorySection />
       <LibrarySection />
       <NotificationSettings />

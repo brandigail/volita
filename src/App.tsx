@@ -8,6 +8,7 @@ import { HistoryView } from './features/history/HistoryView'
 import { ProfileView } from './features/profile/ProfileView'
 import { RecordView } from './features/record/RecordView'
 import { authClient } from './lib/auth-client'
+import { GMAIL_RETURN_PARAM } from './types/gmail'
 import { useFeatures } from './lib/useFeatures'
 import { useActivityReporting } from './lib/useActivityReporting'
 import { UnsentBanner } from './features/history/UnsentBanner'
@@ -21,13 +22,24 @@ import { highlight, hasSeenTour, markTourSeen } from './features/tour/highlight'
 import { TOUR_STEPS, type TourStep } from './features/tour/steps'
 
 export default function App() {
-  // Coming back from PayFast lands on the profile, where the subscription is shown.
-  const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(window.location.search).has('payment') ? 'profile' : 'record'))
+  // Coming back from PayFast or from Google's Gmail permission screen lands on the profile, where each is shown.
+  const [gmailReturn] = useState(() => new URLSearchParams(window.location.search).get(GMAIL_RETURN_PARAM) ?? undefined)
+  const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(window.location.search).has('payment') || gmailReturn ? 'profile' : 'record'))
   const { data: session, isPending } = authClient.useSession()
   const features = useFeatures(Boolean(session))
   useActivityReporting(Boolean(session), tab)
   useNotificationScheduler(Boolean(session))
   const { shared, clear: clearShared } = useSharedContent(Boolean(session))
+
+  // The result code is shown once, then removed from the address so a refresh does not repeat it.
+  useEffect(() => {
+    if (!gmailReturn) return
+    const url = new URL(window.location.href)
+    url.searchParams.delete(GMAIL_RETURN_PARAM)
+    window.history.replaceState(null, '', url)
+    const timer = window.setTimeout(() => document.getElementById('gmail')?.scrollIntoView({ behavior: 'smooth' }), 600)
+    return () => window.clearTimeout(timer)
+  }, [gmailReturn])
 
   // Tapping a reminder on the phone opens the screen it is about.
   useEffect(() => {
@@ -111,7 +123,7 @@ export default function App() {
       ) : tab === 'history' ? (
         <HistoryView key={String(historyOnUnsent)} initialStatus={historyOnUnsent ? 'UNSENT' : 'ALL'} />
       ) : (
-        <ProfileView user={session.user} showSubscriptions={features.subscriptions} activityLogged={features.activityLogged} />
+        <ProfileView user={session.user} showSubscriptions={features.subscriptions} activityLogged={features.activityLogged} gmailReturn={gmailReturn} />
       )}
       {session && <Onboarding />}
       {session && shared && (

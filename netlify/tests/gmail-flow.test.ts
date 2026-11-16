@@ -166,6 +166,12 @@ suite('Gmail feature', () => {
 
   const callbackFor = (user: SessionUser, code: string) => get(`/api/gmail/callback?code=${code}&state=${encodeURIComponent(oauth.createState(user.id))}`)
   const location = (res: Response) => new URL(res.headers.get('location') ?? '').searchParams.get('gmail')
+  /** The callback answers with a small page whose button carries the result code back to the app. */
+  const pageCode = async (res: Response) => {
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/html')
+    return /gmail=([a-z_]+)/.exec(await res.text())?.[1]
+  }
 
   describe('connecting', () => {
     it('sends a Pro user to Google, and a Free user back to the app with a plan notice', async () => {
@@ -178,21 +184,30 @@ suite('Gmail feature', () => {
       expect(location(await handler(get('/api/gmail/start')))).toBe('plan')
     })
 
-    it('refuses a connection that was started by someone else, or has no code', async () => {
-      expect(location(await handler(callbackFor(other, 'good-code')))).toBe('failed')
-      expect(location(await handler(get(`/api/gmail/callback?state=${encodeURIComponent(oauth.createState(pro.id))}`)))).toBe('failed')
-      expect(location(await handler(get('/api/gmail/callback?error=access_denied')))).toBe('denied')
+    it('refuses a missing code, a forged or expired state, and a "no" on the Google screen', async () => {
+      hoisted.current = null
+      expect(await pageCode(await handler(get(`/api/gmail/callback?state=${encodeURIComponent(oauth.createState(pro.id))}`)))).toBe('failed')
+      expect(await pageCode(await handler(get('/api/gmail/callback?code=good-code&state=forged.value')))).toBe('failed')
+      expect(await pageCode(await handler(get(`/api/gmail/callback?code=good-code&state=${encodeURIComponent(oauth.createState(pro.id, Date.now() - 11 * 60_000))}`)))).toBe('failed')
+      expect(await pageCode(await handler(get('/api/gmail/callback?error=access_denied')))).toBe('denied')
       expect(await store.getConnection(pro.id)).toBeNull()
     })
 
     it('refuses when the person left the send permission unticked, and when Google rejects the code', async () => {
-      expect(location(await handler(callbackFor(pro, 'read-only')))).toBe('scopes')
-      expect(location(await handler(callbackFor(pro, 'bad-code')))).toBe('failed')
+      expect(await pageCode(await handler(callbackFor(pro, 'read-only')))).toBe('scopes')
+      expect(await pageCode(await handler(callbackFor(pro, 'bad-code')))).toBe('failed')
       expect(await store.getConnection(pro.id)).toBeNull()
     })
 
+    it('connects the person named in the signed state, even from a browser with no sign-in cookie', async () => {
+      hoisted.current = null
+      expect(await pageCode(await handler(callbackFor(other, 'good-code')))).toBe('connected')
+      expect(await store.getConnection(other.id)).toMatchObject({ email: 'dad@gmail.test' })
+      await store.deleteConnection(other.id)
+    })
+
     it('connects, stores the token and address encrypted, and records it', async () => {
-      expect(location(await handler(callbackFor(pro, 'good-code')))).toBe('connected')
+      expect(await pageCode(await handler(callbackFor(pro, 'good-code')))).toBe('connected')
       const [raw] = await rows('SELECT google_email, refresh_token FROM gmail_connections WHERE user_id = $1', [pro.id])
       expect(String(raw?.refresh_token).startsWith('enc1:')).toBe(true)
       expect(String(raw?.google_email).startsWith('enc1:')).toBe(true)

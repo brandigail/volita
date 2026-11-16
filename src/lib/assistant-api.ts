@@ -13,6 +13,7 @@ const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('memory_saved'), id: z.string(), label: z.string() }),
   z.object({ type: z.literal('contact_saved'), id: z.string(), label: z.string() }),
   z.object({ type: z.literal('memory_forgotten'), id: z.string(), label: z.string() }),
+  z.object({ type: z.literal('email_ready'), id: z.string(), label: z.string() }),
 ])
 const responseSchema = z.object({
   reply: z.string().min(1),

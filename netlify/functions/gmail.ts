@@ -5,6 +5,7 @@ import { planLimits } from '../../src/types/plans.ts'
 import { forgetAccessToken, readMail, sendMail } from './_lib/gmail-api.ts'
 import { cancelPending, claimPending, deleteConnection, deleteSent, getConnection, getPending, listLog, logGmail, releasePending, saveConnection, type PendingFull } from './_lib/gmail-store.ts'
 import { buildAuthUrl, createState, exchangeCode, fetchGoogleEmail, googleConfigured, hasRequiredScopes, readState, revokeToken } from './_lib/google-oauth.ts'
+import { resultPage } from './_lib/gmail-pages.ts'
 import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser, type SessionUser } from './_lib/session.ts'
@@ -49,27 +50,30 @@ function start(req: Request, user: SessionUser): Response {
   return new Response(null, { status: 302, headers: { Location: buildAuthUrl(req.url, createState(user.id), user.email), 'Cache-Control': 'no-store' } })
 }
 
-async function callback(req: Request, user: SessionUser): Promise<Response> {
+/**
+ * Where Google sends the person back to. It does not rely on the sign-in cookie, because the browser that returns may not
+ * be the one Volita is signed in to. The signed state is the proof: only a signed-in person can have been given one,
+ * it names that person, it expires in ten minutes, and Google's code works once.
+ */
+async function callback(req: Request): Promise<Response> {
   const params = new URL(req.url).searchParams
-  if (params.get('error')) return backToApp(req.url, 'denied')
+  if (params.get('error')) return resultPage(req.url, 'denied')
   const code = params.get('code')
-  const stateUser = readState(params.get('state') ?? '')
-  // The person who comes back must be the one who started: a copied or old link does nothing.
-  if (!code || stateUser !== user.id) return backToApp(req.url, 'failed')
-  if (!planLimits(user.plan).email) return backToApp(req.url, 'plan')
+  const userId = readState(params.get('state') ?? '')
+  if (!code || !userId) return resultPage(req.url, 'failed')
 
   const exchanged = await exchangeCode(code, req.url)
-  if (!exchanged.ok) return backToApp(req.url, 'failed')
+  if (!exchanged.ok) return resultPage(req.url, 'failed')
   const { accessToken, refreshToken, scope } = exchanged.tokens
-  if (!hasRequiredScopes(scope)) return backToApp(req.url, 'scopes')
-  if (!refreshToken) return backToApp(req.url, 'failed')
+  if (!hasRequiredScopes(scope)) return resultPage(req.url, 'scopes')
+  if (!refreshToken) return resultPage(req.url, 'failed')
   const email = await fetchGoogleEmail(accessToken)
-  if (!email) return backToApp(req.url, 'failed')
+  if (!email) return resultPage(req.url, 'failed')
 
-  await saveConnection(user.id, email, refreshToken)
-  forgetAccessToken(user.id)
-  await logGmail(user.id, 'connect', email)
-  return backToApp(req.url, 'connected')
+  await saveConnection(userId, email, refreshToken)
+  forgetAccessToken(userId)
+  await logGmail(userId, 'connect', email)
+  return resultPage(req.url, 'connected')
 }
 
 async function disconnect(user: SessionUser): Promise<Response> {
@@ -121,21 +125,25 @@ async function cancel(req: Request, user: SessionUser): Promise<Response> {
 
 /** Routes: /api/gmail/start, callback, status, disconnect, pending, send, cancel and log. */
 export default async function handler(req: Request): Promise<Response> {
-  const session = await requireUser(req)
-  if (!session.ok) {
-    // Coming back from Google without a session (cookie expired): send them to the app to sign in again.
-    return new URL(req.url).pathname.endsWith('/callback') ? backToApp(req.url, 'signin') : session.response
-  }
-  const { user } = session
   const action = new URL(req.url).pathname.split('/').filter(Boolean)[2]
+  if (req.method === 'GET' && action === 'callback') {
+    try {
+      return await callback(req)
+    } catch (err) {
+      console.error('Gmail connection failed:', describeError(err))
+      return resultPage(req.url, 'failed')
+    }
+  }
+
+  const session = await requireUser(req)
+  if (!session.ok) return session.response
+  const { user } = session
 
   try {
     if (req.method === 'GET') {
       switch (action) {
         case 'start':
           return start(req, user)
-        case 'callback':
-          return await callback(req, user)
         case 'status':
           return await status(user)
         case 'pending': {
