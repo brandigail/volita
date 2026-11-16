@@ -88,6 +88,21 @@ Reading a client's email is the most sensitive thing this app could do, so these
 7. **Keep a record:** which emails were read and sent, visible to the account owner.
 8. **Be honest with clients:** the privacy policy says the email text is processed by an AI service.
 
+### Status of the email feature (built 2026-11-16, not deployed yet)
+
+Gmail is built on Google sign-in (not app passwords) with the least access: read mail and send mail. It follows the rules above like this, and each line was tested against the real database and a fake Google (netlify/tests/gmail-flow.test.ts) and in a real browser:
+
+1. **Least access.** Only the gmail.readonly and gmail.send permissions are requested, and the connection is refused if either is unticked. There is no delete, move, label or settings access.
+2. **Tokens are encrypted** per person with the same AES-256-GCM scheme as everything else, and the Gmail address too. "Disconnect Gmail" deletes the saved permission and tells Google to revoke it.
+3. **Read on request only.** The assistant can search and read an email only when asked. Email bodies are never saved: they are fetched, handed to the AI service for that one reply, and dropped. What is stored is a short record (who an email was from and its subject, what was searched, who an email went to).
+4. **Never sends on its own.** The assistant has no send tool at all. It can only prepare an email, which waits on the screen (one at a time, 20 minutes) showing the recipient, subject and full text. Only the person can send it, by tapping Send or saying "send it". The send is claimed in one atomic step, so two taps cannot send it twice, and an email is deleted from the database once sent or cancelled.
+5. **Email text is untrusted.** Everything read from an email is labelled as written by someone else and the assistant is told never to follow it. A replied-to email can only go to the person who wrote it (or their Reply-To). A new email to an address that was not said by the person or saved for a contact, or that appeared while an email was being read, shows a warning on the card. Tested with a real model against an email that tries to make it forward everything to an attacker: nothing was prepared or sent.
+6. **A record the person can see:** Profile, Gmail, "What has Volita done with my email?".
+7. **Connection hardening.** The connection state is signed and expires in 10 minutes, the Google return does not need the sign-in cookie (the signed state names the person), headers cannot be injected through a recipient or subject, and requests that change something must come from the app.
+8. **Not done yet:** the privacy policy (G8) must be updated to say email text is processed by the AI service in the USA, Google's app verification (so the weekly reconnect and the "not verified" warning go away) and Groq's data processing addendum has been read but not signed separately. Groq Zero Data Retention was switched on by the owner on 2026-11-16.
+
+While the app is in Google's test mode, only people added as test users in the Google Cloud console can connect, they see "Google hasn't verified this app" (Advanced, then Continue), and Google ends the permission after 7 days, so each person reconnects about once a week.
+
 ## 6. How to check this yourself
 
 - Open the files linked above; each is short and commented.

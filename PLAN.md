@@ -59,6 +59,9 @@
 - [x] D7. Pro habit features: C6, tone regenerate, C5, templates, price list, quote to PDF, WhatsApp list
 - [~] D8. Later (photo to caption, share into Volita and follow-up nudges are built; the rest waits): photo to caption, share into Volita (Android), follow-up nudges, web push, send from Volita, C7, payment links
 
+- [x] E1. Gmail for Pro: Google sign-in (read + send only), encrypted tokens, search / read / prepare-reply tools with no send tool, approval card with Send and Cancel, spoken "send it", record of what was read and sent, disconnect with revoke, migration 015, tests (built 2026-11-16, not deployed)
+- [ ] E2. Before deploying E1: create the Google Cloud project and OAuth client, add dad as a test user, set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET in Netlify, update the privacy policy (G8), test on a real phone
+
 ## Phase 2
-- Send from inside Volita (Gmail API as the user, or Resend free tier with reply-to)
+- Outlook / iCloud mail (Gmail is built, see SECURITY.md section 5), Google app verification so the weekly reconnect goes away
 - Offline queue, re-generate with a different tone, team or shared business profiles
