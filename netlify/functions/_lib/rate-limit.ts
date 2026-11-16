@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { PLAN_RANK, clipsPerRecording, planLimits, type PlanId } from '../../../src/types/plans.ts'
 import { errorResponse, upgradeResponse } from './http.ts'
+import { noteLimitHit } from './safety.ts'
 import { describeError } from './safe-log.ts'
 
 export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'email'
@@ -114,6 +115,8 @@ export async function claimQuota(
     }
 
     const [counts] = (await sql.query(COUNTS_SQL, [user.id, endpoint])) as UsageCounts[]
+    // The person's own limits (not Volita's shared one): counted, so someone who keeps pushing is reported to the owner.
+    if (counts.global_count < limits.globalPerDay) await noteLimitHit(user.id, endpoint)
     return { ok: false, response: denial(counts, limits, endpoint, user.plan) }
   } catch (err) {
     console.error('Quota check failed:', describeError(err))

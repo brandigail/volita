@@ -7,6 +7,7 @@ import { planLimits } from '../../src/types/plans.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { logActivity } from './_lib/activity.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 import { describeError, describeUpstream } from './_lib/safe-log.ts'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
@@ -103,6 +104,9 @@ export default async function handler(req: Request): Promise<Response> {
     await logActivity(session.user, 'transcribe_empty', { bytes: audio.size, mime: audio.type, forAssistant })
     return errorResponse(422, 'No speech detected. Try recording again.')
   }
+  // Checked before the text is logged, returned or sent on to the AI.
+  const refused = await refuseSensitive(session.user, transcript, forAssistant ? 'assistant voice' : 'recording')
+  if (refused) return refused
   await logActivity(session.user, 'transcribed', { text: transcript, language, bytes: audio.size, mime: audio.type, forAssistant })
 
   return json<TranscribeResponse>({ text: transcript })

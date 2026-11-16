@@ -3,7 +3,9 @@ import { planLimits, type PlanId } from '../../../src/types/plans.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 import { auth } from './auth.ts'
 import { openCalendarLink } from './calendar-secret.ts'
-import { errorResponse } from './http.ts'
+import { ACCOUNT_CLOSED_MESSAGE, isAdult } from '../../../src/lib/age.ts'
+import type { ApiError } from '../../../src/types/api.ts'
+import { errorResponse, json } from './http.ts'
 import { isOwner, resolvePlan, type PlanSource } from './plan.ts'
 import { describeError } from './safe-log.ts'
 
@@ -24,7 +26,11 @@ export async function requireUser(req: Request): Promise<UserResult> {
   try {
     const session = await auth.api.getSession({ headers: req.headers })
     if (session) {
-      const { id, email } = session.user
+      const { id, email, suspendedAt, birthDate } = session.user
+      // 423 and 428 rather than 403, which Netlify's local server mistakes for a missing page.
+      if (suspendedAt) return { ok: false, response: json<ApiError>({ error: ACCOUNT_CLOSED_MESSAGE, code: 'suspended' }, 423) }
+      // Accounts made before the age check give their date of birth once before they can carry on.
+      if (!isAdult(birthDate)) return { ok: false, response: json<ApiError>({ error: 'Please confirm your date of birth to carry on.', code: 'age_required' }, 428) }
       const profile = profileFromUser(session.user)
       const { plan, source } = await resolvePlan(id, email)
       // The saved calendar link is encrypted; servers use the opened copy, and the browser only ever sees the sealed one.

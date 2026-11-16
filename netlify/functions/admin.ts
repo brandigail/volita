@@ -3,6 +3,8 @@ import type { Config } from '@netlify/functions'
 import { z } from 'zod'
 import type { AdminUser, AdminUsersResponse } from '../../src/types/plan-state.ts'
 import { PLAN_RANK, isPlanId } from '../../src/types/plans.ts'
+import type { SafetyEvent, SafetyKind } from '../../src/types/safety.ts'
+import { reopenUser, suspendUser } from './_lib/account-status.ts'
 import { errorResponse, json } from './_lib/http.ts'
 import { isOwner } from './_lib/plan.ts'
 import { requireUser } from './_lib/session.ts'
@@ -17,12 +19,21 @@ interface UserRow {
   subscribed: string | null
   drafts: number
   last_active: string | Date | null
+  suspended_at: string | Date | null
+  sensitive: number
+  limit_hits: number
+  spam: number
 }
+
+const recentSafety = (kinds: string) =>
+  `(SELECT count(*) FROM safety_events e WHERE e.user_id = u.id AND e.kind IN (${kinds}) AND e.created_at > now() - interval '30 days')::int`
 
 const SELECT_USERS = `
   SELECT u.id, u.email, u.name, u."createdAt" AS created_at, COALESCE(g.plan, i.plan) AS granted, s.plan AS subscribed,
     (SELECT count(*) FROM drafts d WHERE d.user_id = u.id)::int AS drafts,
-    (SELECT max(a.created_at) FROM api_usage a WHERE a.user_id = u.id) AS last_active
+    (SELECT max(a.created_at) FROM api_usage a WHERE a.user_id = u.id) AS last_active,
+    u."suspendedAt" AS suspended_at,
+    ${recentSafety("'card', 'bank', 'password'")} AS sensitive, ${recentSafety("'limit'")} AS limit_hits, ${recentSafety("'spam'")} AS spam
   FROM "user" u
   LEFT JOIN plan_grants g ON g.user_id = u.id
   LEFT JOIN plan_invites i ON i.email = lower(u.email)
@@ -58,7 +69,40 @@ function toAdminUser(row: UserRow): AdminUser {
     source,
     drafts: row.drafts,
     lastActive: row.last_active ? new Date(row.last_active).toISOString() : null,
+    suspendedAt: row.suspended_at ? new Date(row.suspended_at).toISOString() : null,
+    safety: { sensitive: row.sensitive, limit: row.limit_hits, spam: row.spam },
   }
+}
+
+const closeSchema = z.object({ reason: z.string().trim().max(200).default('Closed by the owner') })
+
+/** Close or reopen one account: /api/admin/users/:id/close and /api/admin/users/:id/reopen. */
+async function handleStatus(req: Request, sql: NeonQueryFunction<false, false>, id: string, action: string): Promise<Response> {
+  if (req.method !== 'POST') return errorResponse(405, 'Method not allowed.')
+  const [target] = (await sql.query('SELECT email FROM "user" WHERE id = $1', [id])) as { email: string }[]
+  if (!target) return errorResponse(404, 'That account was not found.')
+  if (isOwner(target.email)) return errorResponse(400, 'Owner accounts cannot be closed here.')
+  if (action === 'close') {
+    const input = closeSchema.safeParse(await req.json().catch(() => ({})))
+    await suspendUser(id, input.success ? input.data.reason : 'Closed by the owner')
+  } else if (action === 'reopen') {
+    await reopenUser(id)
+  } else {
+    return errorResponse(404, 'Not found.')
+  }
+  const [row] = (await sql.query(`${SELECT_USERS} WHERE u.id = $1`, [id])) as UserRow[]
+  return json<{ user: AdminUser }>({ user: toAdminUser(row) })
+}
+
+/** The newest stopped attempts across every account: what kind and where, never the text itself. */
+async function listSafety(sql: NeonQueryFunction<false, false>): Promise<Response> {
+  const rows = (await sql.query(
+    `SELECT e.id, e.user_id, u.email, u.name, e.kind, e.source, e.created_at FROM safety_events e JOIN "user" u ON u.id = e.user_id
+     WHERE e.created_at > now() - interval '30 days' ORDER BY e.created_at DESC LIMIT 100`,
+  )) as { id: string | number; user_id: string; email: string; name: string; kind: SafetyKind; source: string; created_at: string | Date }[]
+  return json<{ events: SafetyEvent[] }>({
+    events: rows.map((row) => ({ id: Number(row.id), userId: row.user_id, email: row.email, name: row.name, kind: row.kind, source: row.source, createdAt: new Date(row.created_at).toISOString() })),
+  })
 }
 
 /** The family screen: only the owner can list every account and choose who gets a plan for free. Routes: /api/admin/users and /api/admin/users/:id. */
@@ -73,6 +117,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     if (segments[2] === 'invites') return await handleInvites(req, sql, session.user.email)
+    if (segments[2] === 'safety' && req.method === 'GET') return await listSafety(sql)
+    if (id && segments[4]) return await handleStatus(req, sql, id, segments[4])
 
     if (req.method === 'GET' && !id) {
       const rows = (await sql.query(`${SELECT_USERS} ORDER BY u."createdAt" DESC LIMIT 200`)) as UserRow[]
@@ -151,4 +197,4 @@ async function handleInvites(req: Request, sql: NeonQueryFunction<false, false>,
   return errorResponse(405, 'Method not allowed.')
 }
 
-export const config: Config = { path: ['/api/admin/users', '/api/admin/users/*', '/api/admin/invites'] }
+export const config: Config = { path: ['/api/admin/users', '/api/admin/users/*', '/api/admin/invites', '/api/admin/safety'] }

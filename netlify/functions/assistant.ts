@@ -8,6 +8,7 @@ import { loadMemoryContext } from './_lib/memory-context.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { logActivity } from './_lib/activity.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 import { rememberTurn } from './_lib/conversations.ts'
 import { safeTimeZone } from './_lib/time.ts'
 import { planLimits } from '../../src/types/plans.ts'
@@ -93,6 +94,10 @@ export default async function handler(req: Request): Promise<Response> {
   if (!request.success || request.data.messages[request.data.messages.length - 1].role !== 'user') {
     return errorResponse(400, 'Send the conversation so far, ending with what the user said.')
   }
+
+  // Only the newest message: the earlier ones were checked when they were said.
+  const refused = await refuseSensitive(session.user, request.data.messages[request.data.messages.length - 1].content, 'assistant')
+  if (refused) return refused
 
   const quota = await claimQuota(session.user, 'assistant')
   if (!quota.ok) return quota.response

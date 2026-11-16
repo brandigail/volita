@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
         GOOGLE_CLIENT_ID: 'test-client-id',
         GOOGLE_CLIENT_SECRET: 'test-client-secret',
         OWNER_EMAILS: '',
+        // The safety tests create throwaway accounts through the real sign-up.
+        ALLOW_SIGNUP: 'true',
       },
     },
   }

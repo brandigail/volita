@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { AdminUser, Briefing, PlanState } from '../types/plan-state'
+import type { SafetyEvent } from '../types/safety'
 import { serviceInputSchema, templateInputSchema, type Service, type ServiceInput, type Template, type TemplateInput } from '../types/pricing'
 import { ApiRequestError, request } from './api'
 
@@ -59,6 +60,8 @@ const adminUserSchema = z.object({
   source: sourceSchema,
   drafts: z.number(),
   lastActive: z.string().nullable(),
+  suspendedAt: z.string().nullable(),
+  safety: z.object({ sensitive: z.number(), limit: z.number(), spam: z.number() }),
 })
 
 const briefingSchema = z.object({
@@ -96,6 +99,30 @@ export async function setUserPlan(id: string, plan: 'free' | 'basic' | 'pro'): P
   const data = z.object({ user: adminUserSchema }).safeParse(await request(`/api/admin/users/${id}`, { method: 'PUT', ...json({ plan }) }))
   if (!data.success) throw unexpected()
   return data.data.user
+}
+
+/** Owner only: closes an account (it is signed out everywhere and cannot sign in) or opens it again. */
+export async function setAccountClosed(id: string, closed: boolean, reason?: string): Promise<AdminUser> {
+  const path = `/api/admin/users/${id}/${closed ? 'close' : 'reopen'}`
+  const data = z.object({ user: adminUserSchema }).safeParse(await request(path, json(closed ? { reason } : {})))
+  if (!data.success) throw unexpected()
+  return data.data.user
+}
+
+const safetyEventSchema = z.object({
+  id: z.number(),
+  userId: z.string(),
+  email: z.string(),
+  name: z.string(),
+  kind: z.enum(['card', 'bank', 'password', 'limit', 'spam']),
+  source: z.string(),
+  createdAt: z.string(),
+})
+
+export async function fetchSafetyEvents(): Promise<SafetyEvent[]> {
+  const data = z.object({ events: z.array(safetyEventSchema) }).safeParse(await request('/api/admin/safety', { method: 'GET' }))
+  if (!data.success) throw unexpected()
+  return data.data.events
 }
 
 export async function fetchBriefing(timeZone: string): Promise<Briefing> {

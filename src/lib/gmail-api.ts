@@ -1,15 +1,8 @@
 import { z } from 'zod'
-import type { GmailLogEntry, GmailStatus, PendingEmail } from '../types/gmail'
+import type { GmailLogEntry, PendingEmail } from '../types/gmail'
 import { ApiRequestError, request } from './api'
 
-const statusSchema = z.object({
-  configured: z.boolean(),
-  allowed: z.boolean(),
-  connected: z.boolean(),
-  email: z.string().nullable(),
-  needsReconnect: z.boolean(),
-  connectedAt: z.string().nullable(),
-})
+// The waiting email, sending it and the record work the same whichever email service is connected (see mail-api.ts).
 
 const pendingSchema = z.object({
   id: z.string(),
@@ -28,15 +21,6 @@ const logSchema = z.object({
 const unexpected = () => new ApiRequestError(502, 'The server sent an unexpected response.')
 const post = (body: unknown): RequestInit => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-/** Opening this address (a real page visit, not a fetch) takes the person to Google's permission screen. */
-export const GMAIL_CONNECT_URL = '/api/gmail/start'
-
-export async function fetchGmailStatus(): Promise<GmailStatus> {
-  const data = statusSchema.safeParse(await request('/api/gmail/status', { method: 'GET' }))
-  if (!data.success) throw unexpected()
-  return data.data
-}
-
 export async function fetchPendingEmail(): Promise<PendingEmail | null> {
   const data = z.object({ pending: pendingSchema.nullable() }).safeParse(await request('/api/gmail/pending', { method: 'GET' }))
   if (!data.success) throw unexpected()
@@ -52,10 +36,6 @@ export async function sendPendingEmail(id: string): Promise<{ to: string }> {
 
 export async function cancelPendingEmail(id: string): Promise<void> {
   await request('/api/gmail/cancel', post({ id }))
-}
-
-export async function disconnectGmail(): Promise<void> {
-  await request('/api/gmail/disconnect', post({}))
 }
 
 export async function fetchGmailLog(): Promise<GmailLogEntry[]> {

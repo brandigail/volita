@@ -7,6 +7,7 @@ import { encryptText, openText } from './_lib/crypto.ts'
 import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { describeError } from './_lib/safe-log.ts'
 import { requireUser } from './_lib/session.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 interface TemplateRow {
   id: string
@@ -38,6 +39,8 @@ export default async function handler(req: Request): Promise<Response> {
       if (!planLimits(session.user.plan).templates) return upgradeResponse('Saved templates are part of the Basic plan.', 'basic')
       const input = templateInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, `Give a title and the text (up to ${TEMPLATE_LIMITS.content} characters).`)
+      const refused = await refuseSensitive(session.user, input.data, 'template')
+      if (refused) return refused
       const [{ total }] = (await sql.query('SELECT count(*)::int AS total FROM templates WHERE user_id = $1', [userId])) as { total: number }[]
       if (total >= TEMPLATE_LIMITS.items) return errorResponse(409, `You can keep ${TEMPLATE_LIMITS.items} templates. Delete one first.`)
       const [row] = (await sql.query('INSERT INTO templates (user_id, title, content) VALUES ($1, $2, $3) RETURNING id, title, content', [

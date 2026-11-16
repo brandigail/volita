@@ -8,6 +8,7 @@ import { deleteContact, saveContact, updateContact } from './_lib/memory-store.t
 import { claimQuota } from './_lib/rate-limit.ts'
 import { describeError } from './_lib/safe-log.ts'
 import { requireUser } from './_lib/session.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 /** Routes are /api/contacts and /api/contacts/:id. Listing is part of GET /api/memory. */
 function idFrom(req: Request): string | null {
@@ -32,6 +33,8 @@ export default async function handler(req: Request): Promise<Response> {
     if ((req.method === 'POST' && id === null) || (req.method === 'PUT' && id !== null)) {
       const input = contactInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, 'A contact needs a name, and each detail must be short.')
+      const refused = await refuseSensitive(session.user, input.data, 'contact')
+      if (refused) return refused
       const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
 

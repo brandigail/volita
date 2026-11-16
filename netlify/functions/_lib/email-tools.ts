@@ -1,7 +1,9 @@
 import { z } from 'zod'
 import { buildSignature } from '../../../src/lib/profile.ts'
+import { findSensitive } from '../../../src/lib/sensitive.ts'
 import type { ToolContext } from './assistant-tools.ts'
-import { FAILURE_MESSAGE, readMail, searchMail } from './gmail-api.ts'
+import { readMailbox as readMail, searchMailbox as searchMail } from './mailbox.ts'
+import { FAILURE_MESSAGE } from './mail-types.ts'
 import { hasControlCharacters, parseAddress, replySubject, stripSignOff } from './gmail-mime.ts'
 import { createPending, logGmail } from './gmail-store.ts'
 import { listContacts } from './memory-store.ts'
@@ -27,11 +29,11 @@ export const EMAIL_TOOLS: ToolDefinition[] = [
     function: {
       name: 'search_email',
       description:
-        "Search the user's Gmail. Use it for \"any email from Jan?\", \"did the supplier reply?\" or \"what is in my inbox?\". The query uses Gmail's own search words, for example from:jan, newer_than:2d, is:unread, subject:quote or plain words. Returns up to 5 emails with who sent them, the subject and a short preview.",
+        "Search the user's email (Gmail, Outlook, Yahoo or another service; the same search words work for all of them). Use it for \"any email from Jan?\", \"did the supplier reply?\" or \"what is in my inbox?\". Use these search words: from:jan, newer_than:2d, is:unread, subject:quote or plain words. Returns up to 5 emails with who sent them, the subject and a short preview.",
       parameters: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Gmail search words. Use "in:inbox newer_than:7d" to look at recent mail.' },
+          query: { type: 'string', description: 'Search words. Use "in:inbox newer_than:7d" to look at recent mail.' },
           max_results: { type: 'integer', description: 'How many emails, 1 to 5. Default 3.' },
         },
         required: ['query'],
@@ -77,8 +79,8 @@ export const EMAIL_TOOLS: ToolDefinition[] = [
 const fail = (message: string) => JSON.stringify({ error: message })
 
 const searchArgs = z.object({ query: z.string().trim().min(1).max(200), max_results: z.number().int().min(1).max(MAX_RESULTS).optional() })
-const readArgs = z.object({ id: z.string().trim().min(8).max(40) })
-const replyArgs = z.object({ id: z.string().trim().min(8).max(40), body: z.string().trim().min(2).max(MAX_BODY) })
+const readArgs = z.object({ id: z.string().trim().min(3).max(40) })
+const replyArgs = z.object({ id: z.string().trim().min(3).max(40), body: z.string().trim().min(2).max(MAX_BODY) })
 const newArgs = z.object({ to: z.string().trim().min(3).max(300), subject: z.string().trim().min(1).max(200), body: z.string().trim().min(2).max(MAX_BODY) })
 
 /** The user's own sign-off goes on the end of every email. */
@@ -131,9 +133,13 @@ function spokenSummary(who: string, body: string, isReply: boolean): string {
   return `Here is your ${isReply ? 'reply' : 'email'} to ${who}. ${shown.replace(/[.!?,;:\s]+$/, '')}. It is waiting on your screen. Say "send it" or tap Send, or tell me what to change.`
 }
 
+/** An email may never carry card numbers, bank details or passwords, whoever's they are. */
+const PROTECTED = 'Volita cannot put card numbers, bank account details or passwords in an email. Tell the user you left them out and ask them to share those another way.'
+
 async function prepareReply(args: unknown, ctx: ToolContext): Promise<string> {
   const parsed = replyArgs.safeParse(args)
   if (!parsed.success) return fail('Give the id of the email and the text of the reply.')
+  if (findSensitive(parsed.data.body).length > 0) return fail(PROTECTED)
   const blocked = await gate(ctx)
   if (blocked) return blocked
   const original = await readMail(ctx.userId, parsed.data.id)
@@ -152,6 +158,7 @@ async function prepareReply(args: unknown, ctx: ToolContext): Promise<string> {
 async function prepareNew(args: unknown, ctx: ToolContext): Promise<string> {
   const parsed = newArgs.safeParse(args)
   if (!parsed.success) return fail('Give one email address, a subject and the text.')
+  if (findSensitive(`${parsed.data.subject}\n${parsed.data.body}`).length > 0) return fail(PROTECTED)
   const address = parseAddress(parsed.data.to)
   if (!address || hasControlCharacters(parsed.data.subject)) return fail('That email address or subject is not valid. Ask the user to say the address again.')
   const blocked = await gate(ctx)

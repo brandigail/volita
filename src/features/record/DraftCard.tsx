@@ -12,6 +12,7 @@ import {
   type EmailProvider,
 } from '../../lib/share'
 import type { GeneratedDraft } from '../../types/draft'
+import { clearToShare } from '../../lib/refusals'
 import type { SaveStatus } from './useDraftAutosave'
 import { updateDraftStatus } from '../../lib/drafts-api'
 import { reportActivity } from '../../lib/activity-api'
@@ -90,6 +91,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
     draft.category === 'WHATSAPP' && draft.recipient.trim() !== '' && !isInternationalNumber(draft.recipient)
 
   const handleCopy = async () => {
+    if (!clearToShare(draftToText(draft))) return
     reportAction('copy')
     try {
       await navigator.clipboard.writeText(draftToText(draft))
@@ -149,6 +151,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
 
   /** Opens the device share sheet, which lists every installed mail, chat and notes app. */
   const handleShare = async () => {
+    if (!clearToShare(draftToText(draft))) return
     reportAction('share')
     try {
       await navigator.share({ title: draft.subject || undefined, text: draftToText(draft) })
@@ -165,7 +168,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
       rel="noopener noreferrer"
       aria-disabled={!canSend}
       onClick={(e) => {
-        if (!canSend) return e.preventDefault()
+        if (!canSend || !clearToShare(draftToText(draft))) return e.preventDefault()
         reportAction(`open_${label}`)
         sendPrompt.begin()
       }}

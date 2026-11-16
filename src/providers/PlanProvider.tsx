@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { authClient } from '../lib/auth-client'
+import { isAdult } from '../lib/age'
 import { fetchPlan } from '../lib/plan-api'
 import type { PlanState } from '../types/plan-state'
 import { planLimits } from '../types/plans'
@@ -8,7 +9,8 @@ import { PlanContext, type PlanContextValue } from './plan-context'
 /** Loads the signed-in person's plan once and shares it, so every screen can show locks and the usage meter. */
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession()
-  const userId = session?.user?.id
+  // Waits until the account has given its date of birth (see AgeCheck); before that the server refuses every request.
+  const userId = isAdult(session?.user?.birthDate) ? session?.user?.id : undefined
   const [loaded, setLoaded] = useState<{ userId: string; state: PlanState } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
 

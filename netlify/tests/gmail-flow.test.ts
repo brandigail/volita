@@ -127,6 +127,7 @@ suite('Gmail feature', () => {
   let free: SessionUser
   let other: SessionUser
   let handler: (req: Request) => Promise<Response>
+  let mailHandler: (req: Request) => Promise<Response>
   let tools: typeof import('../functions/_lib/email-tools.ts')
   let store: typeof import('../functions/_lib/gmail-store.ts')
   let api: typeof import('../functions/_lib/gmail-api.ts')
@@ -140,6 +141,7 @@ suite('Gmail feature', () => {
   beforeAll(async () => {
     process.env.GOOGLE_STUB_URL = await startFakeGoogle()
     handler = (await import('../functions/gmail.ts')).default
+    mailHandler = (await import('../functions/mail.ts')).default
     tools = await import('../functions/_lib/email-tools.ts')
     store = await import('../functions/_lib/gmail-store.ts')
     api = await import('../functions/_lib/gmail-api.ts')
@@ -214,19 +216,19 @@ suite('Gmail feature', () => {
       expect(JSON.stringify(raw)).not.toContain('rt-good')
       expect(JSON.stringify(raw)).not.toContain('dad@gmail.test')
       expect(await store.getConnection(pro.id)).toMatchObject({ email: 'dad@gmail.test', refreshToken: 'rt-good', needsReconnect: false })
-      const status = (await (await handler(get('/api/gmail/status'))).json()) as Record<string, unknown>
-      expect(status).toMatchObject({ configured: true, allowed: true, connected: true, email: 'dad@gmail.test', needsReconnect: false })
+      const status = (await (await mailHandler(get('/api/mail/status'))).json()) as Record<string, unknown>
+      expect(status).toMatchObject({ googleReady: true, allowed: true, connected: true, provider: 'gmail', email: 'dad@gmail.test', needsReconnect: false })
       expect((await store.listLog(pro.id)).map((e) => e.action)).toContain('connect')
     })
 
     it('shows a Free user that Gmail is not part of their plan', async () => {
       hoisted.current = free
-      expect(await (await handler(get('/api/gmail/status'))).json()).toMatchObject({ allowed: false, connected: false })
+      expect(await (await mailHandler(get('/api/mail/status'))).json()).toMatchObject({ allowed: false, connected: false })
     })
 
     it('needs a signed-in user', async () => {
       hoisted.current = null
-      expect((await handler(get('/api/gmail/status'))).status).toBe(401)
+      expect((await mailHandler(get('/api/mail/status'))).status).toBe(401)
     })
   })
 
@@ -399,8 +401,8 @@ suite('Gmail feature', () => {
       expect(result).toEqual({ ok: false, reason: 'reconnect' })
       expect(await store.getConnection(other.id)).toMatchObject({ needsReconnect: true })
       hoisted.current = other
-      expect(await (await handler(get('/api/gmail/status'))).json()).toMatchObject({ connected: true, needsReconnect: true })
-      expect(await assistantTools.runTool('search_email', JSON.stringify({ query: 'x' }), context(other))).toContain('connect Gmail again')
+      expect(await (await mailHandler(get('/api/mail/status'))).json()).toMatchObject({ connected: true, needsReconnect: true })
+      expect(await assistantTools.runTool('search_email', JSON.stringify({ query: 'x' }), context(other))).toContain('connect their email again')
     })
 
     it('reports "not connected" for a person who never connected', async () => {
@@ -411,8 +413,8 @@ suite('Gmail feature', () => {
   describe('disconnecting and deleting', () => {
     it('tells Google to forget the permission, deletes the token and any waiting email, and keeps the record', async () => {
       await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'a@client.test', subject: 'Hi', body: 'hello' }), context(pro))
-      const res = await handler(post('/api/gmail/disconnect', {}))
-      expect(await res.json()).toEqual({ disconnected: true })
+      const res = await mailHandler(post('/api/mail/disconnect', {}))
+      expect(await res.json()).toEqual({ disconnected: true, provider: 'gmail' })
       expect(stub.revoked).toEqual(['rt-good'])
       expect(await store.getConnection(pro.id)).toBeNull()
       expect(await store.getPending(pro.id)).toBeNull()

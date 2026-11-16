@@ -12,7 +12,7 @@ import { FeedbackForm } from '../tour/FeedbackForm'
 import { AccountData } from './AccountData'
 import { InstallHelp, TesterNotice } from './DeviceNotices'
 import { CalendarConnect } from './CalendarConnect'
-import { GmailConnect } from './GmailConnect'
+import { EmailConnect } from './EmailConnect'
 import { authClient } from '../../lib/auth-client'
 import { PROFILE_LIMITS, type Profile, type ProfileSource } from '../../types/profile'
 
@@ -200,7 +200,7 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       <PlansSection />
       <FamilySection />
       <ReferralCard />
-      <GmailConnect returnCode={gmailReturn} />
+      <EmailConnect returnCode={gmailReturn} />
       <MemorySection />
       <LibrarySection />
       <NotificationSettings />

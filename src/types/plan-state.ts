@@ -1,5 +1,6 @@
 import type { TrialState } from './growth.ts'
 import type { PlanId, PlanLimits } from './plans.ts'
+import type { SafetyCounts } from './safety.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 
@@ -39,6 +40,10 @@ export interface AdminUser {
   source: PlanSourceName
   drafts: number
   lastActive: string | null
+  /** When the owner closed the account; null while it is open. */
+  suspendedAt: string | null
+  /** What the safety checks stopped in the last 30 days. */
+  safety: SafetyCounts
 }
 
 export interface AdminUsersResponse {

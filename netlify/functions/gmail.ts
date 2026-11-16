@@ -1,10 +1,12 @@
 import type { Config } from '@netlify/functions'
 import { z } from 'zod'
-import { GMAIL_RETURN_PARAM, type GmailStatus, type PendingEmail } from '../../src/types/gmail.ts'
+import { GMAIL_RETURN_PARAM, type PendingEmail } from '../../src/types/gmail.ts'
 import { planLimits } from '../../src/types/plans.ts'
-import { forgetAccessToken, readMail, sendMail } from './_lib/gmail-api.ts'
-import { cancelPending, claimPending, deleteConnection, deleteSent, getConnection, getPending, listLog, logGmail, releasePending, saveConnection, type PendingFull } from './_lib/gmail-store.ts'
-import { buildAuthUrl, createState, exchangeCode, fetchGoogleEmail, googleConfigured, hasRequiredScopes, readState, revokeToken } from './_lib/google-oauth.ts'
+import { forgetAccessToken } from './_lib/gmail-api.ts'
+import { sendFromMailbox } from './_lib/mailbox.ts'
+import { cancelPending, claimPending, deleteSent, getPending, listLog, logGmail, releasePending, saveConnection, sentToday, type PendingFull } from './_lib/gmail-store.ts'
+import { noteSpam } from './_lib/safety.ts'
+import { buildAuthUrl, createState, exchangeCode, fetchGoogleEmail, googleConfigured, hasRequiredScopes, readState } from './_lib/google-oauth.ts'
 import { resultPage } from './_lib/gmail-pages.ts'
 import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
@@ -12,6 +14,8 @@ import { requireUser, type SessionUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
 
 const idBody = z.object({ id: z.uuid() })
+/** Most emails one person can send through Volita in 24 hours. */
+const MAX_SENDS_PER_DAY = 40
 
 /** Back to the app with a short code in the address, which the app turns into a message and then removes. */
 function backToApp(requestUrl: string, code: string): Response {
@@ -31,17 +35,6 @@ function toPublic(pending: PendingFull): PendingEmail {
   return { id: pending.id, to: pending.to, subject: pending.subject, body: pending.body, differs: pending.differs, replyToSubject: null, expiresAt: pending.expiresAt }
 }
 
-async function status(user: SessionUser): Promise<Response> {
-  const connection = await getConnection(user.id)
-  return json<GmailStatus>({
-    configured: googleConfigured(),
-    allowed: planLimits(user.plan).email,
-    connected: connection !== null,
-    email: connection?.email ?? null,
-    needsReconnect: connection?.needsReconnect ?? false,
-    connectedAt: connection?.connectedAt ?? null,
-  })
-}
 
 /** Sends the Google permission screen. Needs a real page navigation, so it answers with a redirect. */
 function start(req: Request, user: SessionUser): Response {
@@ -76,39 +69,30 @@ async function callback(req: Request): Promise<Response> {
   return resultPage(req.url, 'connected')
 }
 
-async function disconnect(user: SessionUser): Promise<Response> {
-  const connection = await getConnection(user.id)
-  if (connection) await revokeToken(connection.refreshToken)
-  await deleteConnection(user.id)
-  forgetAccessToken(user.id)
-  await logGmail(user.id, 'disconnect', connection?.email ?? '')
-  return json({ disconnected: true })
-}
 
 /** The only place an email is ever sent, and only for an email the person approved: the one they tapped Send on. */
 async function send(req: Request, user: SessionUser): Promise<Response> {
-  if (!planLimits(user.plan).email) return upgradeResponse('Gmail is part of the Pro plan.', 'pro')
+  if (!planLimits(user.plan).email) return upgradeResponse('Email is part of the Pro plan.', 'pro')
   const body = idBody.safeParse(await req.json().catch(() => null))
   if (!body.success) return errorResponse(400, 'Say which email to send.')
   const quota = await claimQuota(user, 'email')
   if (!quota.ok) return quota.response
+  // A tradesperson answers a handful of emails a day; far more than that is someone using Volita to send spam.
+  if ((await sentToday(user.id)) >= MAX_SENDS_PER_DAY) {
+    await noteSpam(user.id, 'email send')
+    return errorResponse(429, `Volita sends at most ${MAX_SENDS_PER_DAY} emails a day for you. Please send the rest from your email app.`)
+  }
 
   const pending = await claimPending(user.id, body.data.id)
   if (!pending) return errorResponse(409, 'That email is no longer waiting. It may have been sent, cancelled or expired.')
 
-  let inReplyTo: string | undefined
-  let references: string | undefined
-  if (pending.replyToId) {
-    const original = await readMail(user.id, pending.replyToId)
-    if (original.ok && original.value.messageIdHeader) {
-      inReplyTo = original.value.messageIdHeader
-      references = `${original.value.references} ${original.value.messageIdHeader}`.trim().slice(-900)
-    }
-  }
-  const sent = await sendMail(user.id, { to: pending.to, subject: pending.subject, body: pending.body, threadId: pending.threadId, inReplyTo, references })
+  const sent = await sendFromMailbox(user.id, { to: pending.to, subject: pending.subject, body: pending.body, threadId: pending.threadId, replyToId: pending.replyToId })
   if (!sent.ok) {
     await releasePending(user.id, pending.id)
-    return errorResponse(sent.reason === 'reconnect' ? 409 : 502, sent.reason === 'reconnect' ? 'Your Gmail connection has expired. Connect Gmail again on the Profile tab, then send.' : 'Gmail did not accept that. Try again in a moment.')
+    return errorResponse(
+      sent.reason === 'reconnect' || sent.reason === 'not_connected' ? 409 : 502,
+      sent.reason === 'reconnect' || sent.reason === 'not_connected' ? 'Your email connection has stopped working. Connect your email again on the Profile tab, then send.' : 'Your email service did not accept that. Try again in a moment.',
+    )
   }
   await deleteSent(user.id, pending.id)
   await logGmail(user.id, 'send', `To ${pending.to}: ${pending.subject}`)
@@ -123,7 +107,7 @@ async function cancel(req: Request, user: SessionUser): Promise<Response> {
   return json({ cancelled: removed })
 }
 
-/** Routes: /api/gmail/start, callback, status, disconnect, pending, send, cancel and log. */
+/** Routes: /api/gmail/start, callback, pending, send, cancel and log. Status and disconnecting are in mail.ts, for every service. */
 export default async function handler(req: Request): Promise<Response> {
   const action = new URL(req.url).pathname.split('/').filter(Boolean)[2]
   if (req.method === 'GET' && action === 'callback') {
@@ -144,8 +128,6 @@ export default async function handler(req: Request): Promise<Response> {
       switch (action) {
         case 'start':
           return start(req, user)
-        case 'status':
-          return await status(user)
         case 'pending': {
           const pending = await getPending(user.id)
           return json<{ pending: PendingEmail | null }>({ pending: pending ? toPublic(pending) : null })
@@ -157,8 +139,6 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'POST') {
       if (!fromThisSite(req)) return errorResponse(400, 'That request did not come from the app.')
       switch (action) {
-        case 'disconnect':
-          return await disconnect(user)
         case 'send':
           return await send(req, user)
         case 'cancel':

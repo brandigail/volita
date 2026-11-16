@@ -8,6 +8,7 @@ import { loadPriceContext } from './_lib/price-context.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { logActivity } from './_lib/activity.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 import { AUTO, SAME } from '../../src/types/languages.ts'
 
 /** Netlify's default function timeout is 10 s; the whole call, retry included, must fit inside it. */
@@ -38,6 +39,8 @@ export default async function handler(req: Request): Promise<Response> {
   if (!request.success) return errorResponse(400, 'A transcript of 1 to 10,000 characters is required.')
 
   const { category, transcript, writeLanguage, spokenLanguage, tone } = request.data
+  const refused = await refuseSensitive(user, transcript, 'draft')
+  if (refused) return refused
   // Only filler ("um, yeah, so") was picked up: writing a draft from it would invent an empty message and use up a draft.
   if (transcript.toLowerCase().match(/[\p{L}\p{N}']+/gu)?.every((word) => FILLER_WORDS.has(word)) ?? true) {
     return errorResponse(422, 'I did not catch anything to write. Please try recording again.')

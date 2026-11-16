@@ -9,6 +9,7 @@ import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { loadMemoryContext } from './_lib/memory-context.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 const DEADLINE_MS = 9_000
 /** The app shrinks photos before sending; this keeps the request far under Netlify's 6 MB limit. */
@@ -37,6 +38,8 @@ export default async function handler(req: Request): Promise<Response> {
   if (!request.success) return errorResponse(400, 'Send a JPEG, PNG or WebP photo and a channel.')
   const { image, category, note } = request.data
   if (!limits.channels.includes(category)) return upgradeResponse('That channel is not part of your plan.', planForChannel(category))
+  const refused = await refuseSensitive(user, note, 'photo caption')
+  if (refused) return refused
 
   const quota = await claimQuota(user, 'caption')
   if (!quota.ok) return quota.response

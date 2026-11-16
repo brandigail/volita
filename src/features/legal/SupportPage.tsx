@@ -7,7 +7,7 @@ const HELP: { question: string; answer: string }[] = [
   { question: 'I forgot my password.', answer: 'Email us from the address you signed up with and we will help you back in.' },
   { question: 'How do I delete my account and everything in it?', answer: 'Open Profile, scroll to the end and choose Delete my account and data. You can download a copy of your data first.' },
   { question: 'How do I get the free Pro trial?', answer: 'Open Profile and tap Try Pro free. It needs no card and lasts 14 days.' },
-  { question: 'Gmail says it needs connecting again.', answer: 'While Volita is being tested, Google ends the Gmail permission after about a week. Open Profile, Gmail, and tap Connect again.' },
+  { question: 'My email says it needs connecting again.', answer: 'While Volita is being tested, Google ends the Gmail permission after about a week. For Yahoo, AOL, iCloud and business email it happens when the app password is cancelled or changed. Open Profile, Your email, and connect again.' },
 ]
 
 export function SupportPage() {

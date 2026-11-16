@@ -88,7 +88,7 @@ const FAQ = [
   { q: 'Does Volita keep my voice recordings?', a: 'No. The audio is turned into text and thrown away. Only the text of your draft is kept, encrypted.' },
   { q: 'Which phones does it work on?', a: 'Any recent Android phone or iPhone, and any computer. Open it in the browser and add it to your home screen.' },
   { q: 'Will it get my prices and spelling right?', a: 'It writes from what you say and what it has learned about you, but it is an AI: always read a draft and check the numbers before you send.' },
-  { q: 'Can I connect my Gmail?', a: 'Yes, on Pro. It can find and read emails when you ask and write replies, but it never sends anything unless you tap Send.' },
+  { q: 'Can I connect my email?', a: 'Yes, on Pro: Gmail, Outlook or Hotmail, Yahoo, AOL, iCloud and most business email. It can find and read emails when you ask and write replies, but it never sends anything unless you tap Send.' },
   { q: 'What happens when the trial ends?', a: 'You go back to the plan you were on. Everything you made is kept; the Pro features are locked until you upgrade.' },
 ] as const
 

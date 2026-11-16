@@ -6,6 +6,7 @@ import { addAgendaItem, deleteAgendaItem, listAgenda } from './_lib/agenda.ts'
 import { errorResponse, json } from './_lib/http.ts'
 import { requireUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const DEFAULT_SPAN_DAYS = 14
@@ -49,6 +50,8 @@ export default async function handler(req: Request): Promise<Response> {
       }
       const parsed = newAgendaItemSchema.safeParse(body)
       if (!parsed.success) return errorResponse(400, 'That agenda item is not valid.')
+      const refused = await refuseSensitive({ id: userId }, parsed.data, 'agenda')
+      if (refused) return refused
       const added = await addAgendaItem(userId, parsed.data)
       return added.ok ? json({ item: added.item }, 201) : errorResponse(403, added.message)
     }

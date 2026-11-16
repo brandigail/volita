@@ -9,6 +9,7 @@ import { addMemory, deleteMemory, listContacts, listMemories, updateMemory } fro
 import { claimQuota } from './_lib/rate-limit.ts'
 import { describeError } from './_lib/safe-log.ts'
 import { requireUser } from './_lib/session.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 /** Routes are /api/memory and /api/memory/:id. */
 function idFrom(req: Request): string | null {
@@ -32,6 +33,8 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'POST' && id === null) {
       const input = memoryInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, `Write a note of 1 to ${MEMORY_LIMITS.content} characters.`)
+      const refused = await refuseSensitive(session.user, input.data, 'memory')
+      if (refused) return refused
       const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
       const result = await addMemory(userId, input.data.kind, input.data.content, { cap: planLimits(session.user.plan).memoryItems })
@@ -44,6 +47,8 @@ export default async function handler(req: Request): Promise<Response> {
     if (req.method === 'PUT' && id !== null) {
       const input = memoryInputSchema.safeParse(await req.json().catch(() => null))
       if (!input.success) return errorResponse(400, `Write a note of 1 to ${MEMORY_LIMITS.content} characters.`)
+      const refused = await refuseSensitive(session.user, input.data, 'memory')
+      if (refused) return refused
       const quota = await claimQuota(session.user, 'memory')
       if (!quota.ok) return quota.response
       const memory = await updateMemory(userId, id, input.data.kind, input.data.content)

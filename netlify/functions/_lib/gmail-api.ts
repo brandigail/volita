@@ -2,23 +2,17 @@ import { buildRawMessage, extractBody, headerValue, parseAddress, type GmailPayl
 import { getConnection, markNeedsReconnect } from './gmail-store.ts'
 import { googleUrls, refreshAccessToken } from './google-oauth.ts'
 import { describeError, describeUpstream } from './safe-log.ts'
+import { SNIPPET_CHARS, type MailMessage, type MailResult, type MailSummary } from './mail-types.ts'
 
 /** Talks to Gmail for one person. It never throws: every outcome is a result the caller can turn into a kind message. */
 
 const TIMEOUT_MS = 6_000
-const MESSAGE_ID = /^[0-9a-f]{8,24}$/i
+/** Gmail's message ids: 16 hex characters. */
+export const GMAIL_MESSAGE_ID = /^[0-9a-f]{8,24}$/i
+const MESSAGE_ID = GMAIL_MESSAGE_ID
 const MAX_QUERY_CHARS = 200
-const SNIPPET_CHARS = 160
 
-export type GmailFailure = 'not_connected' | 'reconnect' | 'failed' | 'not_found'
-export type GmailResult<T> = { ok: true; value: T } | { ok: false; reason: GmailFailure }
-
-export const FAILURE_MESSAGE: Record<GmailFailure, string> = {
-  not_connected: 'Gmail is not connected. Tell them to connect it on the Profile tab.',
-  reconnect: 'The Gmail connection has expired. Tell them to connect Gmail again on the Profile tab (it needs renewing every week for now).',
-  failed: 'Gmail did not answer. Say you could not reach their email right now and they can try again in a moment.',
-  not_found: 'That email was not found.',
-}
+type GmailResult<T> = MailResult<T>
 
 // Access tokens last about an hour. They are kept in memory for the life of this server instance only, never stored.
 const tokens = new Map<string, { token: string; expiresAt: number }>()
@@ -71,14 +65,6 @@ async function call<T>(userId: string, path: string, init: RequestInit = {}): Pr
   }
 }
 
-export interface MailSummary {
-  id: string
-  from: string
-  subject: string
-  date: string
-  snippet: string
-}
-
 interface ListResponse {
   messages?: { id: string }[]
 }
@@ -114,15 +100,6 @@ export async function searchMail(userId: string, query: string, max: number): Pr
   const failed = details.find((d) => !d.ok)
   if (failed && !failed.ok && failed.reason !== 'not_found') return failed
   return { ok: true, value: details.flatMap((d) => (d.ok ? [summarise(d.value)] : [])) }
-}
-
-export interface MailMessage extends MailSummary {
-  threadId: string
-  /** Who a reply goes to: the Reply-To address if there is one, otherwise the sender. */
-  replyTo: string | null
-  messageIdHeader: string
-  references: string
-  body: string
 }
 
 /** One email in full. Only its text is returned; attachments are never downloaded. */

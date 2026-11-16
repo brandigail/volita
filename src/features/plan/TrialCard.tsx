@@ -28,7 +28,7 @@ export function TrialCard() {
         <p className="flex items-start gap-3 text-sm">
           <Gift className="mt-0.5 size-5 shrink-0 text-ember-400" aria-hidden="true" />
           <span>
-            <span className="font-bold">Try Pro free for {trial.lengthDays} days.</span> No card, nothing to cancel. Morning briefing, writing style, tone rewrites, web lookups, Gmail and 300 drafts a day.
+            <span className="font-bold">Try Pro free for {trial.lengthDays} days.</span> No card, nothing to cancel. Morning briefing, writing style, tone rewrites, web lookups, your email (Gmail, Outlook, Yahoo and more) and 300 drafts a day.
           </span>
         </p>
         <StartTrialButton className="btn btn-primary self-start" />

@@ -1,5 +1,7 @@
 import { SITE } from '../../config/site'
 import { REFERRED_TRIAL_DAYS, REFERRER_REWARD_DAYS, MAX_REWARDED_REFERRALS, TRIAL_DAYS } from '../../types/growth'
+import { MIN_AGE } from '../../lib/age'
+import { STRIKE_LIMIT } from '../../types/safety'
 import { LegalLayout } from './LegalLayout'
 
 /** The terms of use, in plain language. */
@@ -23,17 +25,52 @@ export function TermsPage() {
       </section>
 
       <section>
+        <h2>Adults only ({MIN_AGE} and over)</h2>
+        <p>
+          {SITE.name} is only for people aged {MIN_AGE} and over. You give your date of birth when you create an account, and it must be true. If we learn that an account belongs to someone under{' '}
+          {MIN_AGE}, we close it.
+        </p>
+      </section>
+
+      <section>
         <h2>Your account</h2>
         <ul>
-          <li>You must be at least 18 and give true details. Keep your password to yourself; you are responsible for what happens under your account.</li>
-          <li>One person per account. Please do not create several accounts to get around a limit or to repeat the free trial.</li>
-          <li>You can delete your account in Profile at any time. We may suspend an account that breaks these terms.</li>
+          <li>Give true details. Keep your password to yourself; you are responsible for what happens under your account.</li>
+          <li>One person per account. Do not create several accounts to get around a limit, to repeat the free trial or to come back after an account was closed.</li>
+          <li>You can delete your account in Profile at any time.</li>
         </ul>
       </section>
 
       <section>
-        <h2>Using it properly</h2>
-        <p>Do not use {SITE.name} to break the law, to harass or deceive people, to send spam, or to try to get past its limits or security. Do not dictate other people&apos;s bank details, card numbers or passwords into it.</p>
+        <h2>Card numbers, bank details and passwords are not allowed</h2>
+        <p>
+          Never say or type card numbers, bank account details (account numbers, branch codes, IBAN or SWIFT codes), passwords, PINs or one-time codes into {SITE.name}, whether they are yours or someone
+          else&apos;s. {SITE.name} checks for them before anything is sent to the AI or saved. When it finds them, it stops, shows a warning that it cannot send this, and does not send or keep the text.
+          Each try is counted. After {STRIKE_LIMIT} tries in 30 days the owner is told, and the account may be closed.
+        </p>
+      </section>
+
+      <section>
+        <h2>No spam, and no getting around limits or security</h2>
+        <ul>
+          <li>Do not use {SITE.name} to break the law, to harass or deceive people, or to send spam or bulk email. {SITE.name} sends at most 40 emails a day for you.</li>
+          <li>
+            Do not try to get past the daily limits, the plan locks or the security: no scripts or bots, no repeated attempts after being refused, no fake accounts, and no attempts to reach other
+            people&apos;s data.
+          </li>
+          <li>
+            {SITE.name} watches for this automatically. It records what kind of thing was stopped and when (never what you said or typed), and the owner is warned when an account keeps being stopped.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>When we close an account</h2>
+        <p>
+          We may close an account that breaks these terms, straight away and without warning if the breach is serious or keeps happening. A closed account is signed out everywhere and cannot sign in again.
+          If you think we made a mistake, write to <a className="underline" href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a> and we will look at it. Anything you paid for and could not use
+          because of a mistake on our side will be refunded.
+        </p>
       </section>
 
       <section>

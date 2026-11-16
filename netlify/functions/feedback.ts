@@ -4,6 +4,7 @@ import { errorResponse, json } from './_lib/http.ts'
 import { claimQuota } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 const requestSchema = z.object({
   message: z.string().trim().min(3).max(2_000),
@@ -19,6 +20,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   const request = requestSchema.safeParse(await req.json().catch(() => null))
   if (!request.success) return errorResponse(400, 'Write a few words (up to 2,000 characters).')
+  const refused = await refuseSensitive(session.user, request.data, 'feedback')
+  if (refused) return refused
 
   const quota = await claimQuota(session.user, 'feedback')
   if (!quota.ok) return quota.response

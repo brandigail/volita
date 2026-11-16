@@ -1,40 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
-import { addInvites, fetchAdminUsers, fetchInvites, removeInvite, setUserPlan, type PlanInvite } from '../../lib/plan-api'
+import { addInvites, fetchAdminUsers, fetchInvites, removeInvite, setAccountClosed, setUserPlan, type PlanInvite } from '../../lib/plan-api'
 import { usePlan } from '../../providers/usePlan'
 import type { AdminUser } from '../../types/plan-state'
-
-const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
-
-function Row({ user, busy, onChange }: { user: AdminUser; busy: boolean; onChange: (plan: 'free' | 'basic' | 'pro') => void }) {
-  const locked = user.source === 'owner'
-  return (
-    <li className="surface flex flex-wrap items-center gap-3 p-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold">{user.name || user.email}</p>
-        <p className="muted truncate text-xs">{user.email}</p>
-        <p className="muted text-xs">
-          {user.drafts} drafts · {user.lastActive ? `last used ${dateFormat.format(new Date(user.lastActive))}` : 'never used'}
-          {user.source === 'subscription' && ' · paying'}
-        </p>
-      </div>
-      <label className="sr-only" htmlFor={`plan-${user.id}`}>
-        Plan for {user.email}
-      </label>
-      <select
-        id={`plan-${user.id}`}
-        value={user.plan}
-        disabled={busy || locked || user.source === 'subscription'}
-        onChange={(e) => onChange(e.target.value as 'free' | 'basic' | 'pro')}
-        className="field w-auto"
-      >
-        <option value="free">Free</option>
-        <option value="basic">Basic (free for them)</option>
-        <option value="pro">Pro (free for them)</option>
-      </select>
-    </li>
-  )
-}
+import { AccountRow } from './AccountRow'
+import { SafetyAlerts } from './SafetyAlerts'
 
 /** Paste emails once; each person gets the plan the moment they sign up with that address. */
 function InviteBox() {
@@ -132,14 +102,14 @@ export function FamilySection() {
 
   if (!isOwner) return null
 
-  const change = async (user: AdminUser, plan: 'free' | 'basic' | 'pro') => {
+  const update = async (user: AdminUser, run: () => Promise<AdminUser>, failure: string) => {
     setBusyId(user.id)
     setError(null)
     try {
-      const updated = await setUserPlan(user.id, plan)
+      const updated = await run()
       setUsers((current) => current?.map((u) => (u.id === updated.id ? updated : u)) ?? null)
     } catch (err) {
-      setError(err instanceof ApiRequestError ? err.message : 'Could not change that plan.')
+      setError(err instanceof ApiRequestError ? err.message : failure)
     } finally {
       setBusyId(null)
     }
@@ -150,17 +120,24 @@ export function FamilySection() {
       <h2 id="family-heading" className="text-2xl font-extrabold tracking-tight">
         Family and friends
       </h2>
-      <p className="muted mt-1 mb-4 text-sm">Choose who gets a plan for free. New sign-ups start on Free. Only you can see this.</p>
+      <p className="muted mt-1 mb-4 text-sm">Choose who gets a plan for free, and close the account of anyone who breaks the rules. New sign-ups start on Free. Only you can see this.</p>
       {error && (
         <p role="alert" className="mb-3 text-sm text-red-700 dark:text-red-400">
           {error}
         </p>
       )}
+      <SafetyAlerts refreshKey={users?.length ?? 0} />
       <InviteBox />
       {users === null && !error && <p className="muted text-sm">Loading…</p>}
       <ul className="space-y-2">
         {users?.map((user) => (
-          <Row key={user.id} user={user} busy={busyId === user.id} onChange={(plan) => void change(user, plan)} />
+          <AccountRow
+            key={user.id}
+            user={user}
+            busy={busyId === user.id}
+            onPlan={(plan) => void update(user, () => setUserPlan(user.id, plan), 'Could not change that plan.')}
+            onClosed={(closed, reason) => void update(user, () => setAccountClosed(user.id, closed, reason), closed ? 'Could not close that account.' : 'Could not reopen that account.')}
+          />
         ))}
       </ul>
     </section>

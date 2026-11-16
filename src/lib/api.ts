@@ -4,6 +4,8 @@ import { isPlanId, type PlanId } from '../types/plans'
 import { generatedDraftSchema } from '../types/draft-schema'
 import type { DraftCategory, GeneratedDraft } from '../types/draft'
 import { extensionForMime } from './audio-mime'
+import type { RefusalCode } from '../types/safety'
+import { announceRefusal } from './refusals'
 
 const REQUEST_TIMEOUT_MS = 20_000
 
@@ -11,14 +13,20 @@ export class ApiRequestError extends Error {
   readonly status: number
   /** Set when the refusal is about the plan: the plan that would allow it. */
   readonly upgrade?: PlanId
+  /** Set for safety refusals (protected details, a closed account, a missing date of birth). */
+  readonly code?: RefusalCode
 
-  constructor(status: number, message: string, upgrade?: PlanId) {
+  constructor(status: number, message: string, upgrade?: PlanId, code?: RefusalCode) {
     super(message)
     this.name = 'ApiRequestError'
     this.status = status
     this.upgrade = upgrade
+    this.code = code
   }
 }
+
+const REFUSAL_CODES: readonly string[] = ['sensitive', 'suspended', 'age_required'] satisfies RefusalCode[]
+const isRefusalCode = (value: unknown): value is RefusalCode => typeof value === 'string' && REFUSAL_CODES.includes(value)
 
 const transcribeResponseSchema = z.object({ text: z.string().min(1) })
 const generateResponseSchema = z.object({ draft: generatedDraftSchema })
@@ -39,14 +47,18 @@ export async function request(path: string, init: RequestInit = {}): Promise<unk
   if (!response.ok) {
     let message = 'Something went wrong. Please try again.'
     let upgrade: PlanId | undefined
+    let code: RefusalCode | undefined
     try {
       const body = (await response.json()) as Partial<ApiError>
       if (typeof body.error === 'string') message = body.error
       if (isPlanId(body.upgrade)) upgrade = body.upgrade
+      if (isRefusalCode(body.code)) code = body.code
     } catch {
       // non-JSON error body; keep the generic message
     }
-    throw new ApiRequestError(response.status, message, upgrade)
+    // Safety refusals are shown as one pop-up for the whole app, whichever screen made the request.
+    if (code) announceRefusal({ code, message })
+    throw new ApiRequestError(response.status, message, upgrade, code)
   }
 
   try {

@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowLeft, AudioWaveform, Eye, EyeOff } from 'lucide-react'
 import { authClient } from '../../lib/auth-client'
+import { UNDER_AGE_MESSAGE, isAdult } from '../../lib/age'
+import { BirthDateFields } from '../safety/BirthDateFields'
+import { EMPTY_BIRTH_DATE, birthDateValue } from '../safety/birthDate'
 
 type Mode = 'sign-in' | 'sign-up'
 
@@ -22,6 +25,8 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [birth, setBirth] = useState(EMPTY_BIRTH_DATE)
+  const [agreed, setAgreed] = useState(false)
 
   const signingUp = mode === 'sign-up'
 
@@ -32,11 +37,14 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    const birthDate = birthDateValue(birth)
+    if (signingUp && !birthDate) return setError('Choose the day, month and year you were born.')
+    if (signingUp && !isAdult(birthDate)) return setError(UNDER_AGE_MESSAGE)
     setBusy(true)
     setError(null)
     try {
       const { error: authError } = signingUp
-        ? await authClient.signUp.email({ name: name.trim(), email: email.trim(), password })
+        ? await authClient.signUp.email({ name: name.trim(), email: email.trim(), password, birthDate: birthDate ?? undefined })
         : await authClient.signIn.email({ email: email.trim(), password })
       // On success the session hook updates and App swaps this screen for the app.
       if (authError) setError(signingUp && authError.status === 400 && /sign.?up/i.test(authError.message ?? '') ? 'New accounts are closed right now. Ask the owner to add you.' : (authError.message ?? 'Something went wrong. Please try again.'))
@@ -127,6 +135,25 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
             </p>
           )}
         </div>
+        {signingUp && (
+          <>
+            <BirthDateFields value={birth} onChange={setBirth} idPrefix="auth-birth" />
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-4 cursor-pointer" />
+              <span>
+                I am 18 or older and I agree to the{' '}
+                <a href="/terms" target="_blank" rel="noreferrer" className="underline">
+                  terms
+                </a>{' '}
+                and{' '}
+                <a href="/privacy" target="_blank" rel="noreferrer" className="underline">
+                  privacy policy
+                </a>
+                , including no card numbers, bank details or passwords and no spam.
+              </span>
+            </label>
+          </>
+        )}
 
         {error && (
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">

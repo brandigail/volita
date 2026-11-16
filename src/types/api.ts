@@ -1,10 +1,16 @@
 import type { Draft, DraftCategory, GeneratedDraft } from './draft.ts'
 import type { PlanId } from './plans.ts'
+import type { RefusalCode } from './safety.ts'
 
 export interface ApiError {
   error: string
   /** Set when the refusal is about the plan: the plan that would allow it, so the app can offer the upgrade. */
   upgrade?: PlanId
+  /** Set for safety refusals, which the app shows as a pop-up. */
+  code?: RefusalCode
+  /** For `sensitive`: how many tries with protected details in the last 30 days, and how many before the owner is told. */
+  strikes?: number
+  strikeLimit?: number
 }
 
 export interface TranscribeResponse {

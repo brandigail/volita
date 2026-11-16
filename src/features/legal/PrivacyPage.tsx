@@ -1,5 +1,6 @@
 import { Mic } from 'lucide-react'
 import { SITE } from '../../config/site'
+import { MIN_AGE } from '../../lib/age'
 import { LegalLayout } from './LegalLayout'
 
 /** The privacy policy, in plain language. Every statement here describes what the app actually does today. */
@@ -30,6 +31,11 @@ export function PrivacyPage() {
         <h2>What we keep</h2>
         <ul>
           <li>Your account: name, email address and a password that is stored only as a one-way scrambled value, so nobody (including us) can read it.</li>
+          <li>Your date of birth, to confirm you are {MIN_AGE} or over.</li>
+          <li>
+            A record of what the safety checks stopped: only the kind (for example &quot;card number&quot; or &quot;too many emails&quot;), where in the app and when. Never the text you said or typed. It is kept
+            for 180 days so the owner can deal with misuse.
+          </li>
           <li>Your profile: business name, role, phone number and sign-off, so drafts can be written and signed in your name.</li>
           <li>What you make: the text of your drafts, who they are for, your agenda items, the notes and people you ask Volita to remember, your price list and templates.</li>
           <li>Your conversations with the voice assistant, so you can look back at them.</li>
@@ -43,7 +49,11 @@ export function PrivacyPage() {
         <h2>How it is protected</h2>
         <p>
           Everything travels over an encrypted connection. The text of your messages, transcripts, agenda items, notes and calendar link is encrypted before it is saved, with a separate key for each
-          person, so another account cannot read it. Passwords are hashed. We still ask you not to dictate bank details, card numbers or ID numbers: type those yourself.
+          person, so another account cannot read it. Passwords are hashed.
+        </p>
+        <p>
+          Card numbers, bank account details and passwords or PINs are not allowed in {SITE.name}. Everything you say or type is checked for them first. If any are found, the text is not sent to the AI,
+          not saved and not logged; you see a warning instead. Please also keep ID numbers out of what you dictate.
         </p>
       </section>
 
@@ -54,18 +64,22 @@ export function PrivacyPage() {
           <li>Groq: turns your voice into text, writes drafts and gives the assistant its natural voices.</li>
           <li>Neon: the database where your account and drafts are stored.</li>
           <li>Netlify: hosts the app and runs its server code.</li>
-          <li>Google: only if you choose to connect Gmail (see below).</li>
+          <li>Your email company (Google, Microsoft, Yahoo, Apple or another): only if you choose to connect your email (see below).</li>
           <li>PayFast and Resend: payments and the emails about them, once paid plans open.</li>
         </ul>
       </section>
 
       <section>
-        <h2>Gmail, if you connect it</h2>
+        <h2>Your email, if you connect it</h2>
         <p>
-          Connecting Gmail is optional and part of the Pro plan. {SITE.name} asks Google only for permission to read and to send mail, nothing else: it cannot delete, move or change your mail. An email is
-          read only when you ask the assistant about it. Its text is sent to our AI service for that one answer and is not saved by {SITE.name}. We never send an email without you: the assistant can only
-          prepare it, and it is sent only when you tap Send or say &quot;send it&quot;. The connection is stored encrypted, you can see a record of what was read and sent, and &quot;Disconnect Gmail&quot; deletes it and
-          tells Google to forget it.
+          Connecting your email is optional and part of the Pro plan. You can connect Gmail or Outlook with their own sign-in page, where {SITE.name} asks only for permission to read and to send mail.
+          For Yahoo, AOL, iCloud, Zoho and business email you give an app password (a separate password just for {SITE.name}, which you can cancel in your email account at any time) or your email
+          password. {SITE.name} only reads and sends: it never deletes, moves or changes your mail.
+        </p>
+        <p>
+          An email is read only when you ask the assistant about it. Its text is sent to our AI service for that one answer and is not saved by {SITE.name}. We never send an email without you: the
+          assistant can only prepare it, and it is sent only when you tap Send or say &quot;send it&quot;. The sign-in or password is stored encrypted, you can see a record of what was read and sent, and
+          &quot;Disconnect&quot; deletes it (for Gmail, Google is also told to forget the permission).
         </p>
       </section>
 
@@ -95,7 +109,10 @@ export function PrivacyPage() {
 
       <section>
         <h2>Children</h2>
-        <p>{SITE.name} is for people running a business and is not meant for anyone under 18.</p>
+        <p>
+          {SITE.name} is only for adults aged {MIN_AGE} and over. Everyone gives their date of birth when they create an account, and an account found to belong to someone under {MIN_AGE} is closed. We do
+          not knowingly keep information about children.
+        </p>
       </section>
 
       <section>

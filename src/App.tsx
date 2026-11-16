@@ -21,6 +21,9 @@ import { useSharedContent } from './features/share/useSharedContent'
 import { GuidedTour } from './features/tour/GuidedTour'
 import { highlight, hasSeenTour, markTourSeen } from './features/tour/highlight'
 import { TOUR_STEPS, type TourStep } from './features/tour/steps'
+import { AgeCheck } from './features/safety/AgeCheck'
+import { SafetyNotice } from './features/safety/SafetyNotice'
+import { isAdult } from './lib/age'
 
 // The signed-in screens are loaded on demand, so a visitor on the landing page does not download the whole app first.
 const AgendaView = lazy(() => import('./features/agenda/AgendaView').then((m) => ({ default: m.AgendaView })))
@@ -30,26 +33,28 @@ const ProfileView = lazy(() => import('./features/profile/ProfileView').then((m)
 const RecordView = lazy(() => import('./features/record/RecordView').then((m) => ({ default: m.RecordView })))
 
 export default function App() {
-  // Coming back from PayFast or from Google's Gmail permission screen lands on the profile, where each is shown.
+  // Coming back from PayFast, or from Google's or Microsoft's email permission screen, lands on the profile, where each is shown.
   const [gmailReturn] = useState(() => new URLSearchParams(window.location.search).get(GMAIL_RETURN_PARAM) ?? undefined)
   const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(window.location.search).has('payment') || gmailReturn ? 'profile' : 'record'))
   const { data: session, isPending } = authClient.useSession()
+  // Accounts made before the age check give their date of birth first; nothing else loads or calls the server until then.
+  const active = Boolean(session) && isAdult(session?.user.birthDate)
   // A friend's invite link (/?ref=CODE) is remembered so it survives the sign-up form, then claimed once signed in.
   useState(() => {
     const code = referralFromSearch(window.location.search)
     if (code) rememberReferral(code)
   })
-  useReferralClaim(Boolean(session))
+  useReferralClaim(active)
   // Signed-out visitors start on the landing page; its buttons open the sign-in or sign-up form.
   const [authMode, setAuthMode] = useState<StartMode | null>(null)
   const [knownMember] = useState(isKnownMember)
   useEffect(() => {
     if (session) rememberMember()
   }, [session])
-  const features = useFeatures(Boolean(session))
-  useActivityReporting(Boolean(session), tab)
-  useNotificationScheduler(Boolean(session))
-  const { shared, clear: clearShared } = useSharedContent(Boolean(session))
+  const features = useFeatures(active)
+  useActivityReporting(active, tab)
+  useNotificationScheduler(active)
+  const { shared, clear: clearShared } = useSharedContent(active)
 
   // The result code is shown once, then removed from the address so a refresh does not repeat it.
   useEffect(() => {
@@ -57,7 +62,7 @@ export default function App() {
     const url = new URL(window.location.href)
     url.searchParams.delete(GMAIL_RETURN_PARAM)
     window.history.replaceState(null, '', url)
-    const timer = window.setTimeout(() => document.getElementById('gmail')?.scrollIntoView({ behavior: 'smooth' }), 600)
+    const timer = window.setTimeout(() => document.getElementById('email')?.scrollIntoView({ behavior: 'smooth' }), 600)
     return () => window.clearTimeout(timer)
   }, [gmailReturn])
 
@@ -75,7 +80,7 @@ export default function App() {
   }
 
   // The tour opens by itself the first time someone signs in on this device; the "?" button opens it again.
-  const userId = session?.user?.id
+  const userId = active ? session?.user?.id : undefined
   const [tourRequested, setTourRequested] = useState<boolean | undefined>(undefined)
   const [tourStep, setTourStep] = useState(0)
   /** Set when the unsent reminder opens History, so it lands on the "To send" list. */
@@ -124,7 +129,7 @@ export default function App() {
       onHelp={openTour}
       onPlan={openPlans}
     >
-      {session && tab === 'record' && (
+      {active && tab === 'record' && (
         <UnsentBanner
           onReview={() => {
             setHistoryOnUnsent(true)
@@ -145,6 +150,8 @@ export default function App() {
         </p>
       ) : !session ? (
         <AuthScreen initialMode={authMode ?? 'sign-in'} onBack={() => setAuthMode(null)} />
+      ) : !active ? (
+        <AgeCheck />
       ) : tab === 'record' ? (
         <RecordView onNavigate={setTab} />
       ) : tab === 'assistant' ? (
@@ -157,8 +164,8 @@ export default function App() {
         <ProfileView user={session.user} showSubscriptions={features.subscriptions} activityLogged={features.activityLogged} gmailReturn={gmailReturn} />
       )}
       </Suspense>
-      {session && <Onboarding />}
-      {session && shared && (
+      {active && <Onboarding />}
+      {active && shared && (
         <SharedDialog
           shared={shared}
           onClose={clearShared}
@@ -170,10 +177,10 @@ export default function App() {
           }}
         />
       )}
-      {session && (
+      {active && (
         <GuidedTour open={tourOpen} step={tourStep} onStep={setTourStep} onFinish={finishTour} onShow={showStep} />
       )}
-      {session && resumeAt !== null && !tourOpen && (
+      {active && resumeAt !== null && !tourOpen && (
         <button
           type="button"
           onClick={resumeTour}
@@ -182,6 +189,7 @@ export default function App() {
           Back to the tour
         </button>
       )}
+      <SafetyNotice />
     </AppShell>
   )
 }

@@ -9,13 +9,16 @@ export interface ResolvedPlan {
 }
 
 /** Accounts that run the app: `OWNER_EMAILS` is a comma separated list. They always get Pro and see the family screen. */
-export function isOwner(email: string): boolean {
+export function ownerEmails(): string[] {
   return (process.env.OWNER_EMAILS ?? '')
     .toLowerCase()
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean)
-    .includes(email.toLowerCase())
+}
+
+export function isOwner(email: string): boolean {
+  return ownerEmails().includes(email.toLowerCase())
 }
 
 interface PlanRow {

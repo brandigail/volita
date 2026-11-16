@@ -66,6 +66,11 @@
 - [x] F2. 14 day Pro trial (no card), referral Pro days, Basic 50 / Pro 300 drafts a day, locked Pro previews for Free and Basic (built 2026-11-16, migration 016 applied, not deployed)
 - [ ] F3. Before deploying F1 and F2: Brandon reads the privacy and terms pages (plain-language drafts, not lawyer-reviewed), confirms the support email, keeps ALLOW_SIGNUP=true if the landing page will bring sign-ups, and checks the tour clip
 
+- [x] G1. Adults only: date of birth at sign-up (under 18 refused), one-time check for older accounts (under 18 closes the account), terms and privacy updated (built 2026-11-16, migration 017 applied, not deployed)
+- [x] G2. Safety: card numbers, bank details and passwords blocked before the AI or the database, pop-up warning with a count, owner alerted after 3 tries, for limit hammering and for more than 40 emails a day; Safety alerts and Close / Reopen account on the Family screen (built 2026-11-16, not deployed)
+- [x] G3. Any email service: Outlook / Hotmail (Microsoft sign-in), Yahoo, AOL, iCloud, Zoho and business email (app password, IMAP and SMTP), one mailbox per person, migration 018 applied (built 2026-11-16, not deployed)
+- [ ] G4. Before deploying G3's Outlook button: register the app in the Microsoft Entra admin centre and set MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET (steps in .env.example); until then Outlook shows "Soon" and the rest work
+
 ## Phase 2
 - Outlook / iCloud mail (Gmail is built, see SECURITY.md section 5), Google app verification so the weekly reconnect goes away
 - Offline queue, re-generate with a different tone, team or shared business profiles

@@ -9,6 +9,7 @@ import { planLimits } from '../../src/types/plans.ts'
 import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
 import { requireUser, type SessionUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
+import { refuseSensitive } from './_lib/safety.ts'
 
 /** Most drafts one user can keep; stops a client from filling the database with made-up ids. */
 const MAX_DRAFTS_PER_USER = 500
@@ -103,6 +104,8 @@ async function upsert(req: Request, sql: NeonQueryFunction<false, false>, userId
   const parsed = saveDraftSchema.safeParse(body)
   if (!parsed.success || parsed.data.id !== id) return errorResponse(400, 'That draft is not valid.')
   const draft = parsed.data
+  const refused = await refuseSensitive({ id: userId }, [draft.recipient, draft.subject, draft.body, draft.transcript], 'saved draft')
+  if (refused) return refused
   const text = encryptDraftText(userId, draft)
 
   const [counts] = (await sql.query(

@@ -37,6 +37,8 @@ export async function getConnection(userId: string): Promise<Connection | null> 
 }
 
 export async function saveConnection(userId: string, email: string, refreshToken: string): Promise<void> {
+  // One mailbox at a time: connecting Gmail replaces any other account.
+  await sql().query('DELETE FROM mail_accounts WHERE user_id = $1', [userId])
   await sql().query(
     `INSERT INTO gmail_connections (user_id, google_email, refresh_token, needs_reconnect, connected_at) VALUES ($1, $2, $3, false, now())
      ON CONFLICT (user_id) DO UPDATE SET google_email = EXCLUDED.google_email, refresh_token = EXCLUDED.refresh_token, needs_reconnect = false, connected_at = now()`,
@@ -64,6 +66,12 @@ export async function logGmail(userId: string, action: GmailLogAction, detail = 
     // The record is secondary: never let it stop a connection, read or send.
     console.error('Could not write the Gmail record:', err instanceof Error ? err.name : 'error')
   }
+}
+
+/** Emails this person sent through Volita in the last 24 hours. */
+export async function sentToday(userId: string): Promise<number> {
+  const [row] = (await sql().query("SELECT count(*)::int AS total FROM gmail_log WHERE user_id = $1 AND action = 'send' AND created_at > now() - interval '24 hours'", [userId])) as { total: number }[]
+  return row?.total ?? 0
 }
 
 export async function listLog(userId: string): Promise<GmailLogEntry[]> {
