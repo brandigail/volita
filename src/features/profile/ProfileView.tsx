@@ -215,6 +215,18 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       </section>
 
       <AccountData />
+
+      <nav aria-label="Legal and help" className="mt-10 flex flex-wrap gap-x-5 gap-y-2 border-t border-(--line) pt-6 text-sm font-semibold">
+        <a href="/privacy" className="hover:underline">
+          Privacy
+        </a>
+        <a href="/terms" className="hover:underline">
+          Terms
+        </a>
+        <a href="/support" className="hover:underline">
+          Support
+        </a>
+      </nav>
     </section>
   )
 }

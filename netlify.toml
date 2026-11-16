@@ -18,8 +18,19 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
-# The app is one page that works out what to show, so /privacy, /terms and /support are served by it.
+# The app is one page that works out what to show, so these three addresses are served by it. They are listed one by one,
+# not as a catch-all: a catch-all also swallows the app's own files when it runs under `netlify dev`, and the page goes blank.
 [[redirects]]
-  from = "/*"
+  from = "/privacy"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/support"
   to = "/index.html"
   status = 200

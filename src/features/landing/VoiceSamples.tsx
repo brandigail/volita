@@ -1,5 +1,6 @@
 import { Pause, Play } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { describeMediaProblem } from '../../lib/mediaProblem'
 import { playVoice, stopVoice } from './voicePlayer'
 
 interface VoiceSample {
@@ -40,7 +41,7 @@ export function VoiceSamples() {
         onEnd: () => setPlaying(null),
         onError: () => {
           setPlaying(null)
-          setError('That voice could not be played. Check your sound and try again.')
+          void describeMediaProblem(`/voice/${voice.id}/greeting.wav`).then((why) => setError(`That voice could not be played. ${why}`))
         },
       })
     } catch {
