@@ -81,13 +81,14 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
         </h1>
       </div>
 
+      {/* An email waiting for approval comes first, so Send is never hidden below the orb. */}
+      <EmailCard email={email} />
+
       <AssistantOrb phase={phase} onTap={tapOrb} orbRef={orbRef} />
 
       <p role="status" aria-live="polite" className="muted -mt-2 min-h-6 max-w-sm text-sm">
         {STATUS[phase]}
       </p>
-
-      <EmailCard email={email} />
 
       <UsageMeter kind="assistant" />
       {!active && <VoicePicker />}
