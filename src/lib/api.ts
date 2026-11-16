@@ -25,7 +25,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-const REFUSAL_CODES: readonly string[] = ['sensitive', 'suspended', 'age_required'] satisfies RefusalCode[]
+const REFUSAL_CODES: readonly string[] = ['sensitive', 'suspended', 'age_required', 'terms_required'] satisfies RefusalCode[]
 const isRefusalCode = (value: unknown): value is RefusalCode => typeof value === 'string' && REFUSAL_CODES.includes(value)
 
 const transcribeResponseSchema = z.object({ text: z.string().min(1) })

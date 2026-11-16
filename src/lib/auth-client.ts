@@ -14,6 +14,8 @@ export const authClient = createAuthClient({
         calendarUrl: { type: 'string', required: false },
         birthDate: { type: 'string', required: false },
         suspendedAt: { type: 'date', required: false, input: false },
+        termsVersion: { type: 'string', required: false },
+        termsAcceptedAt: { type: 'date', required: false, input: false },
       },
     }),
   ],

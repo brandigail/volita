@@ -8,7 +8,7 @@ export type SafetyKind = SensitiveKind | 'limit' | 'spam'
 export const STRIKE_LIMIT = 3
 
 /** Why a request was refused, beyond the message: the app shows a pop-up for these. */
-export type RefusalCode = 'sensitive' | 'suspended' | 'age_required'
+export type RefusalCode = 'sensitive' | 'suspended' | 'age_required' | 'terms_required'
 
 /** One stopped attempt, as the owner sees it. Never includes what was typed or said. */
 export interface SafetyEvent {

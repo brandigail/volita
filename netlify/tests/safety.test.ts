@@ -1,6 +1,8 @@
 import { neon } from '@neondatabase/serverless'
 import { afterAll, describe, expect, it } from 'vitest'
+import { TERMS_VERSION } from '../../src/lib/terms.ts'
 import { STRIKE_LIMIT } from '../../src/types/safety.ts'
+import { requireUser } from '../functions/_lib/session.ts'
 import { isSuspended, reopenUser, suspendUser } from '../functions/_lib/account-status.ts'
 import { auth } from '../functions/_lib/auth.ts'
 import { noteLimitHit, refuseSensitive, safetyCounts, textsIn } from '../functions/_lib/safety.ts'
@@ -14,9 +16,9 @@ const RUN = Math.random().toString(36).slice(2, 8)
 const created: string[] = []
 const PASSWORD = 'safety-test-password-1'
 
-async function signUp(label: string, birthDate?: string): Promise<{ id: string; email: string }> {
+async function signUp(label: string, birthDate?: string, termsVersion: string | null = TERMS_VERSION): Promise<{ id: string; email: string }> {
   const email = `safetytest.${RUN}.${label}@example.com`
-  const result = await auth.api.signUpEmail({ body: { name: 'Safety Test', email, password: PASSWORD, ...(birthDate ? { birthDate } : {}) } })
+  const result = await auth.api.signUpEmail({ body: { name: 'Safety Test', email, password: PASSWORD, ...(birthDate ? { birthDate } : {}), ...(termsVersion ? { termsVersion } : {}) } })
   created.push(result.user.id)
   return { id: result.user.id, email }
 }
@@ -50,6 +52,34 @@ suite('age rule at sign-up', () => {
     const adult = await signUp('adult', '1990-05-01')
     const [row] = (await sql?.query('SELECT "birthDate" FROM "user" WHERE id = $1', [adult.id])) as { birthDate: string }[]
     expect(row.birthDate).toBe('1990-05-01')
+  })
+})
+
+suite('terms of use', () => {
+  it('refuses an account that has not accepted the current terms', async () => {
+    expect(await refusal(signUp('noterms', '1990-05-01', null))).toMatch(/terms of use/)
+    expect(await refusal(signUp('oldterms', '1990-05-01', '2020-01-01'))).toMatch(/terms of use/)
+  })
+
+  it('records the accepted version and when, and locks out an account until it accepts the current version', async () => {
+    const person = await signUp('terms', '1990-05-01')
+    const [row] = (await sql?.query('SELECT "termsVersion", "termsAcceptedAt" FROM "user" WHERE id = $1', [person.id])) as { termsVersion: string; termsAcceptedAt: Date | null }[]
+    expect(row.termsVersion).toBe(TERMS_VERSION)
+    expect(row.termsAcceptedAt).not.toBeNull()
+
+    const signedIn = await auth.api.signInEmail({ body: { email: person.email, password: PASSWORD }, asResponse: true })
+    const cookie = (signedIn.headers.getSetCookie?.() ?? []).map((value) => value.split(';')[0]).join('; ')
+    const request = () => new Request('http://localhost:8888/api/plan', { headers: { cookie } })
+    expect((await requireUser(request())).ok).toBe(true)
+
+    // The terms change (or the account predates them): every request is refused until they are accepted again.
+    await sql?.query('UPDATE "user" SET "termsVersion" = $2 WHERE id = $1', [person.id, '2020-01-01'])
+    const refused = await requireUser(request())
+    expect(refused.ok).toBe(false)
+    if (!refused.ok) {
+      expect(refused.response.status).toBe(428)
+      expect(await refused.response.json()).toMatchObject({ code: 'terms_required' })
+    }
   })
 })
 

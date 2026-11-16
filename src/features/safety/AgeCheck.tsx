@@ -1,6 +1,5 @@
 import { CalendarCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { SITE } from '../../config/site'
 import { authClient } from '../../lib/auth-client'
 import { BirthDateFields } from './BirthDateFields'
 import { EMPTY_BIRTH_DATE, birthDateValue } from './birthDate'
@@ -11,7 +10,6 @@ import { EMPTY_BIRTH_DATE, birthDateValue } from './birthDate'
  */
 export function AgeCheck() {
   const [parts, setParts] = useState(EMPTY_BIRTH_DATE)
-  const [agreed, setAgreed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -50,16 +48,6 @@ export function AgeCheck() {
       <p className="muted mt-2 text-sm">Volita is for adults. Please give your date of birth to carry on. You only need to do this once.</p>
       <form onSubmit={(e) => void submit(e)} className="surface mt-6 flex flex-col gap-4 p-6 text-left">
         <BirthDateFields value={parts} onChange={setParts} idPrefix="age" />
-        <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-4 cursor-pointer" />
-          <span>
-            I am 18 or older and I agree to the{' '}
-            <a href="/terms" target="_blank" rel="noreferrer" className="underline">
-              terms
-            </a>{' '}
-            of {SITE.name}.
-          </span>
-        </label>
         {error && (
           <p role="alert" className="text-sm text-red-700 dark:text-red-400">
             {error}

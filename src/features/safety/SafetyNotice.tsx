@@ -11,7 +11,8 @@ export function SafetyNotice() {
   const [refusal, setRefusal] = useState<Refusal | null>(null)
   const dialog = useRef<HTMLDialogElement>(null)
 
-  useEffect(() => onRefusal((next) => next.code !== 'age_required' && setRefusal(next)), [])
+  // A missing date of birth and terms not yet accepted have their own screens (AgeCheck and TermsGate).
+  useEffect(() => onRefusal((next) => next.code !== 'age_required' && next.code !== 'terms_required' && setRefusal(next)), [])
 
   useEffect(() => {
     const element = dialog.current

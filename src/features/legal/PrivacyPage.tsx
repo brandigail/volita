@@ -32,6 +32,7 @@ export function PrivacyPage() {
         <ul>
           <li>Your account: name, email address and a password that is stored only as a one-way scrambled value, so nobody (including us) can read it.</li>
           <li>Your date of birth, to confirm you are {MIN_AGE} or over.</li>
+          <li>Which version of the terms of use you went through and accepted, and when.</li>
           <li>
             A record of what the safety checks stopped: only the kind (for example &quot;card number&quot; or &quot;too many emails&quot;), where in the app and when. Never the text you said or typed. It is kept
             for 180 days so the owner can deal with misuse.

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowLeft, AudioWaveform, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, AudioWaveform, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { authClient } from '../../lib/auth-client'
 import { UNDER_AGE_MESSAGE, isAdult } from '../../lib/age'
 import { BirthDateFields } from '../safety/BirthDateFields'
 import { EMPTY_BIRTH_DATE, birthDateValue } from '../safety/birthDate'
+import { TERMS_VERSION } from '../../lib/terms'
+import { TermsWalkthrough } from '../legal/TermsWalkthrough'
 
 type Mode = 'sign-in' | 'sign-up'
 
@@ -26,7 +28,8 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
   const [busy, setBusy] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [birth, setBirth] = useState(EMPTY_BIRTH_DATE)
-  const [agreed, setAgreed] = useState(false)
+  // A new account starts with the terms: the sign-up form only opens once every part has been read and ticked.
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const signingUp = mode === 'sign-up'
 
@@ -44,7 +47,7 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
     setError(null)
     try {
       const { error: authError } = signingUp
-        ? await authClient.signUp.email({ name: name.trim(), email: email.trim(), password, birthDate: birthDate ?? undefined })
+        ? await authClient.signUp.email({ name: name.trim(), email: email.trim(), password, birthDate: birthDate ?? undefined, termsVersion: TERMS_VERSION })
         : await authClient.signIn.email({ email: email.trim(), password })
       // On success the session hook updates and App swaps this screen for the app.
       if (authError) setError(signingUp && authError.status === 400 && /sign.?up/i.test(authError.message ?? '') ? 'New accounts are closed right now. Ask the owner to add you.' : (authError.message ?? 'Something went wrong. Please try again.'))
@@ -53,6 +56,32 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
     } finally {
       setBusy(false)
     }
+  }
+
+  if (signingUp && !termsAccepted) {
+    return (
+      <div className="space-y-4">
+        {onBack && (
+          <button type="button" onClick={onBack} className="muted inline-flex items-center gap-1.5 text-sm font-semibold hover:text-(--ink)">
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Back to the home page
+          </button>
+        )}
+        <header className="mx-auto max-w-lg text-center">
+          <h1 id="auth-heading" className="text-3xl font-extrabold tracking-tight">
+            First, the terms of use
+          </h1>
+          <p className="muted mt-2 text-sm">Before you create an account, please go through each part and tick that you understood it. It takes about two minutes.</p>
+        </header>
+        <TermsWalkthrough acceptLabel="I accept, create my account" onAccept={() => setTermsAccepted(true)} />
+        <p className="text-center text-sm muted">
+          Already have an account?{' '}
+          <button type="button" onClick={switchMode} className="font-semibold text-brand-700 underline hover:text-ember-400 dark:text-brand-400">
+            Sign in
+          </button>
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -138,20 +167,16 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
         {signingUp && (
           <>
             <BirthDateFields value={birth} onChange={setBirth} idPrefix="auth-birth" />
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" required checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 size-4 cursor-pointer" />
+            <p className="flex items-start gap-2 text-sm text-emerald-700 dark:text-emerald-300" data-testid="terms-accepted-note">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               <span>
-                I am 18 or older and I agree to the{' '}
+                You went through every part of the{' '}
                 <a href="/terms" target="_blank" rel="noreferrer" className="underline">
-                  terms
+                  terms of use
                 </a>{' '}
-                and{' '}
-                <a href="/privacy" target="_blank" rel="noreferrer" className="underline">
-                  privacy policy
-                </a>
-                , including no card numbers, bank details or passwords and no spam.
+                and accepted them.
               </span>
-            </label>
+            </p>
           </>
         )}
 

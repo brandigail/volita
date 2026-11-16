@@ -2,6 +2,7 @@ import { Pool } from '@neondatabase/serverless'
 import { betterAuth } from 'better-auth'
 import { APIError } from 'better-auth/api'
 import { ACCOUNT_CLOSED_MESSAGE, BIRTH_DATE_NEEDED, UNDER_AGE_MESSAGE, isAdult } from '../../../src/lib/age.ts'
+import { TERMS_NEEDED_MESSAGE, TERMS_VERSION } from '../../../src/lib/terms.ts'
 import { isSuspended, suspendUser } from './account-status.ts'
 import { sealCalendarLink } from './calendar-secret.ts'
 
@@ -41,7 +42,9 @@ export const auth = betterAuth({
         before: async (user) => {
           // Volita is for adults: no account without a date of birth showing 18 or over.
           if (!isAdult(user.birthDate)) throw new APIError('BAD_REQUEST', { message: user.birthDate ? UNDER_AGE_MESSAGE : BIRTH_DATE_NEEDED })
-          return { data: sealCalendarLink(user) }
+          // And no account without going through and accepting the current terms first (the sign-up form only opens after).
+          if (user.termsVersion !== TERMS_VERSION) throw new APIError('BAD_REQUEST', { message: TERMS_NEEDED_MESSAGE })
+          return { data: { ...sealCalendarLink(user), termsAcceptedAt: new Date() } }
         },
       },
       update: {
@@ -51,6 +54,11 @@ export const auth = betterAuth({
             const userId = ctx?.context.session?.user.id
             if (userId && user.birthDate) await suspendUser(userId, 'Under 18')
             throw new APIError('BAD_REQUEST', { message: user.birthDate ? UNDER_AGE_MESSAGE : BIRTH_DATE_NEEDED })
+          }
+          if ('termsVersion' in user) {
+            // Only the current version can be accepted, and the moment it was accepted is recorded with it.
+            if (user.termsVersion !== TERMS_VERSION) throw new APIError('BAD_REQUEST', { message: TERMS_NEEDED_MESSAGE })
+            return { data: { ...sealCalendarLink(user), termsAcceptedAt: new Date() } }
           }
           return { data: sealCalendarLink(user) }
         },
@@ -78,6 +86,10 @@ export const auth = betterAuth({
       birthDate: { type: 'string', required: false },
       /** Set by the owner (or by an under-18 date of birth). The person cannot change it. */
       suspendedAt: { type: 'date', required: false, input: false },
+      /** The version of the terms the person went through and accepted, part by part (see TermsWalkthrough). */
+      termsVersion: { type: 'string', required: false },
+      /** When they accepted it; set by the server, never by the person. */
+      termsAcceptedAt: { type: 'date', required: false, input: false },
     },
   },
 })

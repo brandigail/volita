@@ -24,6 +24,8 @@ import { TOUR_STEPS, type TourStep } from './features/tour/steps'
 import { AgeCheck } from './features/safety/AgeCheck'
 import { SafetyNotice } from './features/safety/SafetyNotice'
 import { isAdult } from './lib/age'
+import { accountReady } from './lib/terms'
+import { TermsGate } from './features/legal/TermsGate'
 
 // The signed-in screens are loaded on demand, so a visitor on the landing page does not download the whole app first.
 const AgendaView = lazy(() => import('./features/agenda/AgendaView').then((m) => ({ default: m.AgendaView })))
@@ -37,8 +39,8 @@ export default function App() {
   const [gmailReturn] = useState(() => new URLSearchParams(window.location.search).get(GMAIL_RETURN_PARAM) ?? undefined)
   const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(window.location.search).has('payment') || gmailReturn ? 'profile' : 'record'))
   const { data: session, isPending } = authClient.useSession()
-  // Accounts made before the age check give their date of birth first; nothing else loads or calls the server until then.
-  const active = Boolean(session) && isAdult(session?.user.birthDate)
+  // An account gives its date of birth (older accounts) and goes through the terms before anything else loads or calls the server.
+  const active = accountReady(session?.user)
   // A friend's invite link (/?ref=CODE) is remembered so it survives the sign-up form, then claimed once signed in.
   useState(() => {
     const code = referralFromSearch(window.location.search)
@@ -150,8 +152,10 @@ export default function App() {
         </p>
       ) : !session ? (
         <AuthScreen initialMode={authMode ?? 'sign-in'} onBack={() => setAuthMode(null)} />
-      ) : !active ? (
+      ) : !isAdult(session.user.birthDate) ? (
         <AgeCheck />
+      ) : !active ? (
+        <TermsGate />
       ) : tab === 'record' ? (
         <RecordView onNavigate={setTab} />
       ) : tab === 'assistant' ? (
