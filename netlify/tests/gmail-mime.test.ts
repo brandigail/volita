@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRawMessage, decodeBase64Url, encodeSubject, extractBody, hasControlCharacters, headerValue, htmlToText, parseAddress, replySubject, stripQuoted, type GmailPayload } from '../functions/_lib/gmail-mime.ts'
+import { buildRawMessage, decodeBase64Url, encodeSubject, extractBody, hasControlCharacters, headerValue, htmlToText, parseAddress, replySubject, stripQuoted, stripSignOff, type GmailPayload } from '../functions/_lib/gmail-mime.ts'
 
 const b64 = (text: string) => Buffer.from(text, 'utf8').toString('base64url')
 
@@ -108,5 +108,24 @@ describe('reading an email', () => {
     const body = extractBody(long, 100)
     expect(body.length).toBeLessThan(140)
     expect(body.endsWith('[the rest was cut off]')).toBe(true)
+  })
+})
+
+describe('stripSignOff', () => {
+  const own = ['Dad Myers', 'Myers Decks', 'Owner', '']
+
+  it('removes a closing and the person\'s own name written by the model', () => {
+    expect(stripSignOff('Hi Jan,\n\nIt is R12 500.\n\nBest regards,\nDad Myers', own)).toBe('Hi Jan,\n\nIt is R12 500.')
+    expect(stripSignOff('Hi Jan,\n\nIt is R12 500.\n\nKind regards\nDad Myers\nMyers Decks\n', own)).toBe('Hi Jan,\n\nIt is R12 500.')
+    expect(stripSignOff('Hi Jan, thanks!\nCheers,', own)).toBe('Hi Jan, thanks!')
+  })
+
+  it('leaves the message alone when it has no sign-off, and never empties it', () => {
+    expect(stripSignOff('Hi Jan,\n\nThe deck is R12 500 and thanks for asking.', own)).toBe('Hi Jan,\n\nThe deck is R12 500 and thanks for asking.')
+    expect(stripSignOff('Thanks', own)).toBe('Thanks')
+  })
+
+  it('does not remove someone else\'s name', () => {
+    expect(stripSignOff('Please call Sam\nSam Dube', own)).toBe('Please call Sam\nSam Dube')
   })
 })

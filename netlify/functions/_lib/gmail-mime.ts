@@ -154,3 +154,21 @@ export function extractBody(payload: GmailPayload, max = MAX_BODY_CHARS): string
   const cleaned = stripQuoted(text)
   return cleaned.length > max ? `${cleaned.slice(0, max).trimEnd()} [the rest was cut off]` : cleaned
 }
+
+const CLOSING = /^(?:kind |best |warm |many )?(?:regards|wishes|thanks|thank you|cheers|sincerely|yours(?: sincerely| faithfully)?)[,.!]*$/i
+
+/**
+ * The assistant is told not to add a sign-off, because the person's own is added for them, but models sometimes write
+ * one anyway ("Best regards, Dad"). Closing lines and the person's own name, business or phone at the very end are
+ * removed so the email does not end up signed twice.
+ */
+export function stripSignOff(body: string, own: string[]): string {
+  const mine = own.map((line) => line.trim().toLowerCase()).filter(Boolean)
+  const lines = body.trimEnd().split('\n')
+  while (lines.length > 1) {
+    const last = (lines[lines.length - 1] ?? '').trim()
+    if (last === '' || CLOSING.test(last) || mine.includes(last.toLowerCase().replace(/[,.]+$/, ''))) lines.pop()
+    else break
+  }
+  return lines.join('\n').trimEnd()
+}

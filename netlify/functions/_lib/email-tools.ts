@@ -2,8 +2,9 @@ import { z } from 'zod'
 import { buildSignature } from '../../../src/lib/profile.ts'
 import type { ToolContext } from './assistant-tools.ts'
 import { FAILURE_MESSAGE, readMail, searchMail } from './gmail-api.ts'
-import { hasControlCharacters, parseAddress, replySubject } from './gmail-mime.ts'
+import { hasControlCharacters, parseAddress, replySubject, stripSignOff } from './gmail-mime.ts'
 import { createPending, logGmail } from './gmail-store.ts'
+import { listContacts } from './memory-store.ts'
 import type { ToolDefinition } from './groq-chat.ts'
 import { claimQuota } from './rate-limit.ts'
 
@@ -82,8 +83,15 @@ const newArgs = z.object({ to: z.string().trim().min(3).max(300), subject: z.str
 
 /** The user's own sign-off goes on the end of every email. */
 function withSignature(body: string, ctx: ToolContext): string {
-  const signature = buildSignature(ctx.profile)
-  return ctx.profile.name || ctx.profile.signature ? `${body.trimEnd()}\n\n${signature}` : body.trimEnd()
+  const { name, signature: custom } = ctx.profile
+  if (!name && !custom) return body.trimEnd()
+  // Any sign-off the model wrote itself is removed first, so the email is signed once, by the person's own sign-off.
+  return `${withoutSignOff(body, ctx)}\n\n${buildSignature(ctx.profile)}`
+}
+
+function withoutSignOff(body: string, ctx: ToolContext): string {
+  const { name, businessName, role, phone } = ctx.profile
+  return stripSignOff(body, [name, businessName, role, phone])
 }
 
 async function gate(ctx: ToolContext): Promise<string | null> {
@@ -120,7 +128,7 @@ async function read(args: unknown, ctx: ToolContext): Promise<string> {
 function spokenSummary(who: string, body: string, isReply: boolean): string {
   const text = body.replace(/\s+/g, ' ').trim()
   const shown = text.length > SPOKEN_BODY_CHARS ? `${text.slice(0, SPOKEN_BODY_CHARS).replace(/\s\S*$/, '')}, and a bit more that you can see on the screen` : text
-  return `Here is your ${isReply ? 'reply' : 'email'} to ${who}. ${shown}. It is waiting on your screen. Say "send it" or tap Send, or tell me what to change.`
+  return `Here is your ${isReply ? 'reply' : 'email'} to ${who}. ${shown.replace(/[.!?,;:\s]+$/, '')}. It is waiting on your screen. Say "send it" or tap Send, or tell me what to change.`
 }
 
 async function prepareReply(args: unknown, ctx: ToolContext): Promise<string> {
@@ -137,7 +145,7 @@ async function prepareReply(args: unknown, ctx: ToolContext): Promise<string> {
   const who = parseAddress(from)?.name || replyTo
   await logGmail(ctx.userId, 'prepare', `Reply to ${replyTo}: ${pending.subject}`)
   ctx.actions.push({ type: 'email_ready', id: pending.id, label: `Reply to ${who}` })
-  ctx.directReply = spokenSummary(who, parsed.data.body, true)
+  ctx.directReply = spokenSummary(who, withoutSignOff(parsed.data.body, ctx), true)
   return JSON.stringify({ prepared: true, to: replyTo })
 }
 
@@ -148,12 +156,21 @@ async function prepareNew(args: unknown, ctx: ToolContext): Promise<string> {
   if (!address || hasControlCharacters(parsed.data.subject)) return fail('That email address or subject is not valid. Ask the user to say the address again.')
   const blocked = await gate(ctx)
   if (blocked) return blocked
-  // If an email was read this turn, its text may have suggested this recipient, so the screen asks the user to check it.
-  const pending = await createPending(ctx.userId, { to: address.email, subject: parsed.data.subject, body: withSignature(parsed.data.body, ctx), threadId: null, replyToId: null, differs: ctx.emailRead })
+  // The screen asks the user to check the address when an email was read this turn (its text may have suggested it), or
+  // when it is neither something they said nor a saved person's address (the assistant may have guessed or been told it).
+  const differs = ctx.emailRead || !(await isKnownAddress(address.email, ctx))
+  const pending = await createPending(ctx.userId, { to: address.email, subject: parsed.data.subject, body: withSignature(parsed.data.body, ctx), threadId: null, replyToId: null, differs })
   await logGmail(ctx.userId, 'prepare', `New email to ${address.email}: ${pending.subject}`)
   ctx.actions.push({ type: 'email_ready', id: pending.id, label: `Email to ${address.name || address.email}` })
-  ctx.directReply = spokenSummary(address.name || address.email, parsed.data.body, false)
+  ctx.directReply = spokenSummary(address.name || address.email, withoutSignOff(parsed.data.body, ctx), false)
   return JSON.stringify({ prepared: true, to: address.email })
+}
+
+/** An address the user can be assumed to mean: one they said themselves, or one saved for a person they have told Volita about. */
+async function isKnownAddress(email: string, ctx: ToolContext): Promise<boolean> {
+  if (ctx.userText.includes(email)) return true
+  const contacts = await listContacts(ctx.userId)
+  return contacts.some((contact) => contact.email.trim().toLowerCase() === email)
 }
 
 /** Runs an email tool, or returns null when the name belongs to another group of tools. */

@@ -38,6 +38,8 @@ export interface ToolContext {
   directReply?: string
   /** Set once an email has been searched or read this turn, so an email suggested by that text is flagged for the user to check. */
   emailRead: boolean
+  /** Everything the user said in this request, so an email address can be checked against their own words. */
+  userText: string
 }
 
 const MAX_RANGE_DAYS = 31

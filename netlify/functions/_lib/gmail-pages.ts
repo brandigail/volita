@@ -16,7 +16,7 @@ export function resultPage(requestUrl: string, code: string): Response {
   const { title, text } = RESULT_TEXT[code] ?? RESULT_TEXT.failed
   const link = new URL('/', requestUrl)
   link.searchParams.set(GMAIL_RETURN_PARAM, RESULT_TEXT[code] ? code : 'failed')
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Volita</title>
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><title>Volita</title>
 <style>body{font-family:system-ui,sans-serif;background:#fffaf5;color:#2b1a12;margin:0;display:grid;place-items:center;min-height:100vh;padding:24px}main{max-width:420px;text-align:center}h1{font-size:1.4rem}a{display:inline-block;margin-top:16px;padding:12px 22px;border-radius:12px;background:#c2410c;color:#fff;text-decoration:none;font-weight:600}</style></head>
 <body><main><h1>${title}</h1><p>${text}</p><a href="${link.pathname}${link.search}">Back to Volita</a></main></body></html>`
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } })

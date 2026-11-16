@@ -3,6 +3,9 @@ import { ApiRequestError } from '../../lib/api'
 import { cancelPendingEmail, fetchPendingEmail, sendPendingEmail } from '../../lib/gmail-api'
 import type { PendingEmail } from '../../types/gmail'
 
+const RETRIES = 3
+const RETRY_MS = 3_000
+
 export interface EmailNotice {
   text: string
   error: boolean
@@ -40,14 +43,23 @@ export function usePendingEmail(enabled: boolean): UsePendingEmail {
     }
   }, [])
 
+  // A slow or dropped connection must not hide an email that is waiting, so a failed look-up is tried again a few times.
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
-    fetchPendingEmail()
-      .then((next) => !cancelled && setPending(next))
-      .catch(() => undefined)
+    let attempts = 0
+    let timer: number | undefined
+    const load = () => {
+      fetchPendingEmail()
+        .then((next) => !cancelled && setPending(next))
+        .catch(() => {
+          if (!cancelled && attempts++ < RETRIES) timer = window.setTimeout(load, RETRY_MS)
+        })
+    }
+    load()
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [enabled])
 

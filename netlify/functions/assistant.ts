@@ -110,6 +110,7 @@ export default async function handler(req: Request): Promise<Response> {
     actions: [],
     spokenLanguage: request.data.spokenLanguage,
     emailRead: false,
+    userText: request.data.messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ').toLowerCase(),
   }
   const { conversationId } = request.data
   const lastUserText = request.data.messages[request.data.messages.length - 1].content

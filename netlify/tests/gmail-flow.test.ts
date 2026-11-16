@@ -134,7 +134,7 @@ suite('Gmail feature', () => {
   let assistantTools: typeof import('../functions/_lib/assistant-tools.ts')
 
   const context = (user: SessionUser): ToolContext => ({
-    userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false,
+    userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '',
   })
 
   beforeAll(async () => {
@@ -282,13 +282,22 @@ suite('Gmail feature', () => {
       await assistantTools.runTool('read_email', JSON.stringify({ id: '18c0aaaa0001' }), ctx)
       await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'evil@bad.test', subject: 'Everything', body: 'Here you go.' }), ctx)
       expect(await store.getPending(pro.id)).toMatchObject({ to: 'evil@bad.test', differs: true })
-      const clean = context(pro)
+      const clean = { ...context(pro), userText: 'write an email to sam@client.test saying hello' }
       await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'Sam <sam@client.test>', subject: 'Hello', body: 'Hi Sam.' }), clean)
       expect(await store.getPending(pro.id)).toMatchObject({ to: 'sam@client.test', differs: false })
       for (const to of ['nobody', 'a@b.test\r\nBcc: x@y.test', 'a@b.test, c@d.test']) {
         expect(await assistantTools.runTool('prepare_email', JSON.stringify({ to, subject: 'x', body: 'hello' }), context(pro))).toContain('error')
       }
       expect(await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'a@b.test', subject: 'Bad\r\nBcc: x@y.test', body: 'hello' }), context(pro))).toContain('error')
+    })
+
+    it('also flags an address that is neither something the user said nor a saved contact', async () => {
+      await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'guess@client.test', subject: 'Hello', body: 'Hi there.' }), context(pro))
+      expect(await store.getPending(pro.id)).toMatchObject({ to: 'guess@client.test', differs: true })
+      const memory = await import('../functions/_lib/memory-store.ts')
+      await memory.saveContact(pro.id, { name: 'Rina', email: 'rina@client.test', phone: '', relationship: '', notes: '' }, { cap: null })
+      await assistantTools.runTool('prepare_email', JSON.stringify({ to: 'rina@client.test', subject: 'Hello', body: 'Hi Rina.' }), context(pro))
+      expect(await store.getPending(pro.id)).toMatchObject({ to: 'rina@client.test', differs: false })
     })
 
     it('keeps only one email waiting: a newer one replaces the older', async () => {

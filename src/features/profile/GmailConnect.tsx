@@ -111,6 +111,18 @@ export function GmailConnect({ returnCode }: { returnCode?: string }) {
             {error}
           </p>
         )}
+        {error && !status && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              setError(null)
+              void load()
+            }}
+          >
+            Try again
+          </button>
+        )}
 
         {!status && !error && <p className="muted text-sm">Checking…</p>}
 
