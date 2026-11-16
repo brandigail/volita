@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { AppShell } from './components/AppShell'
 import type { Tab } from './components/TabBar'
 import { AuthScreen } from './features/auth/AuthScreen'
-import { AgendaView } from './features/agenda/AgendaView'
-import { AssistantView } from './features/assistant/AssistantView'
-import { HistoryView } from './features/history/HistoryView'
-import { ProfileView } from './features/profile/ProfileView'
-import { RecordView } from './features/record/RecordView'
 import { authClient } from './lib/auth-client'
 import { GMAIL_RETURN_PARAM } from './types/gmail'
 import { Landing, type StartMode } from './features/landing/Landing'
@@ -26,6 +21,13 @@ import { useSharedContent } from './features/share/useSharedContent'
 import { GuidedTour } from './features/tour/GuidedTour'
 import { highlight, hasSeenTour, markTourSeen } from './features/tour/highlight'
 import { TOUR_STEPS, type TourStep } from './features/tour/steps'
+
+// The signed-in screens are loaded on demand, so a visitor on the landing page does not download the whole app first.
+const AgendaView = lazy(() => import('./features/agenda/AgendaView').then((m) => ({ default: m.AgendaView })))
+const AssistantView = lazy(() => import('./features/assistant/AssistantView').then((m) => ({ default: m.AssistantView })))
+const HistoryView = lazy(() => import('./features/history/HistoryView').then((m) => ({ default: m.HistoryView })))
+const ProfileView = lazy(() => import('./features/profile/ProfileView').then((m) => ({ default: m.ProfileView })))
+const RecordView = lazy(() => import('./features/record/RecordView').then((m) => ({ default: m.RecordView })))
 
 export default function App() {
   // Coming back from PayFast or from Google's Gmail permission screen lands on the profile, where each is shown.
@@ -73,7 +75,7 @@ export default function App() {
   }
 
   // The tour opens by itself the first time someone signs in on this device; the "?" button opens it again.
-  const userId = session?.user.id
+  const userId = session?.user?.id
   const [tourRequested, setTourRequested] = useState<boolean | undefined>(undefined)
   const [tourStep, setTourStep] = useState(0)
   /** Set when the unsent reminder opens History, so it lands on the "To send" list. */
@@ -130,6 +132,13 @@ export default function App() {
           }}
         />
       )}
+      <Suspense
+        fallback={
+          <p role="status" className="text-center text-slate-500 dark:text-slate-400">
+            Loading…
+          </p>
+        }
+      >
       {isPending ? (
         <p role="status" className="text-center text-slate-500 dark:text-slate-400">
           Loading…
@@ -147,6 +156,7 @@ export default function App() {
       ) : (
         <ProfileView user={session.user} showSubscriptions={features.subscriptions} activityLogged={features.activityLogged} gmailReturn={gmailReturn} />
       )}
+      </Suspense>
       {session && <Onboarding />}
       {session && shared && (
         <SharedDialog

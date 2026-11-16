@@ -1,6 +1,7 @@
 import { History, Mail, ShieldCheck, Unplug } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
+import { usePlan } from '../../providers/usePlan'
 import { StartTrialButton } from '../plan/StartTrialButton'
 import { disconnectGmail, fetchGmailLog, fetchGmailStatus, GMAIL_CONNECT_URL } from '../../lib/gmail-api'
 import type { GmailLogEntry, GmailStatus } from '../../types/gmail'
@@ -45,6 +46,8 @@ export function GmailConnect({ returnCode }: { returnCode?: string }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [log, setLog] = useState<GmailLogEntry[] | null>(null)
+  // The plan can change while this card is open (a free trial starts), so the status is read again when it does.
+  const planId = usePlan().state?.plan
   const [message, setMessage] = useState<Message | null>(returnCode ? (RETURN_MESSAGES[returnCode] ?? RETURN_MESSAGES.failed) : null)
 
   const load = useCallback(async () => {
@@ -63,7 +66,7 @@ export function GmailConnect({ returnCode }: { returnCode?: string }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [planId])
 
   async function disconnect() {
     setBusy(true)

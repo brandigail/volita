@@ -36,7 +36,7 @@ Rule: the free plan must be good enough to prove the idea in one sitting, and an
 - No Volita footer on your drafts.
 
 **Pro ($12): "it runs my admin."**
-- 5 minute recordings, 100 drafts a day, 100 assistant turns a day.
+- 5 minute recordings, 300 drafts a day (was 100), 100 assistant turns a day. Basic is 50 drafts a day (was 15).
 - 600 premium voice turns a month.
 - Unlimited memory.
 - Web lookup in the assistant.
@@ -162,3 +162,12 @@ Do not advertise any stage 5 or 6 item until it ships.
 Decisions made while building: Pro is $12 / $99 a year with **100 drafts and 100 assistant turns a day** (changed from 40 and 80 on Brandon's say-so); the daily time for the briefing and the quote nudge can be any minute (for example 08:03); refusals for plan limits use HTTP 402 and carry the plan that unlocks them; accounts that existed before plans were introduced were given Pro by migration 013; the owner screen can also give a plan to an email address before that person signs up (`plan_invites`), so about 20 family and friends can be approved in one paste.
 
 Built: sections 6 steps 1 to 7 and 10 (plan tiers and limits in one shared file, `getPlan` on the server, enforcement in every function, premium voice pool per assistant turn with device-voice fallback, free footer, usage meter and plan screen, locked-feature prompts instead of errors, morning briefing, tone rewrite, writing style, templates, price list, quote PDF, photo to caption, follow-up nudges, WhatsApp list for tomorrow, three-question welcome, source-tagged memory, share into Volita, pop-up notifications). Not built, on purpose: step 8 billing (upgrade, cancel, annual checkout), step 9 (own PayFast merchant, legal pages), web push, send from inside Volita, inbox awareness, payment links on quotes.
+
+## Update 2026-11-16: trial, referrals, yearly pricing and limits (built, not deployed)
+
+- **Draft limits:** Basic 15 -> 50 a day, Pro 100 -> 300 a day (`src/types/plans.ts`). The per-day transcription allowance is derived from this, and `GLOBAL_DAILY_LIMIT` still protects the shared Groq free tier, which is the real ceiling.
+- **Free Pro trial:** 14 days, no card, once per account (`pro_access` table, `netlify/functions/_lib/pro-access.ts`). `resolvePlan` gives Pro while `pro_until` is in the future and never lowers a plan that is already Pro. It ends by itself; nothing is deleted and the Pro features lock again.
+- **Referrals:** each person has a code (`/?ref=CODE`). A brand new account (under 3 days old) that joins through it gets a 21 day trial; the person who invited them gets +14 days of Pro per friend, for up to 6 friends. One referral per new account, no self-referral, rewards capped. Billing is not live, so the reward is Pro days, not money.
+- **Yearly toggle:** monthly / yearly switch on the Plans screen and the landing page. Basic $50 = exactly 2 months free. Pro $99 = about 4 months free (a bigger saving than "2 months free"; set Pro yearly to $120 for exactly two).
+- **Locked previews:** Free and Basic see the morning briefing and writing style as blurred, made-up samples under a Pro lock, with "Try Pro free" and "See Pro". Gmail's card does the same.
+- **Landing page and legal pages:** the landing page is what a signed-out visitor sees at `/`; `/privacy`, `/terms` and `/support` work for everyone. The support email is in `src/config/site.ts`.

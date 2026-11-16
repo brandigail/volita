@@ -2,8 +2,13 @@ import { CalendarDays, FileText, Globe, Languages, MessageCircle, Mic, ShieldChe
 import type { ReactNode } from 'react'
 
 export function Section({ id, title, intro, children }: { id: string; title: string; intro?: string; children: ReactNode }) {
+  // Sections below the first screen are laid out only when they come into view, which keeps the first paint fast.
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="mx-auto max-w-5xl scroll-mt-20 px-4 py-12">
+    <section
+      id={id}
+      aria-labelledby={`${id}-heading`}
+      className="mx-auto max-w-5xl scroll-mt-20 px-4 py-12 [contain-intrinsic-size:auto_640px] [content-visibility:auto]"
+    >
       <h2 id={`${id}-heading`} className="text-3xl font-extrabold tracking-tight sm:text-4xl">
         {title}
       </h2>

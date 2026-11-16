@@ -62,6 +62,10 @@
 - [x] E1. Gmail for Pro: Google sign-in (read + send only), encrypted tokens, search / read / prepare-reply tools with no send tool, approval card with Send and Cancel, spoken "send it", record of what was read and sent, disconnect with revoke, migration 015, tests (built 2026-11-16, not deployed)
 - [ ] E2. Before deploying E1: create the Google Cloud project and OAuth client, add dad as a test user, set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET in Netlify, update the privacy policy (G8), test on a real phone
 
+- [x] F1. Landing page, tour clip, 6 playable voices, try-it examples, privacy / terms / support pages, yearly toggle, SEO metadata (built 2026-11-16, not deployed)
+- [x] F2. 14 day Pro trial (no card), referral Pro days, Basic 50 / Pro 300 drafts a day, locked Pro previews for Free and Basic (built 2026-11-16, migration 016 applied, not deployed)
+- [ ] F3. Before deploying F1 and F2: Brandon reads the privacy and terms pages (plain-language drafts, not lawyer-reviewed), confirms the support email, keeps ALLOW_SIGNUP=true if the landing page will bring sign-ups, and checks the tour clip
+
 ## Phase 2
 - Outlook / iCloud mail (Gmail is built, see SECURITY.md section 5), Google app verification so the weekly reconnect goes away
 - Offline queue, re-generate with a different tone, team or shared business profiles

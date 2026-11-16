@@ -8,7 +8,7 @@ import { PlanContext, type PlanContextValue } from './plan-context'
 /** Loads the signed-in person's plan once and shares it, so every screen can show locks and the usage meter. */
 export function PlanProvider({ children }: { children: ReactNode }) {
   const { data: session } = authClient.useSession()
-  const userId = session?.user.id
+  const userId = session?.user?.id
   const [loaded, setLoaded] = useState<{ userId: string; state: PlanState } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
 
