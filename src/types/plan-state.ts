@@ -1,8 +1,9 @@
+import type { TrialState } from './growth.ts'
 import type { PlanId, PlanLimits } from './plans.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 
-export type PlanSourceName = 'owner' | 'grant' | 'subscription' | 'default'
+export type PlanSourceName = 'owner' | 'grant' | 'subscription' | 'trial' | 'default'
 
 export interface PlanUsage {
   /** Drafts written in the last 24 hours and the plan's cap. */
@@ -24,6 +25,8 @@ export interface PlanState {
   usage: PlanUsage
   /** False until the three-question welcome has been finished or skipped. */
   onboarded: boolean
+  /** The free Pro trial: whether it can be started, and when a running one ends. */
+  trial: TrialState
 }
 
 /** One account as the owner sees it on the family screen. */

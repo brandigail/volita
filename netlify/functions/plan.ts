@@ -6,6 +6,7 @@ import { errorResponse, json } from './_lib/http.ts'
 import { remainingToday } from './_lib/rate-limit.ts'
 import { requireUser } from './_lib/session.ts'
 import { describeError } from './_lib/safe-log.ts'
+import { trialState } from './_lib/pro-access.ts'
 import { voiceTurnsUsed } from './_lib/voice-pool.ts'
 
 /** The signed-in person's plan, limits and how much of today's allowance is used. The app shows it; the server enforces it. */
@@ -17,11 +18,13 @@ export default async function handler(req: Request): Promise<Response> {
 
   try {
     const sql = neon(process.env.DATABASE_URL ?? '')
-    const [drafts, assistant, voiceUsed, flags] = await Promise.all([
+    const alreadyPro = user.plan === 'pro' && user.planSource !== 'trial'
+    const [drafts, assistant, voiceUsed, flags, trial] = await Promise.all([
       remainingToday(user, 'generate'),
       remainingToday(user, 'assistant'),
       voiceTurnsUsed(user.id),
       sql.query('SELECT onboarded_at FROM user_flags WHERE user_id = $1', [user.id]),
+      trialState(user.id, alreadyPro),
     ])
     const limits = planLimits(user.plan)
     return json<PlanState>({
@@ -38,6 +41,7 @@ export default async function handler(req: Request): Promise<Response> {
         voiceLimit: limits.premiumVoicePerMonth,
       },
       onboarded: Boolean(flags[0]?.onboarded_at),
+      trial,
     })
   } catch (err) {
     console.error('Plan lookup failed:', describeError(err))

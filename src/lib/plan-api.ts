@@ -4,7 +4,7 @@ import { serviceInputSchema, templateInputSchema, type Service, type ServiceInpu
 import { ApiRequestError, request } from './api'
 
 const planIdSchema = z.enum(['free', 'basic', 'pro'])
-const sourceSchema = z.enum(['owner', 'grant', 'subscription', 'default'])
+const sourceSchema = z.enum(['owner', 'grant', 'subscription', 'trial', 'default'])
 const channelSchema = z.enum(['EMAIL', 'QUOTE', 'WHATSAPP', 'SMS', 'INSTAGRAM', 'FACEBOOK', 'TIKTOK', 'NOTE'])
 
 const limitsSchema = z.object({
@@ -47,6 +47,7 @@ const planStateSchema = z.object({
     voiceLimit: z.number(),
   }),
   onboarded: z.boolean(),
+  trial: z.object({ endsAt: z.string().nullable(), available: z.boolean(), lengthDays: z.number() }),
 })
 
 const adminUserSchema = z.object({

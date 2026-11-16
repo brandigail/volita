@@ -88,7 +88,7 @@ const FREE: PlanLimits = {
 }
 
 const BASIC: PlanLimits = {
-  draftsPerDay: 15,
+  draftsPerDay: 50,
   recordingSeconds: 120,
   channels: DRAFT_CATEGORIES,
   anyLanguage: true,
@@ -115,7 +115,7 @@ const BASIC: PlanLimits = {
 
 const PRO: PlanLimits = {
   ...BASIC,
-  draftsPerDay: 100,
+  draftsPerDay: 300,
   recordingSeconds: 300,
   assistantTurnsPerDay: 100,
   premiumVoicePerMonth: 600,
@@ -150,7 +150,7 @@ export const PLANS: readonly (Plan & { id: PaidPlanId })[] = [
     pitch: 'My phone writes my client messages.',
     perks: [
       'All 8 channels: quotes, SMS, Instagram, Facebook and TikTok too',
-      '15 drafts a day, up to 2 minutes each, any language, with translation',
+      '50 drafts a day, up to 2 minutes each, any language, with translation',
       'Assistant that writes drafts, schedules sends and adds meetings: 30 turns a day',
       'Premium voice for 200 turns a month',
       'Memory for 25 notes and 25 people, templates, a price list and quote PDFs',
@@ -166,7 +166,7 @@ export const PLANS: readonly (Plan & { id: PaidPlanId })[] = [
     pitch: 'It runs my admin.',
     perks: [
       'Everything in Basic',
-      '100 drafts a day, up to 5 minutes each',
+      '300 drafts a day, up to 5 minutes each',
       '100 assistant turns a day, 600 premium voice turns a month, web lookups',
       'Unlimited memory and people',
       'Morning briefing, rewrite in a different tone, learns your writing style',

@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { PLAN_RANK, isPlanId, type PlanId } from '../../../src/types/plans.ts'
 
-export type PlanSource = 'owner' | 'grant' | 'subscription' | 'default'
+export type PlanSource = 'owner' | 'grant' | 'subscription' | 'trial' | 'default'
 
 export interface ResolvedPlan {
   plan: PlanId
@@ -21,6 +21,8 @@ export function isOwner(email: string): boolean {
 interface PlanRow {
   granted: string | null
   subscribed: string | null
+  /** Pro time from a free trial or a referral that has not run out yet. */
+  pro_until: string | Date | null
 }
 
 /**
@@ -36,12 +38,14 @@ export async function resolvePlan(userId: string, email: string): Promise<Resolv
          (SELECT plan FROM plan_grants WHERE user_id = $1),
          (SELECT plan FROM plan_invites WHERE email = lower($2))
        ) AS granted,
-       (SELECT plan FROM subscriptions WHERE user_id = $1 AND status = 'active') AS subscribed`,
+       (SELECT plan FROM subscriptions WHERE user_id = $1 AND status = 'active') AS subscribed,
+       (SELECT pro_until FROM pro_access WHERE user_id = $1 AND pro_until > now()) AS pro_until`,
     [userId, email],
   )) as PlanRow[]
   const granted = isPlanId(row?.granted) ? row.granted : null
   const subscribed = isPlanId(row?.subscribed) ? row.subscribed : null
-  if (!granted && !subscribed) return { plan: 'free', source: 'default' }
-  if (granted && (!subscribed || PLAN_RANK[granted] >= PLAN_RANK[subscribed])) return { plan: granted, source: 'grant' }
-  return { plan: subscribed ?? 'free', source: 'subscription' }
+  const best = granted && (!subscribed || PLAN_RANK[granted] >= PLAN_RANK[subscribed]) ? { plan: granted, source: 'grant' as const } : subscribed ? { plan: subscribed, source: 'subscription' as const } : { plan: 'free' as const, source: 'default' as const }
+  // A free trial or referral gives Pro, but never takes anything away from a plan that is already Pro.
+  if (row?.pro_until && best.plan !== 'pro') return { plan: 'pro', source: 'trial' }
+  return best
 }
