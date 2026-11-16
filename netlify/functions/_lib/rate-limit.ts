@@ -3,7 +3,7 @@ import { PLAN_RANK, clipsPerRecording, planLimits, type PlanId } from '../../../
 import { errorResponse, upgradeResponse } from './http.ts'
 import { describeError } from './safe-log.ts'
 
-export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption'
+export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'email'
 
 export interface QuotaLimits {
   /** Calls one user may make in any rolling minute. */
@@ -60,6 +60,8 @@ export function limitsFor(endpoint: MeteredEndpoint, plan: PlanId): QuotaLimits 
       return { perMinute: 10, perDay: 100, globalPerDay: 1000 }
     case 'speak':
       return { perMinute: 24, perDay: 250, globalPerDay: 5000 }
+    case 'email':
+      return { perMinute: 12, perDay: 150, globalPerDay: 2000 }
     case 'caption':
       return { perMinute: 4, perDay: Math.max(10, limits.draftsPerDay), globalPerDay: 300 }
   }
@@ -138,6 +140,7 @@ const NOUN: Record<MeteredEndpoint, string> = {
   memory: 'memory changes',
   lookup: 'web searches',
   caption: 'photo captions',
+  email: 'email requests',
 }
 
 /** The plan above this one, for the upgrade prompt; Pro is the top. */

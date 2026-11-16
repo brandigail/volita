@@ -30,6 +30,7 @@ const limitsSchema = z.object({
   morningBriefing: z.boolean(),
   toneRewrite: z.boolean(),
   writingStyle: z.boolean(),
+  email: z.boolean(),
 })
 
 const planStateSchema = z.object({

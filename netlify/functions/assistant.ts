@@ -72,6 +72,7 @@ const CONFIRMATIONS: Record<AssistantAction['type'], string> = {
   memory_saved: "Got it, I'll remember that.",
   contact_saved: "Got it, I've saved their details.",
   memory_forgotten: "Done, I've forgotten that.",
+  email_ready: 'I have the email ready on your screen. Tap Send when you are happy with it.',
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -108,6 +109,7 @@ export default async function handler(req: Request): Promise<Response> {
     deadlineAt: startedAt + DEADLINE_MS,
     actions: [],
     spokenLanguage: request.data.spokenLanguage,
+    emailRead: false,
   }
   const { conversationId } = request.data
   const lastUserText = request.data.messages[request.data.messages.length - 1].content
@@ -130,7 +132,7 @@ export default async function handler(req: Request): Promise<Response> {
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools),
+      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email),
     },
     ...request.data.messages.map(({ role, content, actions }): ChatMessage => {
       if (role === 'user' || !actions?.length) return { role, content }

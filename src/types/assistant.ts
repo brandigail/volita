@@ -27,6 +27,8 @@ export type AssistantAction =
   | { type: 'memory_saved'; id: string; label: string }
   | { type: 'contact_saved'; id: string; label: string }
   | { type: 'memory_forgotten'; id: string; label: string }
+  /** An email written for the user to approve; `id` is the waiting email. Only the user can send it. */
+  | { type: 'email_ready'; id: string; label: string }
 
 export interface AssistantResponse {
   reply: string

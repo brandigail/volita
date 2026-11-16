@@ -40,6 +40,8 @@ export interface PlanLimits {
   morningBriefing: boolean
   toneRewrite: boolean
   writingStyle: boolean
+  /** Connect Gmail so the assistant can find and read emails and prepare replies that the user approves. */
+  email: boolean
 }
 
 export interface Plan {
@@ -82,6 +84,7 @@ const FREE: PlanLimits = {
   morningBriefing: false,
   toneRewrite: false,
   writingStyle: false,
+  email: false,
 }
 
 const BASIC: PlanLimits = {
@@ -107,6 +110,7 @@ const BASIC: PlanLimits = {
   morningBriefing: false,
   toneRewrite: false,
   writingStyle: false,
+  email: false,
 }
 
 const PRO: PlanLimits = {
@@ -123,6 +127,7 @@ const PRO: PlanLimits = {
   morningBriefing: true,
   toneRewrite: true,
   writingStyle: true,
+  email: true,
 }
 
 export const FREE_PLAN: Plan = {
@@ -165,6 +170,7 @@ export const PLANS: readonly (Plan & { id: PaidPlanId })[] = [
       '100 assistant turns a day, 600 premium voice turns a month, web lookups',
       'Unlimited memory and people',
       'Morning briefing, rewrite in a different tone, learns your writing style',
+      'Connect Gmail: find and read emails, and reply by voice',
       'Up to 3 linked calendars and priority support',
     ],
     limits: PRO,

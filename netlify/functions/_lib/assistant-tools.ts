@@ -7,10 +7,11 @@ import type { Profile } from '../../../src/types/profile.ts'
 import { buildSignature } from '../../../src/lib/profile.ts'
 import { addAgendaItem, listAgenda } from './agenda.ts'
 import { loadMemoryContext } from './memory-context.ts'
+import { EMAIL_TOOLS, EMAIL_TOOL_NAMES, runEmailTool } from './email-tools.ts'
 import { LOOKUP_TOOLS, runLookupTool } from './lookup-tool.ts'
 import { PRICE_TOOLS, runPriceTool } from './price-tools.ts'
 import { loadPriceContext } from './price-context.ts'
-import { planLimits, type AssistantToolLevel, type PlanId } from '../../../src/types/plans.ts'
+import { planLimits, type PlanId } from '../../../src/types/plans.ts'
 import { MEMORY_TOOLS, runMemoryTool } from './memory-tools.ts'
 import { openText } from './crypto.ts'
 import { encryptDraftText } from './draft-store.ts'
@@ -35,6 +36,8 @@ export interface ToolContext {
   speechLanguage?: string
   /** Set by a tool whose answer is already worded for speaking; the assistant says it as it is instead of another model round. */
   directReply?: string
+  /** Set once an email has been searched or read this turn, so an email suggested by that text is flagged for the user to check. */
+  emailRead: boolean
 }
 
 const MAX_RANGE_DAYS = 31
@@ -154,6 +157,7 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   ...LOOKUP_TOOLS,
+  ...EMAIL_TOOLS,
   ...MEMORY_TOOLS,
   ...PRICE_TOOLS,
 ]
@@ -161,7 +165,9 @@ export const TOOLS: ToolDefinition[] = [
 /** Tools every plan has: they only read. */
 const READ_TOOL_NAMES = new Set(['get_agenda', 'find_drafts', 'get_draft'])
 
-function toolAllowed(name: string, level: AssistantToolLevel): boolean {
+function toolAllowed(name: string, plan: PlanId): boolean {
+  const { assistantTools: level, email } = planLimits(plan)
+  if (EMAIL_TOOL_NAMES.has(name)) return email
   if (READ_TOOL_NAMES.has(name)) return true
   if (name === 'look_up') return level === 'full'
   return level !== 'read'
@@ -169,8 +175,7 @@ function toolAllowed(name: string, level: AssistantToolLevel): boolean {
 
 /** The tools the model is shown on this plan. Free can read; Basic can also write and remember; Pro can also search the web. */
 export function toolsFor(plan: PlanId): ToolDefinition[] {
-  const level = planLimits(plan).assistantTools
-  return TOOLS.filter((tool) => toolAllowed(tool.function.name, level))
+  return TOOLS.filter((tool) => toolAllowed(tool.function.name, plan))
 }
 
 const getAgendaArgs = z.object({ from_date: z.string(), to_date: z.string() })
@@ -408,8 +413,8 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
   } catch {
     return fail('The tool arguments were not valid JSON.')
   }
-  if (!toolAllowed(name, planLimits(ctx.plan).assistantTools)) {
-    return fail('That is not part of the user plan. Tell them kindly it needs the Basic or Pro plan.')
+  if (!toolAllowed(name, ctx.plan)) {
+    return fail(EMAIL_TOOL_NAMES.has(name) ? 'Email is part of the Pro plan. Tell them kindly.' : 'That is not part of the user plan. Tell them kindly it needs the Basic or Pro plan.')
   }
   try {
     switch (name) {
@@ -430,6 +435,7 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
       default:
         return (
           (await runLookupTool(name, args, ctx)) ??
+          (await runEmailTool(name, args, ctx)) ??
           (await runMemoryTool(name, args, ctx)) ??
           (await runPriceTool(name, args, ctx)) ??
           fail(`There is no tool called ${name}.`)
