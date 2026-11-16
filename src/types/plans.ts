@@ -191,6 +191,14 @@ export function planLimits(id: PlanId): PlanLimits {
   return planFor(id).limits
 }
 
+/** "2 months free" for a plan billed yearly, worded honestly: exact when it is a whole number of months, otherwise "about". */
+export function yearlyFreeMonthsText(plan: Plan): string | null {
+  if (plan.usdPerYear <= 0 || plan.usdPerMonth <= 0) return null
+  const months = 12 - plan.usdPerYear / plan.usdPerMonth
+  if (months < 1) return null
+  return Number.isInteger(months) ? `${months} months free` : `about ${Math.round(months)} months free`
+}
+
 export const PLAN_RANK: Record<PlanId, number> = { free: 0, basic: 1, pro: 2 }
 
 export function isPlanId(value: unknown): value is PlanId {

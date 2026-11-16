@@ -1,3 +1,4 @@
+import { LockedPreview } from '../plan/LockedPreview'
 import { AlertCircle, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { UpgradeNote } from '../../components/UpgradeNote'
@@ -68,7 +69,17 @@ export function MemorySection() {
           )}
         </div>
       ) : (
-        <p className="muted mt-3 text-xs">Pro learns your writing style from the drafts you edit before sending.</p>
+        <div className="mt-3">
+          <LockedPreview title="Writing style" pitch="Pro learns how you write from the drafts you edit, so every draft sounds like you.">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-bold">
+                <Sparkles className="size-4" aria-hidden="true" />
+                Your writing style
+              </h3>
+              <p className="mt-2 text-sm">Short, friendly sentences. Starts with the first name. Prices in Rand with VAT shown. Signs off with “Cheers”.</p>
+            </div>
+          </LockedPreview>
+        </div>
       )}
 
       {memories === null && !error && (

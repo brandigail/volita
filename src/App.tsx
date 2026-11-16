@@ -9,6 +9,8 @@ import { ProfileView } from './features/profile/ProfileView'
 import { RecordView } from './features/record/RecordView'
 import { authClient } from './lib/auth-client'
 import { GMAIL_RETURN_PARAM } from './types/gmail'
+import { referralFromSearch, rememberReferral } from './features/growth/referral'
+import { useReferralClaim } from './features/growth/useReferralClaim'
 import { useFeatures } from './lib/useFeatures'
 import { useActivityReporting } from './lib/useActivityReporting'
 import { UnsentBanner } from './features/history/UnsentBanner'
@@ -26,6 +28,12 @@ export default function App() {
   const [gmailReturn] = useState(() => new URLSearchParams(window.location.search).get(GMAIL_RETURN_PARAM) ?? undefined)
   const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(window.location.search).has('payment') || gmailReturn ? 'profile' : 'record'))
   const { data: session, isPending } = authClient.useSession()
+  // A friend's invite link (/?ref=CODE) is remembered so it survives the sign-up form, then claimed once signed in.
+  useState(() => {
+    const code = referralFromSearch(window.location.search)
+    if (code) rememberReferral(code)
+  })
+  useReferralClaim(Boolean(session))
   const features = useFeatures(Boolean(session))
   useActivityReporting(Boolean(session), tab)
   useNotificationScheduler(Boolean(session))

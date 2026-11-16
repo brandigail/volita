@@ -18,7 +18,7 @@ export function PlanChip({ onClick }: { onClick: () => void }) {
       aria-label={`Your plan is ${planFor(state.plan).name}. See plans`}
       className={`mr-1 rounded-full border px-3 py-1 text-xs font-bold hover:brightness-110 ${TONE[state.plan]}`}
     >
-      {planFor(state.plan).name}
+      {state.source === 'trial' ? 'Pro trial' : planFor(state.plan).name}
     </button>
   )
 }

@@ -1,6 +1,7 @@
 import { History, Mail, ShieldCheck, Unplug } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
+import { StartTrialButton } from '../plan/StartTrialButton'
 import { disconnectGmail, fetchGmailLog, fetchGmailStatus, GMAIL_CONNECT_URL } from '../../lib/gmail-api'
 import type { GmailLogEntry, GmailStatus } from '../../types/gmail'
 
@@ -126,7 +127,12 @@ export function GmailConnect({ returnCode }: { returnCode?: string }) {
 
         {!status && !error && <p className="muted text-sm">Checking…</p>}
 
-        {status && !status.allowed && <p className="text-sm">Gmail is part of the Pro plan. Ask the owner of Volita to switch it on for you, or see the plans above.</p>}
+        {status && !status.allowed && (
+          <div className="space-y-3">
+            <p className="text-sm">Gmail is part of the Pro plan. You can try it free, or see the plans above.</p>
+            <StartTrialButton />
+          </div>
+        )}
         {status && status.allowed && !status.configured && <p className="text-sm">Gmail sign-in is not set up on this server yet.</p>}
 
         {status?.connected && !status.needsReconnect && (

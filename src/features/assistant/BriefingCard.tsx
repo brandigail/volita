@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { ApiRequestError, generateDraft } from '../../lib/api'
 import { saveDraft, updateDraftStatus } from '../../lib/drafts-api'
 import { fetchBriefing } from '../../lib/plan-api'
+import { LockedPreview } from '../plan/LockedPreview'
 import { usePlan } from '../../providers/usePlan'
 import type { Briefing, FollowUp } from '../../types/plan-state'
 
@@ -63,7 +64,7 @@ function FollowUpRow({ item, onDone }: { item: FollowUp; onDone: (id: string) =>
 }
 
 /** Today at a glance: the morning briefing on Pro, and quotes nobody has answered on Basic and up. */
-export function BriefingCard() {
+function BriefingSection() {
   const { limits } = usePlan()
   const [briefing, setBriefing] = useState<Briefing | null>(null)
   const enabled = limits.morningBriefing || limits.followUps
@@ -125,5 +126,42 @@ export function BriefingCard() {
         </ul>
       )}
     </section>
+  )
+}
+
+/** The sample shown, blurred, to people whose plan does not include the briefing. It is made up, never their own data. */
+function SampleBriefing() {
+  return (
+    <div>
+      <h2 className="flex items-center gap-2 text-lg font-bold">
+        <Sunrise className="size-5 text-amber-400" aria-hidden="true" />
+        Your briefing
+      </h2>
+      <p className="mt-2 text-sm">Good morning. You have three jobs today and two quotes still waiting for an answer.</p>
+      <ul className="muted mt-3 space-y-1 text-sm">
+        <li>08:00 · Quote visit, Mrs Jones, tiled floor</li>
+        <li>11:30 · Call the timber supplier</li>
+        <li>14:00 · Measure up at Harbour Road</li>
+      </ul>
+      <ul className="mt-3 space-y-1 text-sm">
+        <li>Mr Smith, deck quote, sent 3 days ago</li>
+        <li>Dlamini Plumbing, geyser quote, sent 5 days ago</li>
+      </ul>
+    </div>
+  )
+}
+
+/** Today at a glance. People without the morning briefing see what it would look like, locked, with the way to try it free. */
+export function BriefingCard() {
+  const { limits } = usePlan()
+  return (
+    <>
+      <BriefingSection />
+      {!limits.morningBriefing && (
+        <LockedPreview title="Morning briefing" pitch="Every morning Volita reads out your meetings, what is due and which quotes still need a reply.">
+          <SampleBriefing />
+        </LockedPreview>
+      )}
+    </>
   )
 }

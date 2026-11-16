@@ -5,6 +5,8 @@ import { MemorySection } from '../memory/MemorySection'
 import { NotificationSettings } from '../notifications/NotificationSettings'
 import { FamilySection } from '../plan/FamilySection'
 import { PlansSection } from '../plan/PlansSection'
+import { ReferralCard } from '../plan/ReferralCard'
+import { TrialCard } from '../plan/TrialCard'
 import { SubscriptionSection } from '../subscription/SubscriptionSection'
 import { FeedbackForm } from '../tour/FeedbackForm'
 import { AccountData } from './AccountData'
@@ -194,8 +196,10 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       {activityLogged && <TesterNotice />}
       <InstallHelp />
       <ProfileForm key={user.id} initial={profileFromUser(user)} email={user.email} />
+      <TrialCard />
       <PlansSection />
       <FamilySection />
+      <ReferralCard />
       <GmailConnect returnCode={gmailReturn} />
       <MemorySection />
       <LibrarySection />
