@@ -17,3 +17,9 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+# The app is one page that works out what to show, so /privacy, /terms and /support are served by it.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { AudioWaveform, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, AudioWaveform, Eye, EyeOff } from 'lucide-react'
 import { authClient } from '../../lib/auth-client'
 
 type Mode = 'sign-in' | 'sign-up'
@@ -7,8 +7,15 @@ type Mode = 'sign-in' | 'sign-up'
 const fieldClass =
   'field'
 
-export function AuthScreen() {
-  const [mode, setMode] = useState<Mode>('sign-in')
+interface AuthScreenProps {
+  /** Which form to open with: the landing page's "Sign in" and "Try free" buttons choose. */
+  initialMode?: Mode
+  /** Back to the landing page, when that is where the person came from. */
+  onBack?: () => void
+}
+
+export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps) {
+  const [mode, setMode] = useState<Mode>(initialMode)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,6 +49,12 @@ export function AuthScreen() {
 
   return (
     <section aria-labelledby="auth-heading" className="mx-auto max-w-sm text-center">
+      {onBack && (
+        <button type="button" onClick={onBack} className="muted mb-4 inline-flex items-center gap-1.5 text-sm font-semibold hover:text-(--ink)">
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to the home page
+        </button>
+      )}
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white shadow-xl shadow-ember-600/40">
         <AudioWaveform className="size-8" aria-hidden="true" />
       </span>

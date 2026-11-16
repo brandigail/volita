@@ -9,6 +9,10 @@ import { ProfileView } from './features/profile/ProfileView'
 import { RecordView } from './features/record/RecordView'
 import { authClient } from './lib/auth-client'
 import { GMAIL_RETURN_PARAM } from './types/gmail'
+import { Landing, type StartMode } from './features/landing/Landing'
+import { isKnownMember, rememberMember } from './features/landing/member'
+import { PublicPage } from './features/legal/PublicPage'
+import { publicPageFor } from './lib/route'
 import { referralFromSearch, rememberReferral } from './features/growth/referral'
 import { useReferralClaim } from './features/growth/useReferralClaim'
 import { useFeatures } from './lib/useFeatures'
@@ -34,6 +38,12 @@ export default function App() {
     if (code) rememberReferral(code)
   })
   useReferralClaim(Boolean(session))
+  // Signed-out visitors start on the landing page; its buttons open the sign-in or sign-up form.
+  const [authMode, setAuthMode] = useState<StartMode | null>(null)
+  const [knownMember] = useState(isKnownMember)
+  useEffect(() => {
+    if (session) rememberMember()
+  }, [session])
   const features = useFeatures(Boolean(session))
   useActivityReporting(Boolean(session), tab)
   useNotificationScheduler(Boolean(session))
@@ -97,6 +107,10 @@ export default function App() {
     setTourRequested(true)
   }
 
+  const publicPage = publicPageFor(window.location.pathname)
+  if (publicPage) return <PublicPage page={publicPage} />
+  if (!session && authMode === null && (!isPending || !knownMember)) return <Landing onStart={setAuthMode} />
+
   return (
     <AppShell
       activeTab={tab}
@@ -121,7 +135,7 @@ export default function App() {
           Loading…
         </p>
       ) : !session ? (
-        <AuthScreen />
+        <AuthScreen initialMode={authMode ?? 'sign-in'} onBack={() => setAuthMode(null)} />
       ) : tab === 'record' ? (
         <RecordView onNavigate={setTab} />
       ) : tab === 'assistant' ? (
