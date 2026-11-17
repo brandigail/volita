@@ -3,6 +3,8 @@ import { buildSignature, profileFromUser } from '../../lib/profile'
 import { LibrarySection } from '../library/LibrarySection'
 import { MemorySection } from '../memory/MemorySection'
 import { NotificationSettings } from '../notifications/NotificationSettings'
+import { usePlan } from '../../providers/usePlan'
+import { ReviewsSection } from '../reviews/ReviewsSection'
 import { FamilySection } from '../plan/FamilySection'
 import { PlansSection } from '../plan/PlansSection'
 import { ReferralCard } from '../plan/ReferralCard'
@@ -184,6 +186,7 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ user, showSubscriptions, activityLogged, gmailReturn }: ProfileViewProps) {
+  const isOwner = usePlan().state?.isOwner === true
   return (
     <section aria-labelledby="profile-heading">
       <h1 id="profile-heading" className="text-3xl font-extrabold tracking-tight">
@@ -205,6 +208,13 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       <LibrarySection />
       <NotificationSettings />
       {showSubscriptions && <SubscriptionSection />}
+
+      <section aria-labelledby="reviews-heading" className="mt-10" id="reviews">
+        <h2 id="reviews-heading" className="mb-4 text-2xl font-extrabold tracking-tight">
+          Reviews
+        </h2>
+        <ReviewsSection signedIn isOwner={isOwner} />
+      </section>
 
       <section aria-labelledby="feedback-heading" className="mt-10">
         <h2 id="feedback-heading" className="text-2xl font-extrabold tracking-tight">

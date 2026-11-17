@@ -83,3 +83,4 @@ The release app loads the live site, so new features reach it only after a deplo
 
 ## Phase 2
 Paid plans and billing (PayFast live merchant, upgrade and cancel, yearly prices), web push for closed-browser reminders, send from inside Volita (Gmail API or Resend), inbox awareness, payment links on quotes, offline queue, iOS app.
+- Reviews (built 2026-11-17): a public "What people say" section on the landing page (empty state "Be the first to review") and a form in Profile. One review per account (1 to 5 stars and up to 600 characters), editable and deletable by its author, only first names shown, comments checked for card, bank and password details, and the owner can remove any review. `netlify/functions/reviews.ts`, migration 020, tests in `netlify/tests/reviews.test.ts`.

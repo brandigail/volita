@@ -1,6 +1,7 @@
 import { Gift, Smartphone, ShieldCheck } from 'lucide-react'
 import { SiteFooter, SiteHeader } from '../legal/LegalLayout'
 import { PlanPicker } from '../plan/PlanCards'
+import { ReviewsSection } from '../reviews/ReviewsSection'
 import { REFERRED_TRIAL_DAYS, REFERRER_REWARD_DAYS, TRIAL_DAYS } from '../../types/growth'
 import { ExampleJobs } from './ExampleJobs'
 import { Faq, Features, HowItWorks, Section, VoicePrivacy } from './LandingSections'
@@ -17,6 +18,7 @@ const NAV = [
   { href: '#how', label: 'How it works' },
   { href: '#try', label: 'Try it' },
   { href: '#voices', label: 'Voices' },
+  { href: '#reviews', label: 'Reviews' },
   { href: '#pricing', label: 'Pricing' },
 ] as const
 
@@ -96,6 +98,10 @@ export function Landing({ onStart }: LandingProps) {
 
         <Section id="privacy-note" title="Private by design">
           <VoicePrivacy />
+        </Section>
+
+        <Section id="reviews" title="What people say" intro="Real reviews from people using Volita. Reviews need an account, and only first names are shown.">
+          <ReviewsSection signedIn={false} onStart={() => onStart('sign-up')} />
         </Section>
 
         <Section id="pricing" title="Simple pricing" intro="Start free. Try everything in Pro for 14 days, no card. Pay only if it earns its place.">
