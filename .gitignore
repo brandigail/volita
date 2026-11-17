@@ -40,3 +40,7 @@ keystore.properties
 
 # Files made for sharing (audio, text), not part of the app
 /share
+
+# Marketing videos are large; the captions (marketing/posts.md) are kept
+marketing/*.mp4
+marketing/*.jpg
