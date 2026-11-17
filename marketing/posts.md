@@ -82,3 +82,52 @@ Shorter version (TikTok / Reels caption):
 - On Instagram and TikTok put the web address in your bio, because links in captions cannot be tapped.
 - The first two seconds decide whether people keep watching, so keep the question ("Still typing quotes at night?") as the first line of the caption too.
 - Voice audio in the videos was made with Volita's own voices. The background music was generated for these videos, so there is no copyright claim risk.
+
+---
+
+# Batch 2: trade clips (all 1080 x 1920 MP4, 23 to 35 seconds)
+
+## volita-electrician-whatsapp.mp4
+> Answer customers from the roof. Say it, and Volita writes the WhatsApp in your name.
+> Try Pro free for 14 days, no card: https://volita.netlify.app
+> #electrician #sparky #tradie #smallbusiness #southafrica
+
+## volita-landscaper-quote.mp4
+> A full garden quote from one sentence. Prices added up and the deposit worked out.
+> https://volita.netlify.app
+> #landscaping #gardenservice #quotes #smallbusinessSA #tradie
+
+## volita-mechanic-car-ready.mp4
+> "Your car is ready." Sent without wiping your hands first.
+> https://volita.netlify.app
+> #mechanic #workshop #autorepair #smallbusiness #southafrica
+
+## volita-hairdresser-fully-booked.mp4
+> Fully booked? Tell every client in one go, between appointments.
+> https://volita.netlify.app
+> #hairdresser #salon #barber #bookings #smallbusiness
+
+## volita-estate-agent-caption.mp4
+> Listing captions with hashtags, from one sentence. Speak the listing, post the caption.
+> https://volita.netlify.app
+> #realestate #estateagent #justlisted #propertySA #instagramtips
+
+## volita-caterer-quote.mp4
+> Event quotes before the client hangs up. Forty people, braai and salads, total and deposit worked out.
+> https://volita.netlify.app
+> #catering #events #smallbusiness #quotes #southafrica
+
+## volita-one-sentence-four-messages.mp4
+> One sentence, four messages: WhatsApp, SMS, email and a note. Each one written for where it is going.
+> https://volita.netlify.app
+> #productivity #smallbusiness #admin #tradie #voice
+
+## volita-six-voices-poll.mp4 (engagement post)
+> Volita talks back in six natural voices. Which one is your favourite? Comment below.
+> https://volita.netlify.app
+> #voiceassistant #AI #smallbusiness #poll
+
+## volita-safety-card-numbers.mp4 (trust post)
+> Volita refuses card numbers, bank details and passwords. On purpose. They are never sent to the AI and never saved.
+> https://volita.netlify.app
+> #privacy #security #smallbusiness #southafrica
