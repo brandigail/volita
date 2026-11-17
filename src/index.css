@@ -198,6 +198,14 @@ body {
       box-shadow 150ms;
   }
 
+  /* The open list of a dropdown is drawn by the browser, not by .field: without its own solid colours the items can be
+     light text on a white list (unreadable until hovered) in the dark theme. */
+  select.field option,
+  select.field optgroup {
+    background-color: var(--surface-strong);
+    color: var(--ink);
+  }
+
   .field:hover {
     border-color: rgb(247 179 43 / 0.5);
   }
