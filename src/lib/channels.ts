@@ -13,6 +13,11 @@ export interface Channel {
   to: string
   /** Where the "open app" button goes for social channels. */
   appUrl?: string
+  /**
+   * For apps whose web links open a website instead of the app (TikTok opens Studio): the app's own link and Android
+   * package names, most common first. "Open app" then opens the app, or the Play Store when it is not installed.
+   */
+  androidApp?: { link: string; packages: readonly string[] }
 }
 
 export const CHANNELS: readonly Channel[] = [
@@ -22,7 +27,7 @@ export const CHANNELS: readonly Channel[] = [
   { id: 'SMS', label: 'SMS', hint: 'A short, plain text message.', kind: 'chat', from: '#38bdf8', to: '#3b82f6' },
   { id: 'INSTAGRAM', label: 'Instagram', hint: 'A caption with a hook, a call to action and hashtags.', kind: 'social', from: '#f59e0b', to: '#f2693f', appUrl: 'https://www.instagram.com/' },
   { id: 'FACEBOOK', label: 'Facebook', hint: 'A friendly post for your page or community.', kind: 'social', from: '#3b82f6', to: '#1d4ed8', appUrl: 'https://www.facebook.com/' },
-  { id: 'TIKTOK', label: 'TikTok', hint: 'An on-screen hook, a punchy caption and hashtags.', kind: 'social', from: '#2fbfae', to: '#f43f5e', appUrl: 'https://www.tiktok.com/upload' },
+  { id: 'TIKTOK', label: 'TikTok', hint: 'An on-screen hook, a punchy caption and hashtags.', kind: 'social', from: '#2fbfae', to: '#f43f5e', appUrl: 'https://www.tiktok.com/', androidApp: { link: 'snssdk1233://', packages: ['com.zhiliaoapp.musically', 'com.ss.android.ugc.trill'] } },
   { id: 'NOTE', label: 'Note', hint: 'A tidy memo to yourself.', kind: 'note', from: '#f59e0b', to: '#f97316' },
 ]
 

@@ -12,6 +12,7 @@ import {
   type EmailProvider,
 } from '../../lib/share'
 import type { GeneratedDraft } from '../../types/draft'
+import { openSocialApp } from '../../lib/open-app'
 import { clearToShare } from '../../lib/refusals'
 import type { SaveStatus } from './useDraftAutosave'
 import { updateDraftStatus } from '../../lib/drafts-api'
@@ -319,6 +320,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
                   if (!canSend) return e.preventDefault()
                   void handleCopy()
                   sendPrompt.begin()
+                  if (openSocialApp(channel)) e.preventDefault()
                 }}
                 className="btn btn-channel"
               >

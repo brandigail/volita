@@ -1,5 +1,6 @@
 import { ExternalLink, Mail, MessageCircle, MessageSquare } from 'lucide-react'
 import { channelFor } from '../../lib/channels'
+import { openSocialApp } from '../../lib/open-app'
 import { buildEmailUrl, buildSmsUrl, buildWhatsAppUrl, draftToText, EMAIL_PROVIDERS } from '../../lib/share'
 import type { Draft } from '../../types/draft'
 import { SentPrompt } from '../record/SentPrompt'
@@ -60,9 +61,10 @@ export function SendLink({ draft, onSent }: SendLinkProps) {
         href={href}
         target={newTab ? '_blank' : undefined}
         rel="noopener noreferrer"
-        onClick={() => {
+        onClick={(e) => {
           if (copyFirst) void navigator.clipboard?.writeText(draftToText(draft)).catch(() => undefined)
           sendPrompt.begin()
+          if (copyFirst && openSocialApp(channel)) e.preventDefault()
         }}
         className="btn btn-channel"
       >

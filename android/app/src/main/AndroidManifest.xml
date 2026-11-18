@@ -52,6 +52,12 @@
         </provider>
     </application>
 
+    <!-- Lets "Copy & open TikTok" check whether TikTok is installed (Android 11+ hides other apps otherwise). -->
+    <queries>
+        <package android:name="com.zhiliaoapp.musically" />
+        <package android:name="com.ss.android.ugc.trill" />
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
