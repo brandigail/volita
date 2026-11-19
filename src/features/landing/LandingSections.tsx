@@ -1,4 +1,4 @@
-import { CalendarDays, FileText, Globe, Languages, MessageCircle, Mic, ShieldCheck, Smartphone, Sunrise, Users } from 'lucide-react'
+import { CalendarDays, Camera, FileText, Globe, Languages, MessageCircle, Mic, ShieldCheck, Smartphone, Sunrise, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export function Section({ id, title, intro, children }: { id: string; title: string; intro?: string; children: ReactNode }) {
@@ -43,6 +43,9 @@ const FEATURES: { icon: typeof Mic; title: string; text: string }[] = [
   { icon: MessageCircle, title: 'Messages in your voice', text: 'WhatsApp, SMS, email and social posts, signed with your name and business every time.' },
   { icon: Sunrise, title: 'A hands-free assistant', text: 'Ask what is on today, which quotes nobody answered, or what you told Mrs Jones. It answers out loud.' },
   { icon: MessageCircle, title: 'WhatsApp catch-up (Android)', text: 'In the Android app, say "catch me up with John" and Volita reads what came in, hands-free. On an iPhone, add a screenshot of the chat instead.' },
+  { icon: FileText, title: 'Invoices and payment reminders (Pro)', text: 'Make an invoice by voice, send it as a PDF, and get friendly reminders ready to send when a customer is late.' },
+  { icon: CalendarDays, title: 'A booking link (Pro)', text: 'Customers pick a free time on their own phone. It lands on your agenda, and nobody can double-book you.' },
+  { icon: Camera, title: 'Scan receipts and cards (Pro)', text: 'Photograph a till slip to log the expense, or a business card to save the person. You check it before it is saved.' },
   { icon: Users, title: 'It remembers your clients', text: 'Saved prices, names and preferences, so you stop repeating yourself on every job.' },
   { icon: CalendarDays, title: 'Your agenda, one place', text: 'Link your Google, Outlook or Apple calendar, add meetings by voice and set send-later reminders.' },
   { icon: Languages, title: 'Speak your language', text: 'Talk in English, Afrikaans, Spanish and many more, and get a draft in the language the client reads.' },

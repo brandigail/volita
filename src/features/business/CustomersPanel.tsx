@@ -5,6 +5,7 @@ import { fetchCustomers, fetchCustomerStory } from '../../lib/business-api'
 import { plain } from '../../lib/customer-match'
 import { formatRand } from '../../lib/money'
 import type { CustomerStory, CustomerSummary, TimelineKind } from '../../types/business'
+import { CardScan } from './CardScan'
 
 const KIND_ICON: Record<TimelineKind, typeof FileText> = {
   draft: MessageSquare,
@@ -27,6 +28,8 @@ export function CustomersPanel({ onInvoice }: CustomersPanelProps) {
   const [openId, setOpenId] = useState<string | null>(null)
   const [story, setStory] = useState<CustomerStory | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /** Bumped to load the list again, for example after a business card was saved. */
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -36,7 +39,7 @@ export function CustomersPanel({ onInvoice }: CustomersPanelProps) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadKey])
 
   useEffect(() => {
     if (openId === null) return
@@ -115,6 +118,7 @@ export function CustomersPanel({ onInvoice }: CustomersPanelProps) {
 
   return (
     <div className="flex flex-col gap-3">
+      <CardScan onSaved={() => setReloadKey((current) => current + 1)} />
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 muted" aria-hidden="true" />
         <input aria-label="Search customers" className="field pl-9" placeholder="Search customers" value={query} onChange={(e) => setQuery(e.target.value)} />

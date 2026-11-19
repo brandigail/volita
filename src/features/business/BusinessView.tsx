@@ -1,4 +1,4 @@
-import { Briefcase, CalendarCheck, FileText, Settings, Users } from 'lucide-react'
+import { Briefcase, CalendarCheck, FileText, Receipt, Settings, Users } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
 import { fetchBusinessSettings } from '../../lib/business-api'
@@ -7,15 +7,17 @@ import { DEFAULT_BUSINESS_SETTINGS, type BusinessSettings, type CustomerSummary 
 import { LockedPreview } from '../plan/LockedPreview'
 import { BookingsPanel } from './BookingsPanel'
 import { CustomersPanel } from './CustomersPanel'
+import { ExpensesPanel } from './ExpensesPanel'
 import { InvoicesPanel } from './InvoicesPanel'
 import { SettingsPanel } from './SettingsPanel'
 
-type Section = 'customers' | 'invoices' | 'bookings' | 'settings'
+type Section = 'customers' | 'invoices' | 'bookings' | 'expenses' | 'settings'
 
 const SECTIONS: { id: Section; label: string; icon: typeof Users }[] = [
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'invoices', label: 'Invoices', icon: FileText },
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+  { id: 'expenses', label: 'Expenses', icon: Receipt },
   { id: 'settings', label: 'Details', icon: Settings },
 ]
 
@@ -95,6 +97,7 @@ export function BusinessView() {
           {section === 'customers' && <CustomersPanel onInvoice={startInvoice} />}
           {section === 'invoices' && <InvoicesPanel settings={settings ?? DEFAULT_BUSINESS_SETTINGS} invoiceFor={invoiceFor} onInvoiceStarted={() => setInvoiceFor(null)} onNeedDetails={() => setSection('settings')} />}
           {section === 'bookings' && <BookingsPanel />}
+          {section === 'expenses' && <ExpensesPanel />}
           {section === 'settings' && <SettingsPanel settings={settings ?? DEFAULT_BUSINESS_SETTINGS} onSaved={setSettings} />}
         </>
       )}

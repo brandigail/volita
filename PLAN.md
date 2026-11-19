@@ -129,15 +129,15 @@ Order: H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9 → H10, then 
 - [~] H12. Price memory (built 2026-11-19, not deployed): on a new invoice, an item charged at a different price from last time shows "Last time (INV-0007) you charged R4 800.00; this is 6% more" with a Use last price button. NOT built: warning when a price is below material cost (Volita holds no costs) and updating prices from a photo of a supplier price list
 - [x] H13. Weekly money summary by voice (built 2026-11-19, not deployed): assistant tool money_summary, the last 7 or 30 days: quotes sent (counted, since a quote is written text), invoiced, paid, still owed and overdue
 - [x] H14. End-of-day wrap (built 2026-11-19, not deployed): assistant tool day_wrap: what got done today, quotes and messages sent, drafts not sent yet, money paid today, owed and overdue, and the first job tomorrow
-- [ ] H15. Day plan by route: order today's jobs by location and send "on my way, about 20 minutes"
-- [ ] H16. Receipt scanning (from QuickReceipt): log expenses, monthly and tax-year totals
+- [ ] H15. Day plan by route (NOT built): needs a street address for every job and a free route and geocoding service, and the on my way about 20 minutes message needs real travel times. Needs a decision on which free service to use (OpenStreetMap-based services have strict usage rules)
+- [x] H16. Receipt scanning (built 2026-11-19, not deployed; migration 025 applied; Pro): Business, Expenses: photograph a till slip, the vision model reads supplier, date, total and VAT, the owner checks and changes anything and saves; also add by hand; totals for this month and the South African tax year (1 March to end February) with VAT; the photo is read once and never stored. Read correctly from a test slip with the live model
 - [x] H17. Job sheet (built 2026-11-19, not deployed): on any invoice, a Job sheet with the work done (the keyboard microphone can dictate it) and up to 6 photos, made into a job report PDF on the phone and shared with the invoice; photos are not uploaded
-- [ ] H18. Business card scanner: snap a card, save the contact, link it to the timeline
-- [ ] H19. Unified inbox: WhatsApp captures, email and website chat per customer in one list
-- [ ] H20. Website chat widget: embeddable script (Martinnaise first), messages land in the inbox, Volita reads and replies fully
-- [ ] H21. Team mode (Pro): owner plus 1-2 staff, jobs assigned by voice, "job done" photo from staff
-- [ ] H22. Multilingual replies: reply to customers in isiZulu or isiXhosa (test Whisper and the model on Zulu and Xhosa first); low-data mode
-- [ ] H23. Paid upgrades for owners who switch: Facebook / Instagram Page messages and WhatsApp Business API (coexistence; 1,000 free service replies a month, then about R0.12 each, confirm on Meta's rate card)
+- [x] H18. Business card scanner (built 2026-11-19, not deployed; Pro): Business, Customers, Scan a business card: the vision model reads name, number, email, role and company, the owner checks them and saves the person; the photo is read once and never stored. Read correctly from a test card with the live model
+- [ ] H19. Unified inbox (NOT built): it only makes sense once the website chat (H20) exists, because WhatsApp cannot be read on an iPhone and email is already read by the assistant
+- [ ] H20. Website chat widget (NOT built): needs a public embeddable script that accepts messages from strangers and, as asked, lets Volita reply fully on the owner behalf. That puts an AI in front of the public under the owner name, so it needs a deliberate design for abuse limits, what it may promise, and the owner approving replies. Do it only after owners ask for it
+- [ ] H21. Team mode (NOT built): every function today scopes data to one person, so staff would need roles and shared ownership across all of them. A risky change to make quickly; it deserves its own planned round
+- [~] H22. Multilingual replies: isiZulu and isiXhosa already exist as languages to write drafts in, but the quality of Whisper and the model on Zulu and Xhosa has NOT been tested (that needs real recordings from speakers), and the low-data mode is not built
+- [ ] H23. Paid upgrades for owners who switch: Facebook / Instagram Page messages and WhatsApp Business API (NOT built): needs Meta business approval and paid services, so it stays on hold
 
 ## Phase 2
 - Outlook / iCloud mail (Gmail is built, see SECURITY.md section 5), Google app verification so the weekly reconnect goes away
