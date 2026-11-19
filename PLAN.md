@@ -86,7 +86,7 @@ Netlify credits are tight, so everything is grouped into two deploys. Nothing de
 - [ ] P7. Netlify settings ready: `DATA_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, SPA fallback redirect in `netlify.toml`
 
 ### Deploy 1: everything already built (D0, E1, F1, F2, G1, G2, G3, G5)
-- [ ] P8. Deploy once, then run `scripts/encrypt-existing.ts` once, and check the database holds only scrambled text
+- [x] P8. (Deployed to volita.netlify.app 2026-11-19 with Android 1.7; the preview of the encrypt script then showed 0 rows left to convert for the 3 accounts, so nothing was applied.) Deploy once, then run `scripts/encrypt-existing.ts` once, and check the database holds only scrambled text
 - [ ] P9. Live smoke test on both phones: sign-up with terms walkthrough, record → draft, assistant, agenda, Gmail connect / read / send, share into Volita (Android), notifications
 - [ ] P10. Give dad and each test owner their own account and Pro from the family screen
 
