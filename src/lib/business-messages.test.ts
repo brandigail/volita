@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Invoice } from '../types/business'
 import type { Profile } from '../types/profile'
-import { chaserMessage, reviewMessage } from './business-messages'
+import { bookingReminderMessage, chaserMessage, reviewMessage } from './business-messages'
 
 const profile: Profile = { name: 'Sam Dube', businessName: 'Dube Plumbing', role: '', phone: '082 000 1111', signature: '', calendarUrl: '', nickname: '', businessAbout: '' }
 const invoice: Invoice = {
@@ -63,5 +63,15 @@ describe('reviewMessage', () => {
     expect(message.body).toContain('\nhttps://g.page/r/abc123/review\n')
     expect(message.body).toContain('Dube Plumbing')
     expect(message.body.endsWith('082 000 1111')).toBe(true)
+  })
+})
+
+describe('bookingReminderMessage', () => {
+  it('names the day and the time in the business’s own time zone', () => {
+    const message = bookingReminderMessage({ customerName: 'Mrs Naidoo', startsAt: '2026-11-20T07:00:00.000Z' }, profile, 'Africa/Johannesburg')
+    expect(message.body).toContain('Hi Mrs Naidoo,')
+    expect(message.body).toContain('Friday 20 November')
+    expect(message.body).toContain('09:00')
+    expect(message.body).toContain('Dube Plumbing')
   })
 })

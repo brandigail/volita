@@ -66,3 +66,13 @@ export function reviewMessage(customerName: string, reviewLink: string, profile:
     ].join('\n\n'),
   }
 }
+
+/** The day-before reminder to a customer who booked a time. `startsAt` is ISO; the time is shown in the page's own time zone. */
+export function bookingReminderMessage(booking: { customerName: string; startsAt: string }, profile: Profile, timeZone: string): BusinessMessage {
+  const business = profile.businessName || profile.name || 'we'
+  const when = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(booking.startsAt))
+  return {
+    subject: `Reminder: ${when}`,
+    body: [`Hi ${booking.customerName},`, `A quick reminder that ${business} will see you on ${when}. Please let me know if you need to change the time.`, 'See you then!', buildSignature(profile)].join('\n\n'),
+  }
+}

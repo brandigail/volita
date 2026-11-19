@@ -39,3 +39,9 @@
   from = "/check"
   to = "/index.html"
   status = 200
+
+# A customer's booking link, /book/<address>, is also served by the app.
+[[redirects]]
+  from = "/book/*"
+  to = "/index.html"
+  status = 200

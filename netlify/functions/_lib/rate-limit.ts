@@ -4,7 +4,7 @@ import { errorResponse, upgradeResponse } from './http.ts'
 import { noteLimitHit } from './safety.ts'
 import { describeError } from './safe-log.ts'
 
-export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'catchup' | 'nickname' | 'email'
+export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'catchup' | 'nickname' | 'email' | 'booking'
 
 export interface QuotaLimits {
   /** Calls one user may make in any rolling minute. */
@@ -65,6 +65,9 @@ export function limitsFor(endpoint: MeteredEndpoint, plan: PlanId): QuotaLimits 
       return { perMinute: 12, perDay: 150, globalPerDay: 2000 }
     case 'caption':
       return { perMinute: 4, perDay: Math.max(10, limits.draftsPerDay), globalPerDay: 300 }
+    case 'booking':
+      // Counted against the owner of the page, so a flood of bookings on one page cannot grow without limit.
+      return { perMinute: 5, perDay: 40, globalPerDay: 1500 }
     case 'nickname':
       return { perMinute: 3, perDay: 10, globalPerDay: 200 }
     case 'catchup':
@@ -151,6 +154,7 @@ const NOUN: Record<MeteredEndpoint, string> = {
   catchup: 'chat catch-ups',
   nickname: 'name suggestions',
   email: 'email requests',
+  booking: 'bookings',
 }
 
 /** The plan above this one, for the upgrade prompt; Pro is the top. */

@@ -1,20 +1,22 @@
-import { Briefcase, FileText, Settings, Users } from 'lucide-react'
+import { Briefcase, CalendarCheck, FileText, Settings, Users } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
 import { fetchBusinessSettings } from '../../lib/business-api'
 import { usePlan } from '../../providers/usePlan'
 import { DEFAULT_BUSINESS_SETTINGS, type BusinessSettings, type CustomerSummary } from '../../types/business'
 import { LockedPreview } from '../plan/LockedPreview'
+import { BookingsPanel } from './BookingsPanel'
 import { CustomersPanel } from './CustomersPanel'
 import { InvoicesPanel } from './InvoicesPanel'
 import { SettingsPanel } from './SettingsPanel'
 
-type Section = 'customers' | 'invoices' | 'settings'
+type Section = 'customers' | 'invoices' | 'bookings' | 'settings'
 
 const SECTIONS: { id: Section; label: string; icon: typeof Users }[] = [
   { id: 'customers', label: 'Customers', icon: Users },
   { id: 'invoices', label: 'Invoices', icon: FileText },
-  { id: 'settings', label: 'My details', icon: Settings },
+  { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+  { id: 'settings', label: 'Details', icon: Settings },
 ]
 
 /** A made-up example shown blurred behind the lock for people who are not on Pro. */
@@ -77,7 +79,7 @@ export function BusinessView() {
                 type="button"
                 onClick={() => setSection(id)}
                 aria-current={section === id ? 'page' : undefined}
-                className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-semibold ${section === id ? 'bg-brand-500/20 text-(--ink)' : 'muted hover:bg-brand-500/10'}`}
+                className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-xs font-semibold sm:min-h-11 sm:flex-row sm:gap-1.5 sm:px-2 sm:text-sm ${section === id ? 'bg-brand-500/20 text-(--ink)' : 'muted hover:bg-brand-500/10'}`}
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 {label}
@@ -92,6 +94,7 @@ export function BusinessView() {
           )}
           {section === 'customers' && <CustomersPanel onInvoice={startInvoice} />}
           {section === 'invoices' && <InvoicesPanel settings={settings ?? DEFAULT_BUSINESS_SETTINGS} invoiceFor={invoiceFor} onInvoiceStarted={() => setInvoiceFor(null)} onNeedDetails={() => setSection('settings')} />}
+          {section === 'bookings' && <BookingsPanel />}
           {section === 'settings' && <SettingsPanel settings={settings ?? DEFAULT_BUSINESS_SETTINGS} onSaved={setSettings} />}
         </>
       )}

@@ -7,7 +7,7 @@ import { GMAIL_RETURN_PARAM } from './types/gmail'
 import { Landing, type StartMode } from './features/landing/Landing'
 import { isKnownMember, rememberMember } from './features/landing/member'
 import { PublicPage } from './features/legal/PublicPage'
-import { publicPageFor } from './lib/route'
+import { bookingSlugFor, publicPageFor } from './lib/route'
 import { referralFromSearch, rememberReferral } from './features/growth/referral'
 import { useReferralClaim } from './features/growth/useReferralClaim'
 import { useFeatures } from './lib/useFeatures'
@@ -31,6 +31,7 @@ import { TermsGate } from './features/legal/TermsGate'
 // The signed-in screens are loaded on demand, so a visitor on the landing page does not download the whole app first.
 const AgendaView = lazy(() => import('./features/agenda/AgendaView').then((m) => ({ default: m.AgendaView })))
 const AssistantView = lazy(() => import('./features/assistant/AssistantView').then((m) => ({ default: m.AssistantView })))
+const BookingPage = lazy(() => import('./features/booking/BookingPage').then((m) => ({ default: m.BookingPage })))
 const BusinessView = lazy(() => import('./features/business/BusinessView').then((m) => ({ default: m.BusinessView })))
 const HistoryView = lazy(() => import('./features/history/HistoryView').then((m) => ({ default: m.HistoryView })))
 const ProfileView = lazy(() => import('./features/profile/ProfileView').then((m) => ({ default: m.ProfileView })))
@@ -118,6 +119,14 @@ export default function App() {
     setTourRequested(true)
   }
 
+  const bookingSlug = bookingSlugFor(window.location.pathname)
+  if (bookingSlug) {
+    return (
+      <Suspense fallback={null}>
+        <BookingPage slug={bookingSlug} />
+      </Suspense>
+    )
+  }
   const publicPage = publicPageFor(window.location.pathname)
   if (publicPage) return <PublicPage page={publicPage} />
   if (!session && authMode === null && (!isPending || !knownMember)) return <Landing onStart={setAuthMode} />
