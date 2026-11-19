@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isSameContact, markDuplicates, normalizeNumber, parseContactFile, parseCsv, parseVcf } from './contact-import'
+import { cleanContacts, isSameContact, markDuplicates, normalizeNumber, parseContactFile, parseCsv, parseVcf } from './contact-import'
 
 describe('normalizeNumber', () => {
   it('gives local South African numbers the country code and drops spaces and tel:', () => {
@@ -86,5 +86,17 @@ describe('duplicates', () => {
       { name: 'Sipho D', phone: '082 111 0000', email: '' },
     ]
     expect(markDuplicates(saved, incoming).map((contact) => contact.duplicate)).toEqual([true, false, true])
+  })
+})
+
+describe('cleanContacts', () => {
+  it('tidies people read from the phone and drops entries with no name or no way to reach them', () => {
+    const raw = [
+      { name: '  Thandi   Mokoena ', phone: '082 123 4567', email: 'THANDI@Example.com' },
+      { name: '', phone: '082 999 0000', email: '' },
+      { name: 'No details', phone: '', email: '' },
+      { name: '0821234567', phone: '0821234567', email: '' },
+    ]
+    expect(cleanContacts(raw)).toEqual([{ name: 'Thandi Mokoena', phone: '+27821234567', email: 'thandi@example.com' }])
   })
 })

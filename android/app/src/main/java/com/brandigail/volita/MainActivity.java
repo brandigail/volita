@@ -33,6 +33,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(VolitaListeningPlugin.class);
         registerPlugin(VolitaInboxPlugin.class);
+        registerPlugin(VolitaContactsPlugin.class);
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         if (isShare(intent)) {

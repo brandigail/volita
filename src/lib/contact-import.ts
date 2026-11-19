@@ -128,6 +128,11 @@ export function parseContactFile(fileName: string, text: string): ImportedContac
   return (isVcf ? parseVcf(text) : parseCsv(text)).slice(0, MAX_IMPORT)
 }
 
+/** Tidies people read straight from the phone's address book the same way a file's are (numbers normalised, unnamed entries dropped). */
+export function cleanContacts(raw: readonly ImportedContact[]): ImportedContact[] {
+  return raw.flatMap((item) => finish(item.name, item.phone, item.email) ?? []).slice(0, MAX_IMPORT)
+}
+
 /** Whether two entries are the same person: the same name, the same number (however written) or the same email. */
 export function isSameContact(a: ImportedContact, b: ImportedContact): boolean {
   if (plain(a.name) !== '' && plain(a.name) === plain(b.name)) return true

@@ -44,7 +44,7 @@ export function PrivacyPage() {
             settings, and the bookings customers make on it (their name, phone, email and note). All of this is stored scrambled, apart from amounts and dates, which are needed to add up what you are owed.
           </li>
           <li>
-            People you import from your phone&apos;s contacts file: only the name, number and email of the ones you tick, after you choose the file yourself. Volita never reads your phone&apos;s address book on its own. Those
+            People you import from your phone&apos;s contacts (a contacts file you choose, or in the Android app the Pick from my phone button after you allow it): only the name, number and email of the ones you tick are sent to Volita. Volita never reads your phone&apos;s address book on its own. Those
             people have not asked to be saved here, so import only people you deal with in your business, and delete anyone at any time under What Volita knows about you.
           </li>
           <li>Your conversations with the voice assistant, so you can look back at them.</li>

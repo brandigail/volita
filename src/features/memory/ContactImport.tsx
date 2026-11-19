@@ -1,8 +1,9 @@
-import { FileUp, Loader2 } from 'lucide-react'
+import { Contact, FileUp, Loader2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
-import { markDuplicates, parseContactFile, MAX_IMPORT, type ImportCandidate, type ImportedContact } from '../../lib/contact-import'
+import { cleanContacts, markDuplicates, parseContactFile, MAX_IMPORT, type ImportCandidate, type ImportedContact } from '../../lib/contact-import'
 import { importContacts, type ImportSummary } from '../../lib/memory-api'
+import { canReadPhoneContacts, ContactsDeniedError, readPhoneContacts } from '../../lib/native-contacts'
 
 /** A contacts file bigger than this is not an address book. */
 const MAX_FILE_BYTES = 5_000_000
@@ -15,17 +16,23 @@ interface ContactImportProps {
 }
 
 /**
- * Brings in people from the phone's address book so nobody re-types old customers. The person exports a file (.vcf or .csv), picks it
- * here, ticks who to bring in, and only the name, number and email of those are sent. Nothing is read from the phone without them choosing the file.
+ * Brings in people from the phone's address book so nobody re-types old customers. In the Android app one tap reads the address book
+ * (after Android's own permission question); anywhere else the person picks an exported file (.vcf or .csv). Either way they tick who to
+ * bring in, and only the name, number and email of those are sent. Nothing is read without them tapping a button.
  */
 export function ContactImport({ existing, onImported }: ContactImportProps) {
   const input = useRef<HTMLInputElement>(null)
   const [candidates, setCandidates] = useState<ImportCandidate[] | null>(null)
   const [ticked, setTicked] = useState<ReadonlySet<number>>(new Set())
   const [busy, setBusy] = useState(false)
+  const [reading, setReading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const showList = (found: ImportCandidate[]) => {
+    setCandidates(found)
+    setTicked(new Set(found.flatMap((contact, index) => (contact.duplicate ? [] : [index]))))
+  }
   const choose = async (file: File | undefined) => {
     if (!file) return
     setError(null)
@@ -33,8 +40,22 @@ export function ContactImport({ existing, onImported }: ContactImportProps) {
     if (file.size > MAX_FILE_BYTES) return setError('That file is too big to be an address book.')
     const found = markDuplicates(existing, parseContactFile(file.name, await file.text()))
     if (found.length === 0) return setError('No contacts with a name and a number or email were found in that file. Export your contacts as .vcf or .csv and try again.')
-    setCandidates(found)
-    setTicked(new Set(found.flatMap((contact, index) => (contact.duplicate ? [] : [index]))))
+    showList(found)
+  }
+  /** Android app only: reads the address book after the person allows it, then shows the same tick-list as a file does. */
+  const pickFromPhone = async () => {
+    setError(null)
+    setMessage(null)
+    setReading(true)
+    try {
+      const found = markDuplicates(existing, cleanContacts(await readPhoneContacts()))
+      if (found.length === 0) setError('No contacts with a name and a number or email were found on this phone.')
+      else showList(found)
+    } catch (err) {
+      setError(err instanceof ContactsDeniedError ? 'Volita was not allowed to read your contacts. You can allow it in Android Settings, Apps, Volita, Permissions, or import a contacts file instead.' : 'Could not read your contacts. Please try again.')
+    } finally {
+      setReading(false)
+    }
   }
   const toggle = (index: number) =>
     setTicked((current) => {
@@ -65,10 +86,18 @@ export function ContactImport({ existing, onImported }: ContactImportProps) {
       <input ref={input} type="file" accept=".vcf,.csv,text/vcard,text/x-vcard,text/csv,text/plain" hidden onChange={(e) => void choose(e.target.files?.[0])} />
       {!candidates && (
         <>
-          <button type="button" onClick={() => input.current?.click()} className="btn btn-ghost cursor-pointer">
-            <FileUp className="size-4" aria-hidden="true" />
-            Import from my contacts file
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {canReadPhoneContacts && (
+              <button type="button" onClick={() => void pickFromPhone()} disabled={reading} className="btn btn-ghost cursor-pointer">
+                {reading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Contact className="size-4" aria-hidden="true" />}
+                Pick from my phone
+              </button>
+            )}
+            <button type="button" onClick={() => input.current?.click()} className="btn btn-ghost cursor-pointer">
+              <FileUp className="size-4" aria-hidden="true" />
+              Import from my contacts file
+            </button>
+          </div>
           <details className="mt-2 text-sm">
             <summary className="muted cursor-pointer">How do I get the file?</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5">
