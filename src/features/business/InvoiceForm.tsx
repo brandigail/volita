@@ -1,16 +1,12 @@
-import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiRequestError } from '../../lib/api'
-import { createInvoice, fetchCustomers } from '../../lib/business-api'
+import { createInvoice, fetchCustomers, fetchInvoices } from '../../lib/business-api'
 import { addDaysTo, calcTotals, formatRand, parseRand } from '../../lib/money'
+import { lastPrices, priceNote, type PastPrice } from '../../lib/price-memory'
 import { BUSINESS_LIMITS, type BusinessSettings, type CustomerSummary, type Invoice } from '../../types/business'
 import { todayLocal } from './dates'
-
-interface Row {
-  description: string
-  quantity: string
-  price: string
-}
+import { InvoiceItemRow, type Row } from './InvoiceItemRow'
 
 const EMPTY_ROW: Row = { description: '', quantity: '1', price: '' }
 
@@ -32,6 +28,7 @@ export function InvoiceForm({ settings, customer, onSaved, onCancel }: InvoiceFo
   const [dueOn, setDueOn] = useState(() => addDaysTo(todayLocal(), settings.paymentTermsDays))
   const [note, setNote] = useState('')
   const [known, setKnown] = useState<CustomerSummary[]>([])
+  const [past, setPast] = useState<ReadonlyMap<string, PastPrice>>(new Map())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,6 +36,9 @@ export function InvoiceForm({ settings, customer, onSaved, onCancel }: InvoiceFo
     let cancelled = false
     fetchCustomers()
       .then((list) => !cancelled && setKnown(list))
+      .catch(() => undefined)
+    fetchInvoices()
+      .then((list) => !cancelled && setPast(lastPrices(list)))
       .catch(() => undefined)
     return () => {
       cancelled = true
@@ -111,14 +111,15 @@ export function InvoiceForm({ settings, customer, onSaved, onCancel }: InvoiceFo
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-sm font-semibold">Items (price without VAT)</legend>
         {rows.map((row, index) => (
-          <div key={index} className="grid grid-cols-[1fr_4rem_6.5rem_2.75rem] items-center gap-2">
-            <input aria-label={`Item ${index + 1} description`} className="field" placeholder="What" value={row.description} maxLength={BUSINESS_LIMITS.description} onChange={(e) => setRow(index, { description: e.target.value })} />
-            <input aria-label={`Item ${index + 1} quantity`} className="field px-2 text-center" inputMode="decimal" value={row.quantity} onChange={(e) => setRow(index, { quantity: e.target.value })} />
-            <input aria-label={`Item ${index + 1} price`} className="field px-2 text-right" inputMode="decimal" placeholder="R 0.00" value={row.price} onChange={(e) => setRow(index, { price: e.target.value })} />
-            <button type="button" aria-label={`Remove item ${index + 1}`} disabled={rows.length === 1} onClick={() => setRows((current) => current.filter((_, i) => i !== index))} className="btn btn-ghost px-0">
-              <Trash2 className="size-4" aria-hidden="true" />
-            </button>
-          </div>
+          <InvoiceItemRow
+            key={index}
+            index={index}
+            row={row}
+            note={priceNote(past, row.description, parseRand(row.price))}
+            canRemove={rows.length > 1}
+            onChange={(patch) => setRow(index, patch)}
+            onRemove={() => setRows((current) => current.filter((_, i) => i !== index))}
+          />
         ))}
         <button type="button" disabled={rows.length >= BUSINESS_LIMITS.items} onClick={() => setRows((current) => [...current, { ...EMPTY_ROW }])} className="btn btn-ghost self-start">
           <Plus className="size-4" aria-hidden="true" />

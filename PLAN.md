@@ -82,7 +82,7 @@ Netlify credits are tight, so everything is grouped into two deploys. Nothing de
 - [~] P4. Local test on real phones (items 16 and C4): dad's iPhone in Safari and an Android phone, using dad's real wording for quotes and replies; tune prompts where drafts come out wrong. Android done (works, 2026-11-19); still to do: dad's iPhone (or any iPhone) in Safari, and the new Round H features on both phones (see the test list in the H section)
 - [ ] P5. Read the privacy and terms pages (F3), confirm the support email in `src/config/site.ts`, decide `ALLOW_SIGNUP`
 - [ ] P6. Google Cloud project and OAuth client for Gmail (E2): add dad as a test user, update the privacy policy (G8), test Gmail on the local link
-- [ ] P6b. Contacts import, so owners never re-type old contacts: Android app imports from the phone in one tap (Capacitor contacts plugin, one permission prompt); iPhone uses the Volita Shortcut (one tap: Find Contacts → send to Volita through the per-user upload link), with a `.vcf` / CSV upload as backup (iCloud, Google Contacts, Outlook). On import: checklist to untick family and friends, skip or merge duplicates by number or email, normalise SA numbers (082… → +2782…), import only name, numbers and email, encrypted like existing contacts; re-running adds only new ones. Mention in the privacy policy (POPIA). The per-user access code from H1 is the base for the upload link
+- [~] P6b. Contacts import (web part built 2026-11-19, not deployed): in Profile, What Volita knows about you, pick a .vcf or .csv contacts file (iPhone, Android, Google, Outlook), tick who to import (duplicates by name, number or email are marked and unticked), SA numbers normalised (082 to +2782), only name, number and email, stored scrambled, plan limit respected, privacy policy updated. NOT built: the one-tap Android import (needs a native contacts plugin and a new Android build, so it cannot be tested without the phone) and the iPhone Shortcut that sends contacts
 - [ ] P7. Netlify settings ready: `DATA_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, SPA fallback redirect in `netlify.toml`
 
 ### Deploy 1: everything already built (D0, E1, F1, F2, G1, G2, G3, G5)
@@ -126,12 +126,12 @@ Order: H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9 → H10, then 
 
 ### Later (when owners ask)
 - [ ] H11. "Power's out" command: "power's out at the shop until 4" drafts reschedule messages to everyone booked in that window. Add a load-shedding schedule feed only if load shedding returns (EskomSePush API is paid for commercial use, about $55+ a year; read its licence)
-- [ ] H12. Price memory and margin check: warn when a quote differs from last time or is below material cost; update prices from a photo of a supplier price list or invoice
-- [ ] H13. Weekly money summary by voice: quoted, won, invoiced, paid, outstanding
-- [ ] H14. End-of-day wrap: jobs done, quotes sent, money owed, tomorrow's first job
+- [~] H12. Price memory (built 2026-11-19, not deployed): on a new invoice, an item charged at a different price from last time shows "Last time (INV-0007) you charged R4 800.00; this is 6% more" with a Use last price button. NOT built: warning when a price is below material cost (Volita holds no costs) and updating prices from a photo of a supplier price list
+- [x] H13. Weekly money summary by voice (built 2026-11-19, not deployed): assistant tool money_summary, the last 7 or 30 days: quotes sent (counted, since a quote is written text), invoiced, paid, still owed and overdue
+- [x] H14. End-of-day wrap (built 2026-11-19, not deployed): assistant tool day_wrap: what got done today, quotes and messages sent, drafts not sent yet, money paid today, owed and overdue, and the first job tomorrow
 - [ ] H15. Day plan by route: order today's jobs by location and send "on my way, about 20 minutes"
 - [ ] H16. Receipt scanning (from QuickReceipt): log expenses, monthly and tax-year totals
-- [ ] H17. Job sheet (from FieldOps): dictate work done plus photos, job report PDF sent with the invoice
+- [x] H17. Job sheet (built 2026-11-19, not deployed): on any invoice, a Job sheet with the work done (the keyboard microphone can dictate it) and up to 6 photos, made into a job report PDF on the phone and shared with the invoice; photos are not uploaded
 - [ ] H18. Business card scanner: snap a card, save the contact, link it to the timeline
 - [ ] H19. Unified inbox: WhatsApp captures, email and website chat per customer in one list
 - [ ] H20. Website chat widget: embeddable script (Martinnaise first), messages land in the inbox, Volita reads and replies fully

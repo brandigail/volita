@@ -12,6 +12,7 @@ import { deliverPdf } from '../../lib/quote-pdf'
 import type { BusinessSettings, Invoice, InvoiceStatus } from '../../types/business'
 import { todayLocal } from './dates'
 import { lookOf, STATUS_LOOK } from './invoiceLook'
+import { JobSheet } from './JobSheet'
 import { MessagePanel } from './MessagePanel'
 
 interface InvoiceDetailProps {
@@ -159,6 +160,8 @@ export function InvoiceDetail({ invoice, settings, onChange, onDeleted, onBack }
           {error}
         </p>
       )}
+
+      {profile && invoice.status !== 'CANCELLED' && <JobSheet customer={invoice.customerName} profile={profile} />}
 
       {profile && stage !== null && (
         <MessagePanel

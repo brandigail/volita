@@ -39,6 +39,14 @@ export function PrivacyPage() {
           </li>
           <li>Your profile: business name, role, phone number and sign-off, so drafts can be written and signed in your name.</li>
           <li>What you make: the text of your drafts, who they are for, your agenda items, the notes and people you ask Volita to remember, your price list and templates.</li>
+          <li>
+            Your customers and money, if you use the Business tab: invoices (customer, items, amounts, dates and status), the business details printed on them such as your VAT number and bank account, your booking page
+            settings, and the bookings customers make on it (their name, phone, email and note). All of this is stored scrambled, apart from amounts and dates, which are needed to add up what you are owed.
+          </li>
+          <li>
+            People you import from your phone&apos;s contacts file: only the name, number and email of the ones you tick, after you choose the file yourself. Volita never reads your phone&apos;s address book on its own. Those
+            people have not asked to be saved here, so import only people you deal with in your business, and delete anyone at any time under What Volita knows about you.
+          </li>
           <li>Your conversations with the voice assistant, so you can look back at them.</li>
           <li>Counts of how much you have used, so the daily limits of your plan can be applied, and which plan or free trial you are on.</li>
           <li>If you use it, an invite link code and how many friends joined through it.</li>
