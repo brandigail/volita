@@ -183,7 +183,7 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
         const reading = await inboxChatsFor(text)
         inboxChatsRef.current = mergeChats(inboxChatsRef.current, reading.chats, MAX_ASSISTANT_CHATS)
         const chats = mergeChats(chatsForAssistant(), inboxChatsRef.current, MAX_ASSISTANT_CHATS)
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving, inboxTitles: reading.titles })
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving, inboxTitles: reading.titles, catchUp: reading.chats.length > 0 || reading.titles.length > 0 })
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)

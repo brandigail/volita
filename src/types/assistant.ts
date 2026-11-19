@@ -34,6 +34,8 @@ export interface AssistantRequest {
   chats?: AssistantChat[]
   /** When the person named someone who matched no WhatsApp chat on their phone: the names of their recent chats, so the assistant can ask which one. */
   inboxTitles?: string[]
+  /** True when the app read chats from the phone for this turn, so the assistant can answer with one small call. */
+  catchUp?: boolean
   /** True in driving mode: replies are only heard, so the assistant keeps them short and confirms every send. */
   driving?: boolean
 }

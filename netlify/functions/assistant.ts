@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ASSISTANT_CHAT_MESSAGES, MAX_ASSISTANT_CHATS, MAX_ASSISTANT_CHAT_TEXT, READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
 import { TOOLS, runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
 import { assistantSystemPrompt } from './_lib/assistant-prompt.ts'
+import { answerCatchUp, isCatchUpTurn } from './_lib/catch-up-turn.ts'
 import { chat, type ChatMessage } from './_lib/groq-chat.ts'
 import { errorResponse, json, warmUpResponse } from './_lib/http.ts'
 import { loadMemoryContext } from './_lib/memory-context.ts'
@@ -59,6 +60,8 @@ const requestSchema = z.object({
   chats: z.array(chatSchema).max(MAX_ASSISTANT_CHATS).default([]),
   driving: z.boolean().default(false),
   inboxTitles: z.array(z.string().max(80)).max(12).default([]),
+  /** The app read chats from the phone for this turn. */
+  catchUp: z.boolean().default(false),
 })
 
 /** Some models wrap their reasoning in <think> tags; it must never be spoken. */
@@ -145,6 +148,15 @@ export default async function handler(req: Request): Promise<Response> {
       ms: Date.now() - startedAt,
     })
     return json<AssistantResponse>({ reply, actions: ctx.actions, speechLanguage: ctx.speechLanguage })
+  }
+
+  // "Catch me up" with chats in hand: one small call with no tools, because the free AI service allows about 8,000 tokens a minute
+  // per model and a normal turn costs about 5,000 for every call it makes.
+  if (isCatchUpTurn(lastUserText, ctx, request.data.catchUp)) {
+    const answer = await answerCatchUp({ turns: request.data.messages, chatsReadThisTurn: request.data.catchUp }, ctx, assistantModels())
+    if (answer.ok) return respond(answer.reply)
+    await logActivity(session.user, 'assistant_failed', { said: lastUserText, reason: `catch-up failed (${answer.status})` })
+    return errorResponse(answer.status === 429 ? 429 : answer.status === 504 ? 504 : 502, answer.status === 429 ? 'The AI service is busy. Try again in a moment.' : 'Sorry, I could not catch you up just now. Please try again.')
   }
 
   const limits = planLimits(session.user.plan)

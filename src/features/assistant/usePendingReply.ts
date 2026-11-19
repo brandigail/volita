@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { ApiRequestError } from '../../lib/api'
 import { deleteDraft, listDrafts, markDraftSent } from '../../lib/drafts-api'
 import { nativeInbox } from '../../lib/native-inbox'
+import { chatTitleFor } from '../inbox/aliases'
 import { isAndroidApp, openInstalledApp } from '../../lib/native-listening'
 import { buildWhatsAppUrl } from '../../lib/share'
 import type { Draft } from '../../types/draft'
@@ -57,7 +58,7 @@ export function usePendingReply(): UsePendingReply {
       current.current = draft ? { draft, who } : null
       setPending(current.current)
       setNeedsTap(false)
-      setDirect(draft ? await nativeInbox.canReply(who) : false)
+      setDirect(draft ? await nativeInbox.canReply(chatTitleFor(who)) : false)
     } catch {
       // The reply is still saved in History; the card just could not be drawn.
     }
@@ -69,7 +70,9 @@ export function usePendingReply(): UsePendingReply {
     setBusy(true)
     try {
       // When the chat's own Reply button is available, the message is sent from here and WhatsApp stays closed.
-      if ((await nativeInbox.canReply(waiting.who)) && (await nativeInbox.sendReply(waiting.who, waiting.draft.body))) {
+      // The person says "Abigail"; WhatsApp knows the chat by the name saved in the phone, so the reply goes to that chat.
+      const chatTitle = chatTitleFor(waiting.who)
+      if ((await nativeInbox.canReply(chatTitle)) && (await nativeInbox.sendReply(chatTitle, waiting.draft.body))) {
         await markDraftSent(waiting.draft.id, true).catch(() => undefined)
         current.current = null
         setPending(null)

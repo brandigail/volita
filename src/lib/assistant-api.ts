@@ -27,7 +27,7 @@ export async function askAssistant(
   messages: AssistantTurn[],
   conversationId: string,
   spokenLanguage: string,
-  extras: { chats?: AssistantChat[]; driving?: boolean; inboxTitles?: string[] } = {},
+  extras: { chats?: AssistantChat[]; driving?: boolean; inboxTitles?: string[]; catchUp?: boolean } = {},
 ): Promise<AssistantResponse> {
   const payload: AssistantRequest = {
     messages,
@@ -37,6 +37,7 @@ export async function askAssistant(
     ...(extras.chats?.length ? { chats: extras.chats } : {}),
     ...(extras.driving ? { driving: true } : {}),
     ...(extras.inboxTitles?.length ? { inboxTitles: extras.inboxTitles } : {}),
+    ...(extras.catchUp ? { catchUp: true } : {}),
   }
   const data = responseSchema.safeParse(
     await request('/api/assistant', { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),

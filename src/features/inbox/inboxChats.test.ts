@@ -67,7 +67,7 @@ describe('inboxChatsFor', () => {
   it('reads the chat saved under a nickname when the person has said who it is', async () => {
     setAliases(NICKNAME, ['Abigail', 'my wife'])
     const { chats } = await inboxChatsFor('Catch me up with Abigail')
-    expect(chats.map((c) => c.contact)).toEqual([NICKNAME])
+    expect(chats.map((c) => c.contact)).toEqual(['Abigail'])
     expect(chats[0].messages.map((m) => m.text)).toEqual(['Are you coming?', 'Hello??'])
   })
 
@@ -85,10 +85,10 @@ describe('inboxChatsFor', () => {
   it('remembers who a chat is when the next words name it, so it works by name from then on', async () => {
     await inboxChatsFor('Catch me up with Abigail')
     const second = await inboxChatsFor('Squishmellow')
-    expect(second.chats.map((c) => c.contact)).toEqual([NICKNAME])
+    expect(second.chats.map((c) => c.contact)).toEqual(['Abigail'])
     expect(readAliases()[NICKNAME]).toEqual(['Abigail'])
     const third = await inboxChatsFor('what did Abigail say')
-    expect(third.chats.map((c) => c.contact)).toEqual([NICKNAME])
+    expect(third.chats.map((c) => c.contact)).toEqual(['Abigail'])
     expect(third.titles).toEqual([])
   })
 
@@ -126,5 +126,20 @@ describe('mergeChats', () => {
     const merged = mergeChats([chat('Abigail', 'old'), chat('Sipho')], [chat('abigail', 'new'), chat('Jan')], 3)
     expect(merged.map((c) => `${c.contact}:${c.summary}`)).toEqual(['abigail:new', 'Jan:', 'Sipho:'])
     expect(mergeChats([chat('A'), chat('B')], [chat('C'), chat('D')], 3)).toHaveLength(3)
+  })
+})
+
+describe('naming a chat by the name the person gave it', () => {
+  it('speaks of the chat as Abigail and sends replies to the real chat', async () => {
+    const { aliasLabel, chatTitleFor } = await import('./aliases')
+    setAliases(NICKNAME, ['Abigail', 'my wife'])
+    expect(aliasLabel(NICKNAME)).toBe('Abigail')
+    expect(aliasLabel('Sipho Dlamini')).toBe('Sipho Dlamini')
+    expect(chatTitleFor('Abigail')).toBe(NICKNAME)
+    expect(chatTitleFor('my wife')).toBe(NICKNAME)
+    expect(chatTitleFor('Sipho Dlamini')).toBe('Sipho Dlamini')
+    const { chats } = await inboxChatsFor('catch me up with Abigail')
+    expect(chats[0].contact).toBe('Abigail')
+    expect(chats[0].messages.every((m) => m.sender === 'Abigail')).toBe(true)
   })
 })

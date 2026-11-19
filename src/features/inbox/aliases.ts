@@ -49,6 +49,20 @@ export function addAlias(chat: string, name: string): ChatAliases {
   return setAliases(chat, names.some((existing) => normalise(existing) === normalise(name)) ? names : [...names, name].slice(-6))
 }
 
+/** What to call a chat when speaking about it: the first name the person gave it, otherwise the chat's own name. */
+export function aliasLabel(chat: string, aliases: ChatAliases = readAliases()): string {
+  return aliases[chat]?.[0] ?? chat
+}
+
+/** The chat a spoken name stands for: the chat the person gave that name to, otherwise the name itself (it may already be the chat's own name). */
+export function chatTitleFor(name: string, aliases: ChatAliases = readAliases()): string {
+  const wanted = normalise(name)
+  for (const [chat, names] of Object.entries(aliases)) {
+    if (names.some((alias) => normalise(alias) === wanted)) return chat
+  }
+  return name
+}
+
 /** The chat names that any of the person's own names for chats appear in what they said, e.g. "Abigail" gives "Squishmellow 💞". */
 export function chatsAliasedIn(utterance: string, aliases: ChatAliases): string[] {
   const spoken = ` ${normalise(utterance)} `

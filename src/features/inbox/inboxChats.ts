@@ -1,6 +1,6 @@
 import { nativeInbox, type InboxChatInfo, type InboxMessage } from '../../lib/native-inbox'
 import type { AssistantChat } from '../../types/assistant'
-import { addAlias, chatsAliasedIn, readAliases } from './aliases'
+import { addAlias, aliasLabel, chatsAliasedIn, readAliases } from './aliases'
 import { asksAboutPerson, chatsNamedIn, guessName, wantsCatchUp } from './match'
 
 /** How far back a named chat is looked for, and how far back "catch me up" looks when no one is named. */
@@ -22,14 +22,16 @@ export interface InboxReading {
   titles: string[]
 }
 
-function toChat(contact: string, messages: InboxMessage[]): AssistantChat {
+function toChat(title: string, messages: InboxMessage[]): AssistantChat {
+  // The assistant speaks of the chat by the name the person gave it ("Abigail"), not the nickname WhatsApp shows.
+  const contact = aliasLabel(title)
   return {
     contact,
     summary: '',
     // The copy holds what people sent, so the last message is theirs and is waiting for an answer.
     needsReply: messages.length > 0,
     asked: [],
-    messages: messages.slice(-MESSAGES_PER_CHAT).map((message) => ({ sender: message.sender, mine: false, text: message.text.slice(0, TEXT_CHARS) })),
+    messages: messages.slice(-MESSAGES_PER_CHAT).map((message) => ({ sender: message.sender === title ? contact : message.sender, mine: false, text: message.text.slice(0, TEXT_CHARS) })),
   }
 }
 
