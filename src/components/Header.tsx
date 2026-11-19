@@ -1,6 +1,7 @@
 import { AudioWaveform, CircleHelp, LogOut, Moon, Sun } from 'lucide-react'
 import { authClient } from '../lib/auth-client'
 import { useTheme } from '../providers/useTheme'
+import { BetaBadge } from './BetaBadge'
 import { PlanChip } from './PlanChip'
 
 const iconButton = 'inline-flex size-10 items-center justify-center rounded-full hover:bg-brand-500/15'
@@ -19,6 +20,7 @@ export function Header({ signedIn, onHelp, onPlan }: { signedIn: boolean; onHelp
           <span>
             <span className="text-gradient">Volita</span>
           </span>
+          <BetaBadge />
         </div>
         <div className="flex items-center">
           {signedIn && <PlanChip onClick={onPlan} />}

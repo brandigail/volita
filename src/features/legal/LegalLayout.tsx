@@ -1,4 +1,5 @@
 import { AudioWaveform } from 'lucide-react'
+import { BetaBadge } from '../../components/BetaBadge'
 import type { ReactNode } from 'react'
 import { SITE } from '../../config/site'
 
@@ -6,7 +7,13 @@ export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-(--line) py-8 text-sm">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4">
-        <p className="muted">© {new Date().getFullYear()} {SITE.name}. Made in South Africa.</p>
+        <div className="muted">
+          <p>© {new Date().getFullYear()} {SITE.name}. Made in South Africa.</p>
+          <p className="mt-1">
+            {SITE.name} is in beta, so things are still being polished.{' '}
+            <a className="underline" href={`mailto:${SITE.supportEmail}?subject=${encodeURIComponent(`${SITE.name} beta feedback`)}`}>Tell us what you think.</a>
+          </p>
+        </div>
         <nav aria-label="Legal and help" className="flex flex-wrap gap-x-5 gap-y-2 font-semibold">
           <a href="/privacy" className="hover:underline">
             Privacy
@@ -31,6 +38,7 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
           <AudioWaveform className="size-5" aria-hidden="true" />
         </span>
         <span className="text-gradient">{SITE.name}</span>
+        <BetaBadge />
       </a>
       {children}
     </header>

@@ -78,9 +78,14 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
   return (
     <section aria-labelledby="assistant-heading" className="flex flex-col items-center gap-5 text-center">
       <div className="animate-rise">
+        {greeting && (
+          <p className="mb-3 text-2xl font-extrabold tracking-tight sm:text-3xl" data-testid="greeting">
+            {greeting}
+          </p>
+        )}
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1 text-xs font-semibold backdrop-blur">
           <Sparkles className="size-3.5 text-ember-400" aria-hidden="true" />
-          {greeting ?? 'Hands-free assistant'}
+          Hands-free assistant
         </p>
         <h1 id="assistant-heading" className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl">
           Just talk.

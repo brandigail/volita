@@ -9,7 +9,8 @@ import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
 import { classifyApproval } from './approval'
 import { SpeechPlayer } from './speech'
-import { callName, spokenWelcome } from '../../lib/greeting'
+import { spokenWelcome } from '../../lib/greeting'
+import { visitGreeting } from '../../lib/visit-greeting'
 import { chatsForAssistant } from '../catchup/chatStore'
 import { useGreeting } from '../profile/useGreeting'
 import { takeDailyWelcome } from './welcome'
@@ -274,8 +275,8 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
 
     // The usual line is fixed, so a recording of it plays at once instead of waiting for the voice service.
     // The first conversation of the day gets a personal welcome by name; later ones use the quick recorded greeting.
-    const welcome = !driving && profile !== null && callName(profile) !== '' && takeDailyWelcome()
-    const greeting = driving ? DRIVING_GREETING : welcome && profile ? spokenWelcome(profile) : "Hi, I'm listening. What can I do for you?"
+    const welcome = !driving && profile !== null && takeDailyWelcome()
+    const greeting = driving ? DRIVING_GREETING : welcome && profile ? spokenWelcome(visitGreeting(profile)) : "Hi, I'm listening. What can I do for you?"
     addLine('assistant', greeting)
     setPhase('speaking')
     session.player.startTurn(crypto.randomUUID())

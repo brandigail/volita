@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowLeft, AudioWaveform, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { BetaBadge } from '../../components/BetaBadge'
 import { authClient } from '../../lib/auth-client'
 import { UNDER_AGE_MESSAGE, isAdult } from '../../lib/age'
 import { BirthDateFields } from '../safety/BirthDateFields'
@@ -95,7 +96,8 @@ export function AuthScreen({ initialMode = 'sign-in', onBack }: AuthScreenProps)
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-linear-to-br from-ember-700 via-ember-600 to-ember-500 text-white shadow-xl shadow-ember-600/40">
         <AudioWaveform className="size-8" aria-hidden="true" />
       </span>
-      <h1 id="auth-heading" className="mt-5 text-3xl font-extrabold tracking-tight">
+      <BetaBadge className="mt-4" />
+      <h1 id="auth-heading" className="mt-3 text-3xl font-extrabold tracking-tight">
         {signingUp ? 'Create your account' : 'Sign in'}
       </h1>
       <p className="mt-2 muted">
