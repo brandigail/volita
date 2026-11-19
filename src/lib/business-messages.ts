@@ -1,8 +1,8 @@
-import type { Invoice } from '../types/business'
-import type { Profile } from '../types/profile'
-import { addDaysTo, daysBetween, formatRand, type ChaseStage } from './money'
-import { prettyDate } from './invoice-text'
-import { buildSignature } from './profile'
+import type { Invoice } from '../types/business.ts'
+import type { Profile } from '../types/profile.ts'
+import { addDaysTo, daysBetween, formatRand, type ChaseStage } from './money.ts'
+import { prettyDate } from './invoice-text.ts'
+import { buildSignature } from './profile.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 

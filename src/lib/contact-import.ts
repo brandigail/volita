@@ -1,5 +1,5 @@
-import { plain, phoneTail } from './customer-match'
-import { toInternationalNumber } from './phone'
+import { plain, phoneTail } from './customer-match.ts'
+import { toInternationalNumber } from './phone.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 

@@ -1,7 +1,7 @@
-import type { BusinessSettings, Invoice } from '../types/business'
-import type { Profile } from '../types/profile'
-import { formatRand } from './money'
-import { toInternationalNumber } from './phone'
+import type { BusinessSettings, Invoice } from '../types/business.ts'
+import type { Profile } from '../types/profile.ts'
+import { formatRand } from './money.ts'
+import { toInternationalNumber } from './phone.ts'
 
 /** "19 Nov 2026" from a YYYY-MM-DD date, without the time zone shifting the day. */
 export const prettyDate = (date: string): string =>

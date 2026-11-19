@@ -1,4 +1,4 @@
-import type { InvoiceItem } from '../types/business'
+import type { InvoiceItem } from '../types/business.ts'
 
 // Shared by the client and the Netlify Functions. Keep this file free of DOM and Node APIs.
 
