@@ -1,5 +1,19 @@
 import type { DraftCategory } from './draft.ts'
 
+/** A chat read from screenshots, trimmed, that the app hands the assistant so it can catch the user up or reply. */
+export interface AssistantChat {
+  contact: string
+  summary: string
+  needsReply: boolean
+  asked: string[]
+  messages: { sender: string; mine: boolean; text: string }[]
+}
+
+export const MAX_ASSISTANT_CHATS = 3
+/** Newest messages kept per chat, and the longest text kept per message. */
+export const ASSISTANT_CHAT_MESSAGES = 20
+export const MAX_ASSISTANT_CHAT_TEXT = 400
+
 export interface AssistantTurn {
   role: 'user' | 'assistant'
   content: string
@@ -16,6 +30,10 @@ export interface AssistantRequest {
   conversationId: string
   /** The language being spoken, or "auto", so recognition is more accurate. */
   spokenLanguage?: string
+  /** Chats the user added as screenshots on this device (never stored by the server). */
+  chats?: AssistantChat[]
+  /** True in driving mode: replies are only heard, so the assistant keeps them short and confirms every send. */
+  driving?: boolean
 }
 
 /** Things the assistant did on the user's behalf this turn, so the screen can show them. */
@@ -29,6 +47,8 @@ export type AssistantAction =
   | { type: 'memory_forgotten'; id: string; label: string }
   /** An email written for the user to approve; `id` is the waiting email. Only the user can send it. */
   | { type: 'email_ready'; id: string; label: string }
+  /** A reply written for the user to approve; uid=197609(brand) gid=197609 groups=197609 is the saved draft. WhatsApp opens only when the user says send it or taps the button. */
+  | { type: 'reply_ready'; id: string; label: string }
 
 export interface AssistantResponse {
   reply: string

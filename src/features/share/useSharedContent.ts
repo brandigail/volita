@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
+import { MAX_CHAT_IMAGES } from '../../types/catchup'
 
-/** Something another app handed to Volita: a message to reply to, or a voice note to turn into text. */
-export type SharedItem = { kind: 'text'; text: string } | { kind: 'audio'; mimeType: string; base64: string }
+/** Something another app handed to Volita: a message to reply to, a voice note to turn into text, or chat screenshots to catch up on. */
+export type SharedItem =
+  | { kind: 'text'; text: string }
+  | { kind: 'audio'; mimeType: string; base64: string }
+  /** JPEG data URLs, already shrunk by the Android app, oldest first. */
+  | { kind: 'images'; images: string[] }
 
 /** The Android app fires these when WhatsApp (or any app) shares a message or voice note into Volita. */
 export const SHARED_AUDIO_EVENT = 'volita:shared-audio'
 export const SHARED_TEXT_EVENT = 'volita:shared-text'
+export const SHARED_IMAGES_EVENT = 'volita:shared-images'
 
 const MAX_TEXT = 4_000
 
@@ -49,10 +55,16 @@ export function useSharedContent(signedIn: boolean): { shared: SharedItem | null
       const detail = (event as CustomEvent<AudioDetail>).detail
       setShared({ kind: 'audio', mimeType: detail.mimeType, base64: detail.base64 })
     }
+    const onImages = (event: Event) => {
+      const images = (event as CustomEvent<string[]>).detail
+      if (Array.isArray(images) && images.length > 0) setShared({ kind: 'images', images: images.slice(0, MAX_CHAT_IMAGES) })
+    }
     window.addEventListener(SHARED_TEXT_EVENT, onText)
+    window.addEventListener(SHARED_IMAGES_EVENT, onImages)
     window.addEventListener(SHARED_AUDIO_EVENT, onAudio)
     return () => {
       window.removeEventListener(SHARED_TEXT_EVENT, onText)
+      window.removeEventListener(SHARED_IMAGES_EVENT, onImages)
       window.removeEventListener(SHARED_AUDIO_EVENT, onAudio)
     }
   }, [])

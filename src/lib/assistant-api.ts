@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { AssistantRequest, AssistantResponse, AssistantTurn, AssistantVoice } from '../types/assistant'
+import type { AssistantChat, AssistantRequest, AssistantResponse, AssistantTurn, AssistantVoice } from '../types/assistant'
 import { MAX_SPEECH_CHARS } from '../types/assistant'
 import { ApiRequestError, request } from './api'
 
@@ -14,6 +14,7 @@ const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('contact_saved'), id: z.string(), label: z.string() }),
   z.object({ type: z.literal('memory_forgotten'), id: z.string(), label: z.string() }),
   z.object({ type: z.literal('email_ready'), id: z.string(), label: z.string() }),
+  z.object({ type: z.literal('reply_ready'), id: z.string(), label: z.string() }),
 ])
 const responseSchema = z.object({
   reply: z.string().min(1),
@@ -26,12 +27,15 @@ export async function askAssistant(
   messages: AssistantTurn[],
   conversationId: string,
   spokenLanguage: string,
+  extras: { chats?: AssistantChat[]; driving?: boolean } = {},
 ): Promise<AssistantResponse> {
   const payload: AssistantRequest = {
     messages,
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     conversationId,
     spokenLanguage,
+    ...(extras.chats?.length ? { chats: extras.chats } : {}),
+    ...(extras.driving ? { driving: true } : {}),
   }
   const data = responseSchema.safeParse(
     await request('/api/assistant', { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),

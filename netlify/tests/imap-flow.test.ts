@@ -92,7 +92,7 @@ suite('email with an app password (IMAP and SMTP)', () => {
   let runTool: typeof import('../functions/_lib/assistant-tools.ts').runTool
   let store: typeof import('../functions/_lib/gmail-store.ts')
   let mailStore: typeof import('../functions/_lib/mail-store.ts')
-  const context = (): ToolContext => ({ userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '' })
+  const context = (): ToolContext => ({ userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '', chats: [], driving: false })
   const connect = (smtpPort: number, password = PASSWORD) =>
     mailHandler(post('/api/mail/connect', { provider: 'other', email: ADDRESS, password, imap: { host: 'localhost', port: 993 }, smtp: { host: 'localhost', port: smtpPort } }))
 

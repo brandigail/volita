@@ -1,6 +1,8 @@
 package com.brandigail.volita;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,14 +12,20 @@ import android.webkit.WebView;
 
 import com.getcapacitor.BridgeActivity;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 public class MainActivity extends BridgeActivity {
     /** Voice notes larger than this are not sent: the server accepts clips up to 4 MB. */
     private static final int MAX_SHARED_AUDIO_BYTES = 3 * 1024 * 1024;
+    /** Chat screenshots are shrunk here, before they reach the web page, so a big PNG never has to be passed across. */
+    private static final int MAX_SHARED_IMAGE_SIDE = 1400;
+    private static final int MAX_SHARED_IMAGES = 4;
+    private static final int SHARED_IMAGE_QUALITY = 70;
     /** On a cold start the web page needs a moment to load before it can receive a share. */
     private static final long COLD_START_DELAY_MS = 3000;
 
@@ -39,7 +47,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private static boolean isShare(Intent intent) {
-        return intent != null && Intent.ACTION_SEND.equals(intent.getAction());
+        return intent != null && (Intent.ACTION_SEND.equals(intent.getAction()) || Intent.ACTION_SEND_MULTIPLE.equals(intent.getAction()));
     }
 
     /** Hands a shared message or voice note to the web app, which turns it into a draft reply. */
@@ -56,6 +64,12 @@ public class MainActivity extends BridgeActivity {
                 script = "window.__volitaShared={kind:'text',text:" + quoted + "};"
                     + "window.dispatchEvent(new CustomEvent('volita:shared-text',{detail:" + quoted + "}));";
             }
+        } else if (type.startsWith("image/")) {
+            String images = sharedImages(intent);
+            if (images != null) {
+                script = "window.__volitaShared={kind:'images',images:" + images + "};"
+                    + "window.dispatchEvent(new CustomEvent('volita:shared-images',{detail:" + images + "}));";
+            }
         } else if (type.startsWith("audio/")) {
             Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
             String base64 = uri == null ? null : readBase64(uri);
@@ -66,6 +80,61 @@ public class MainActivity extends BridgeActivity {
             }
         }
         if (script != null) webView.evaluateJavascript(script, null);
+    }
+
+    /** The shared screenshots as a JSON array of small JPEG data URLs, or null if none could be read. */
+    private String sharedImages(Intent intent) {
+        ArrayList<Uri> uris = new ArrayList<>();
+        if (Intent.ACTION_SEND_MULTIPLE.equals(intent.getAction())) {
+            ArrayList<Uri> many = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (many != null) uris.addAll(many);
+        } else {
+            Uri one = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (one != null) uris.add(one);
+        }
+        JSONArray images = new JSONArray();
+        for (Uri uri : uris) {
+            if (images.length() >= MAX_SHARED_IMAGES) break;
+            String dataUrl = shrinkToDataUrl(uri);
+            if (dataUrl != null) images.put(dataUrl);
+        }
+        return images.length() == 0 ? null : images.toString();
+    }
+
+    /** Decodes a shared picture at a reduced size and returns it as a JPEG data URL, or null if it cannot be read. */
+    private String shrinkToDataUrl(Uri uri) {
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                BitmapFactory.decodeStream(in, null, bounds);
+            }
+            int longest = Math.max(bounds.outWidth, bounds.outHeight);
+            if (longest <= 0) return null;
+            int sample = 1;
+            while (longest / (sample * 2) >= MAX_SHARED_IMAGE_SIDE) sample *= 2;
+            BitmapFactory.Options decode = new BitmapFactory.Options();
+            decode.inSampleSize = sample;
+            Bitmap bitmap;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                bitmap = BitmapFactory.decodeStream(in, null, decode);
+            }
+            if (bitmap == null) return null;
+            float scale = Math.min(1f, (float) MAX_SHARED_IMAGE_SIDE / Math.max(bitmap.getWidth(), bitmap.getHeight()));
+            if (scale < 1f) {
+                Bitmap scaled = Bitmap.createScaledBitmap(bitmap, Math.round(bitmap.getWidth() * scale), Math.round(bitmap.getHeight() * scale), true);
+                bitmap.recycle();
+                bitmap = scaled;
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, SHARED_IMAGE_QUALITY, out);
+            bitmap.recycle();
+            return "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /** Reads a shared file as base64, or null if it cannot be read or is too large. */

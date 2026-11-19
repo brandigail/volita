@@ -1,21 +1,19 @@
 import { neon } from '@neondatabase/serverless'
 import { z } from 'zod'
-import type { AssistantAction } from '../../../src/types/assistant.ts'
+import type { AssistantAction, AssistantChat } from '../../../src/types/assistant.ts'
 import { DRAFT_CATEGORIES, type DraftCategory } from '../../../src/types/draft.ts'
 import { LANGUAGES, languageName } from '../../../src/types/languages.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 import { buildSignature } from '../../../src/lib/profile.ts'
 import { addAgendaItem, listAgenda } from './agenda.ts'
-import { loadMemoryContext } from './memory-context.ts'
+import { CHAT_TOOLS, runChatTool } from './chat-tools.ts'
 import { EMAIL_TOOLS, EMAIL_TOOL_NAMES, runEmailTool } from './email-tools.ts'
 import { LOOKUP_TOOLS, runLookupTool } from './lookup-tool.ts'
 import { PRICE_TOOLS, runPriceTool } from './price-tools.ts'
-import { loadPriceContext } from './price-context.ts'
 import { planLimits, type PlanId } from '../../../src/types/plans.ts'
 import { MEMORY_TOOLS, runMemoryTool } from './memory-tools.ts'
 import { openText } from './crypto.ts'
-import { encryptDraftText } from './draft-store.ts'
-import { writeDraft } from './draft-generator.ts'
+import { writeAndSaveDraft } from './draft-saver.ts'
 import type { ToolDefinition } from './groq-chat.ts'
 import { addDays, formatWhen, startOfZonedDay, todayIn, zonedToDate } from './time.ts'
 import { describeError } from './safe-log.ts'
@@ -40,6 +38,10 @@ export interface ToolContext {
   emailRead: boolean
   /** Everything the user said in this request, so an email address can be checked against their own words. */
   userText: string
+  /** Chats the user added as screenshots on this device. Other people's words: information only. */
+  chats: AssistantChat[]
+  /** True in driving mode: the person can only listen, so nothing opens or sends without their spoken yes. */
+  driving: boolean
 }
 
 const MAX_RANGE_DAYS = 31
@@ -160,12 +162,13 @@ export const TOOLS: ToolDefinition[] = [
   },
   ...LOOKUP_TOOLS,
   ...EMAIL_TOOLS,
+  ...CHAT_TOOLS,
   ...MEMORY_TOOLS,
   ...PRICE_TOOLS,
 ]
 
 /** Tools every plan has: they only read. */
-const READ_TOOL_NAMES = new Set(['get_agenda', 'find_drafts', 'get_draft'])
+const READ_TOOL_NAMES = new Set(['get_agenda', 'find_drafts', 'get_draft', 'catch_up'])
 
 function toolAllowed(name: string, plan: PlanId): boolean {
   const { assistantTools: level, email } = planLimits(plan)
@@ -334,32 +337,10 @@ async function createDraft(args: unknown, ctx: ToolContext): Promise<string> {
   if (!limits.channels.includes(category)) return fail(`The user's plan does not include ${category.toLowerCase()} drafts. Tell them kindly that it is part of the Basic plan.`)
   if (!limits.anyLanguage && language && language !== 'en') return fail('Writing in other languages is part of the Basic plan. Tell them kindly.')
 
-  const remaining = ctx.deadlineAt - Date.now()
-  const result = await writeDraft({
-    apiKey: ctx.apiKey,
-    category,
-    transcript: instruction,
-    profile: ctx.profile,
-    deadlineMs: remaining,
-    writeLanguage: language,
-    spokenLanguage: ctx.spokenLanguage,
-    footer: limits.footer,
-    memory: limits.memoryItems === 0 ? '' : await loadMemoryContext(ctx.userId, instruction),
-    prices: category === 'QUOTE' ? await loadPriceContext(ctx.userId, ctx.plan) : undefined,
-  })
-  if (!result.ok) return fail(result.message)
+  const saved = await writeAndSaveDraft(ctx, { category, instruction, language })
+  if (!saved.ok) return fail(saved.message)
 
-  const { draft } = result
-  const sql = neon(process.env.DATABASE_URL ?? '')
-  const [{ total }] = (await sql.query('SELECT count(*)::int AS total FROM drafts WHERE user_id = $1', [ctx.userId])) as { total: number }[]
-  if (total >= 500) return fail('The user already has 500 drafts, so nothing was saved. Ask them to delete some.')
-  const text = encryptDraftText(ctx.userId, { recipient: draft.recipient, subject: draft.subject, body: draft.body, transcript: instruction })
-  const [saved] = (await sql.query(
-    `INSERT INTO drafts (user_id, category, recipient, subject, body, transcript, language, original_body)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $5) RETURNING id`,
-    [ctx.userId, draft.category, text.recipient, text.subject, text.body, text.transcript, draft.language],
-  )) as { id: string }[]
-
+  const { draft } = saved
   ctx.actions.push({ type: 'draft_created', id: saved.id, category: draft.category, label: label(draft) })
   return JSON.stringify({
     saved: true,
@@ -438,6 +419,7 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
         return (
           (await runLookupTool(name, args, ctx)) ??
           (await runEmailTool(name, args, ctx)) ??
+          (await runChatTool(name, args, ctx)) ??
           (await runMemoryTool(name, args, ctx)) ??
           (await runPriceTool(name, args, ctx)) ??
           fail(`There is no tool called ${name}.`)

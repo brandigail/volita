@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
+import { ASSISTANT_CHAT_MESSAGES, MAX_ASSISTANT_CHATS, MAX_ASSISTANT_CHAT_TEXT, READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
 import { TOOLS, runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
 import { assistantSystemPrompt } from './_lib/assistant-prompt.ts'
 import { chat, type ChatMessage } from './_lib/groq-chat.ts'
@@ -31,6 +31,14 @@ function assistantModels(): string[] {
   return configured ? [configured, ...DEFAULT_MODELS.filter((m) => m !== configured)] : DEFAULT_MODELS
 }
 
+const chatSchema = z.object({
+  contact: z.string().trim().max(80),
+  summary: z.string().trim().max(700),
+  needsReply: z.boolean(),
+  asked: z.array(z.string().max(120)).max(8),
+  messages: z.array(z.object({ sender: z.string().max(80), mine: z.boolean(), text: z.string().max(MAX_ASSISTANT_CHAT_TEXT) })).max(ASSISTANT_CHAT_MESSAGES),
+})
+
 const requestSchema = z.object({
   messages: z
     .array(
@@ -48,6 +56,8 @@ const requestSchema = z.object({
   timeZone: z.string().max(64),
   conversationId: z.uuid(),
   spokenLanguage: z.string().refine((code) => SPOKEN_CODES.includes(code)).optional(),
+  chats: z.array(chatSchema).max(MAX_ASSISTANT_CHATS).default([]),
+  driving: z.boolean().default(false),
 })
 
 /** Some models wrap their reasoning in <think> tags; it must never be spoken. */
@@ -74,6 +84,7 @@ const CONFIRMATIONS: Record<AssistantAction['type'], string> = {
   contact_saved: "Got it, I've saved their details.",
   memory_forgotten: "Done, I've forgotten that.",
   email_ready: 'I have the email ready on your screen. Tap Send when you are happy with it.',
+  reply_ready: 'I have your reply ready on the screen. Say send it, or tap the button, when you are happy with it.',
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -116,6 +127,8 @@ export default async function handler(req: Request): Promise<Response> {
     spokenLanguage: request.data.spokenLanguage,
     emailRead: false,
     userText: request.data.messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ').toLowerCase(),
+    chats: request.data.chats,
+    driving: request.data.driving,
   }
   const { conversationId } = request.data
   const lastUserText = request.data.messages[request.data.messages.length - 1].content
@@ -138,7 +151,7 @@ export default async function handler(req: Request): Promise<Response> {
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email),
+      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email, { chats: request.data.chats.map((chat) => chat.contact || 'someone'), driving: request.data.driving }),
     },
     ...request.data.messages.map(({ role, content, actions }): ChatMessage => {
       if (role === 'user' || !actions?.length) return { role, content }

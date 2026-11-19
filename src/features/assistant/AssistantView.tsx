@@ -1,12 +1,15 @@
-import { useEffect } from 'react'
-import { AlertCircle, BellRing, Brain, CalendarPlus, CheckCheck, FilePenLine, Sparkles, Square, Trash2, UserPlus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AlertCircle, BellRing, Car, Brain, CalendarPlus, CheckCheck, FilePenLine, Sparkles, Square, Trash2, UserPlus } from 'lucide-react'
 import type { Tab } from '../../components/TabBar'
 import { warmUp } from '../../lib/assistant-api'
 import type { AssistantAction } from '../../types/assistant'
 import { UsageMeter } from '../plan/UsageMeter'
 import { AssistantOrb } from './AssistantOrb'
 import { BriefingCard } from './BriefingCard'
+import { ChatShelf } from '../catchup/ChatShelf'
+import { DrivingMode } from './DrivingMode'
 import { EmailCard } from './EmailCard'
+import { ReplyCard } from './ReplyCard'
 import { VoicePicker } from './VoicePicker'
 import { useAssistant, type AssistantPhase } from './useAssistant'
 
@@ -25,6 +28,8 @@ const SUGGESTIONS = [
   'Did I already send Mr Smith his quote?',
   'Write a quote for Mrs Jones for a tiled floor.',
   'Add a meeting with the supplier tomorrow at ten.',
+  'Catch me up.',
+  'Reply to Mrs Naidoo and say I can start on Monday.',
 ]
 
 interface AssistantViewProps {
@@ -60,12 +65,13 @@ function ActionChip({ action, onNavigate }: { action: AssistantAction; onNavigat
 }
 
 export function AssistantView({ onNavigate }: AssistantViewProps) {
-  const { phase, lines, error, orbRef, tapOrb, end, clear, email } = useAssistant()
+  const { phase, lines, error, orbRef, tapOrb, end, clear, email, reply } = useAssistant()
   // The voice and listening services start cold; waking them now means they are ready when the user taps the orb.
   useEffect(() => {
     warmUp()
   }, [])
   const active = phase !== 'idle'
+  const [driving, setDriving] = useState(false)
 
   return (
     <section aria-labelledby="assistant-heading" className="flex flex-col items-center gap-5 text-center">
@@ -83,6 +89,7 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
 
       {/* An email waiting for approval comes first, so Send is never hidden below the orb. */}
       <EmailCard email={email} />
+      <ReplyCard reply={reply} />
 
       <AssistantOrb phase={phase} onTap={tapOrb} orbRef={orbRef} />
 
@@ -91,6 +98,14 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
       </p>
 
       <UsageMeter kind="assistant" />
+      {!active && (
+        <button type="button" onClick={() => setDriving(true)} className="btn btn-ghost">
+          <Car className="size-4" aria-hidden="true" />
+          Driving mode
+        </button>
+      )}
+      {driving && <DrivingMode onClose={() => setDriving(false)} />}
+      {!active && <ChatShelf />}
       {!active && <VoicePicker />}
       {!active && lines.length === 0 && <BriefingCard />}
 
@@ -134,7 +149,7 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
                 {line.text}
               </p>
               {line.actions
-                .filter((action) => action.type !== 'email_ready')
+                .filter((action) => action.type !== 'email_ready' && action.type !== 'reply_ready')
                 .map((action) => (
                 <ActionChip key={action.id} action={action} onNavigate={onNavigate} />
               ))}

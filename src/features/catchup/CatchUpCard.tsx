@@ -1,5 +1,5 @@
 import { Loader2, MessagesSquare, Volume2, VolumeX } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { UpgradeNote } from '../../components/UpgradeNote'
 import { ApiRequestError, generateDraft } from '../../lib/api'
 import { CHANNELS } from '../../lib/channels'
@@ -10,6 +10,7 @@ import { MAX_CHAT_IMAGES, chatAsText, type CatchUp } from '../../types/catchup'
 import type { DraftCategory, GeneratedDraft } from '../../types/draft'
 import { SpeechPlayer } from '../assistant/speech'
 import { effectiveSpoken, effectiveWrite } from '../language/languageSettings'
+import { addChat } from './chatStore'
 import { ChatTranscript } from './ChatTranscript'
 
 /** Screenshots are text, so they are kept sharper than photos; four of them still fit well under the upload limit. */
@@ -19,10 +20,12 @@ const JPEG_QUALITY = 0.7
 interface CatchUpCardProps {
   onDraft: (draft: GeneratedDraft, transcript: string) => void
   onSeePlans: () => void
+  /** Screenshots another app shared in (already shrunk), read straight away. */
+  initialImages?: string[]
 }
 
 /** "Catch me up": pick screenshots of a WhatsApp chat, hear what it says, then say what to reply and get a draft. */
-export function CatchUpCard({ onDraft, onSeePlans }: CatchUpCardProps) {
+export function CatchUpCard({ onDraft, onSeePlans, initialImages }: CatchUpCardProps) {
   const { limits, refresh } = usePlan()
   const input = useRef<HTMLInputElement>(null)
   const player = useRef<SpeechPlayer | null>(null)
@@ -39,29 +42,50 @@ export function CatchUpCard({ onDraft, onSeePlans }: CatchUpCardProps) {
 
   useEffect(() => () => player.current?.stop(), [])
 
-  const fail = (err: unknown, fallback: string) => {
+  const fail = useCallback((err: unknown, fallback: string) => {
     setUpgrade(err instanceof ApiRequestError && err.upgrade !== undefined)
     setError(err instanceof ApiRequestError ? err.message : fallback)
-  }
+  }, [])
 
-  const choose = async (files: FileList | null) => {
-    const picked = Array.from(files ?? []).slice(0, MAX_CHAT_IMAGES)
-    if (picked.length === 0) return
+  /** Reads screenshots that are already small enough to send (JPEG data URLs, oldest first). */
+  const read = useCallback(async (images: string[]) => {
     setReading(true)
     setError(null)
     setUpgrade(false)
     try {
-      const images = await Promise.all(picked.map((file) => shrinkImage(file, MAX_SIDE, JPEG_QUALITY)))
-      setCatchUp(await readChatScreenshots(images))
+      const reading = await readChatScreenshots(images)
+      setCatchUp(reading)
+      addChat(reading)
       setShowMessages(false)
       refresh()
     } catch (err) {
       fail(err, 'Could not read those screenshots. Try a clearer one.')
     } finally {
       setReading(false)
+    }
+  }, [fail, refresh])
+
+  const choose = async (files: FileList | null) => {
+    const picked = Array.from(files ?? []).slice(0, MAX_CHAT_IMAGES)
+    if (picked.length === 0) return
+    setReading(true)
+    try {
+      await read(await Promise.all(picked.map((file) => shrinkImage(file, MAX_SIDE, JPEG_QUALITY))))
+    } catch {
+      setReading(false)
+      setError('Could not open those screenshots. Try another one.')
+    } finally {
       if (input.current) input.current.value = ''
     }
   }
+
+  // Screenshots shared in from another app are read as soon as the card opens, once.
+  const started = useRef(false)
+  useEffect(() => {
+    if (!initialImages?.length || started.current) return
+    started.current = true
+    void read(initialImages)
+  }, [initialImages, read])
 
   const hear = () => {
     if (!catchUp) return

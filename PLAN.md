@@ -15,7 +15,7 @@
 - [x] 13. `netlify/functions/db-sync.ts` (list, upsert, delete, scoped to the signed-in user) and a client sync layer
 - [x] 14. Draft history screen with search and category filter
 - [x] 15. PWA: manifest, icons in `/public`, `vite-plugin-pwa` prompt-for-update banner, offline shell
-- [ ] 16. Test the full flow on desktop Chrome and a real phone (iOS Safari and Android Chrome)
+- [~] 16. Test the full flow on desktop Chrome and a real phone (iOS Safari and Android Chrome). Desktop Chrome and Android work (Brandon, 2026-11-19); still to do: dad's iPhone or any iPhone in Safari
 - [ ] 17. Build, lint and `tsc --noEmit` clean; no console errors
 - [x] 18. README (pitch, architecture diagram, features, recruiter demo bullets)
 - [~] 19. Deploy to Netlify with env vars; test live; push to GitHub; update root `LINKS.md`
@@ -79,7 +79,7 @@ Netlify credits are tight, so everything is grouped into two deploys. Nothing de
 - [ ] P1. Back up `DATA_ENCRYPTION_KEY` from `.env.local` in a password manager (if lost, every encrypted draft is gone for good). Brandon does this one; the key is present in `.env.local`
 - [~] P2. Clean build: `npm run build`, lint and `tsc --noEmit` pass, no console errors (item 17). Build, lint and type check pass (2026-11-19); the console-error check in a browser is still to do
 - [x] P3. Run every test (`vitest`) and fix failures (17 files, 157 tests pass, 2026-11-19)
-- [ ] P4. Local test on real phones (items 16 and C4): dad's iPhone in Safari and an Android phone, using dad's real wording for quotes and replies; tune prompts where drafts come out wrong
+- [~] P4. Local test on real phones (items 16 and C4): dad's iPhone in Safari and an Android phone, using dad's real wording for quotes and replies; tune prompts where drafts come out wrong. Android done (works, 2026-11-19); still to do: dad's iPhone (or any iPhone) in Safari, and the new Round H features on both phones (see the test list in the H section)
 - [ ] P5. Read the privacy and terms pages (F3), confirm the support email in `src/config/site.ts`, decide `ALLOW_SIGNUP`
 - [ ] P6. Google Cloud project and OAuth client for Gmail (E2): add dad as a test user, update the privacy policy (G8), test Gmail on the local link
 - [ ] P7. Netlify settings ready: `DATA_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, SPA fallback redirect in `netlify.toml`
@@ -105,9 +105,9 @@ Netlify credits are tight, so everything is grouped into two deploys. Nothing de
 Order: H1 → H2 → H3 → H4 → H5 → H6 → H7 → H8 → H9 → H10, then H11 onwards when owners ask.
 
 ### WhatsApp without switching to Business (no Meta approval needed)
-- [~] H1. (built 2026-11-19, not deployed: `read-chat` function, Catch me up card on the Record screen with several screenshots, summary read aloud, then reply; tested live on a sample chat. Still open: Android share of images into Volita, the iPhone Shortcut, which needs a per-person access token) Catch me up from a screenshot: `features/share` accepts images; new `netlify/functions/read-chat.ts` reads chat screenshots with a vision model and returns messages grouped by sender; summary read aloud, then "what do you want to say?". iPhone: a "Catch me up" Shortcut (share sheet, Back Tap or Action Button) posts the screenshot. Plan limits: Free 3 a day, Basic and Pro more
-- [ ] H2. Assistant tools `catch_up` (screenshots + email together) and `reply_to(contact)`; reply opens WhatsApp pre-filled (`wa.me`) or sends email; nothing sends without a spoken "send"
-- [ ] H3. Driving mode: one big button, everything read aloud, no reading on screen, confirm every send by voice
+- [x] H1. Catch me up from a screenshot (built 2026-11-19, not deployed). `netlify/functions/read-chat.ts` reads up to 4 chat screenshots with the vision model (nothing stored); Catch me up card on the Record screen; Android share-sheet for images (`MainActivity.java`); iPhone Shortcut with a personal access code (Profile, `shortcut-token.ts`, migration 021). Limits: Free 3, Basic 20, Pro 60 a day. STILL NEEDED before the iPhone Shortcut works: apply migration 021 (`npm run db:migrate`, Brandon to approve) and run `netlify/tests/shortcut.test.ts`
+- [x] H2. Assistant tools `catch_up` (screenshots + unread email together) and `reply_to(contact)` (built 2026-11-19, not deployed): chats added on the Assistant screen go to the assistant with each turn (memory only); reply card with Open WhatsApp; spoken "send it" opens WhatsApp pre-filled (native on Android; a browser may need one tap); nothing sends without it. Email replies already existed (`prepare_reply`, `prepare_email`)
+- [x] H3. Driving mode (built 2026-11-19, not deployed): Driving mode button on the Assistant screen; safety notice, one huge button, one-word status, big Stop; the assistant keeps answers to 1 to 3 sentences, never mentions the screen, and waits for a spoken "send it". Needs a real drive-style test on Android and iPhone
 - [ ] H10. WhatsApp Inbox (Android, Pro): `NotificationListenerService` beside `ListeningService.java`, exposed through `VolitaListeningPlugin`; keeps a copy of every WhatsApp message as it arrives (`com.whatsapp`, `com.whatsapp.w4b`) so read messages can be read again later; reply through the notification's reply action, fallback to pre-filled WhatsApp. Before release: check Google Play's notification-access policy and WhatsApp's terms, POPIA notice, auto-delete old messages, battery-optimisation exemption prompt
 
 ### Customers and money

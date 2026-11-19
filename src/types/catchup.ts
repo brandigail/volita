@@ -46,3 +46,11 @@ export function chatAsText(catchUp: CatchUp): string {
   }
   return `Chat with ${catchUp.contact || 'a customer'}:\n${kept.join('\n')}`
 }
+
+/** The reading as one plain paragraph, for places that only show or speak text (the iPhone Shortcut). */
+export function readoutOf(catchUp: CatchUp): string {
+  const who = catchUp.contact ? `${catchUp.contact}: ` : ''
+  const wants = catchUp.asked.length > 0 ? ` They want: ${catchUp.asked.join('; ')}.` : ''
+  const waiting = catchUp.needsReply ? ' They are waiting for your reply.' : ''
+  return `${who}${catchUp.summary}${wants}${waiting}`
+}

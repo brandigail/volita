@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { buildSignature, profileFromUser } from '../../lib/profile'
 import { LibrarySection } from '../library/LibrarySection'
+import { ShortcutSection } from '../catchup/ShortcutSection'
 import { MemorySection } from '../memory/MemorySection'
 import { NotificationSettings } from '../notifications/NotificationSettings'
 import { usePlan } from '../../providers/usePlan'
@@ -207,6 +208,7 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       <MemorySection />
       <LibrarySection />
       <NotificationSettings />
+      <ShortcutSection />
       {showSubscriptions && <SubscriptionSection />}
 
       <section aria-labelledby="reviews-heading" className="mt-10" id="reviews">

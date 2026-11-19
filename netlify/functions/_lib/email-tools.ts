@@ -195,3 +195,14 @@ export async function runEmailTool(name: string, args: unknown, ctx: ToolContext
       return null
   }
 }
+
+/** The newest unread emails, for "catch me up". A mailbox that is not connected or cannot be read is described, not treated as a failure. */
+export async function recentUnreadEmail(ctx: ToolContext): Promise<{ emails: unknown[]; note?: string }> {
+  const blocked = await gate(ctx)
+  if (blocked) return { emails: [], note: 'Too many email requests for now, so email was left out.' }
+  const found = await searchMail(ctx.userId, 'in:inbox is:unread newer_than:2d', MAX_RESULTS)
+  if (!found.ok) return { emails: [], note: FAILURE_MESSAGE[found.reason] }
+  await logGmail(ctx.userId, 'search', 'catch me up: unread in the last 2 days')
+  ctx.emailRead = true
+  return { emails: found.value }
+}

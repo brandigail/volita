@@ -9,7 +9,9 @@ import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
 import { classifyApproval } from './approval'
 import { SpeechPlayer } from './speech'
+import { chatsForAssistant } from '../catchup/chatStore'
 import { usePendingEmail, type UsePendingEmail } from './usePendingEmail'
+import { usePendingReply, type UsePendingReply } from './usePendingReply'
 
 export type AssistantPhase = 'idle' | 'starting' | 'listening' | 'hearing' | 'thinking' | 'speaking'
 
@@ -19,6 +21,9 @@ export interface ChatLine {
   text: string
   actions: AssistantAction[]
 }
+
+/** Spoken when driving mode starts. It is not one of the recorded clips, so it is generated or spoken by the device. */
+const DRIVING_GREETING = 'Driving mode is on. Say catch me up, or tell me who to message. I will ask before anything is sent.'
 
 /** The assistant is shown the last few turns only, which keeps replies fast and the request small. */
 const HISTORY_TURNS = 8
@@ -49,9 +54,16 @@ export interface UseAssistant {
   clear: () => void
   /** The email waiting for approval, with the buttons that send or cancel it. */
   email: UsePendingEmail
+  /** The WhatsApp reply waiting for approval, with the buttons that open WhatsApp or cancel it. */
+  reply: UsePendingReply
 }
 
-export function useAssistant(): UseAssistant {
+/** Driving mode: the assistant keeps replies short and confirms every send out loud. */
+export interface AssistantOptions {
+  driving?: boolean
+}
+
+export function useAssistant({ driving = false }: AssistantOptions = {}): UseAssistant {
   const { limits, refresh } = usePlan()
   const anyLanguage = limits.anyLanguage
   const [phase, setPhase] = useState<AssistantPhase>('idle')
@@ -62,6 +74,11 @@ export function useAssistant(): UseAssistant {
   const nextIdRef = useRef(1)
   const email = usePendingEmail(limits.email)
   const { send: sendEmail, cancel: cancelEmail, refresh: refreshEmail } = email
+  const pendingReply = usePendingReply()
+  const { show: showReply, open: openReply, cancel: cancelReply } = pendingReply
+  /** Whether a reply is waiting, and which kind of thing the assistant prepared last, for the spoken "send it". */
+  const replyWaitingRef = useRef(false)
+  const lastReadyRef = useRef<'email' | 'reply' | null>(null)
   /** The email waiting for approval, readable from callbacks that outlive a render. */
   const pendingRef = useRef(email.pending)
   /** True only straight after the assistant said an email is ready: that is when a bare "yes" may approve it. */
@@ -69,6 +86,9 @@ export function useAssistant(): UseAssistant {
   useEffect(() => {
     pendingRef.current = email.pending
   }, [email.pending])
+  useEffect(() => {
+    replyWaitingRef.current = pendingReply.pending !== null
+  }, [pendingReply.pending])
 
   /** A reply or recording that finishes after the user ended the session (or started a new one) is ignored. */
   const isCurrent = useCallback((session: Session) => sessionRef.current?.id === session.id, [])
@@ -114,10 +134,21 @@ export function useAssistant(): UseAssistant {
   const handleApproval = useCallback(
     async (session: Session, text: string): Promise<boolean> => {
       const waiting = pendingRef.current
-      const approval = waiting ? classifyApproval(text, readyRef.current) : null
-      if (!waiting || !approval) return false
+      // Whatever the assistant prepared last is what "send it" means when both an email and a reply are waiting.
+      const target = replyWaitingRef.current && (lastReadyRef.current === 'reply' || !waiting) ? 'reply' : waiting ? 'email' : null
+      const approval = target ? classifyApproval(text, readyRef.current) : null
+      if (!target || !approval) return false
       setPhase('thinking')
-      const outcome = approval === 'send' ? await sendEmail(waiting.id) : await cancelEmail(waiting.id)
+      const outcome =
+        target === 'reply'
+          ? approval === 'send'
+            ? await openReply()
+            : await cancelReply()
+          : waiting && approval === 'send'
+            ? await sendEmail(waiting.id)
+            : waiting
+              ? await cancelEmail(waiting.id)
+              : { ok: false, message: 'Nothing is waiting.' }
       readyRef.current = false
       if (!isCurrent(session)) return true
       session.history.push({ role: 'assistant', content: outcome.message })
@@ -125,7 +156,7 @@ export function useAssistant(): UseAssistant {
       await speakReply(session, outcome.message)
       return true
     },
-    [addLine, cancelEmail, isCurrent, sendEmail, speakReply],
+    [addLine, cancelEmail, cancelReply, isCurrent, openReply, sendEmail, speakReply],
   )
 
   const respond = useCallback(
@@ -138,12 +169,21 @@ export function useAssistant(): UseAssistant {
           listenAgain(session)
           return
         }
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage))
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats: chatsForAssistant(), driving })
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)
-        readyRef.current = reply.actions.some((a) => a.type === 'email_ready')
-        if (readyRef.current) void refreshEmail()
+        const emailReady = reply.actions.some((a) => a.type === 'email_ready')
+        const replyReady = reply.actions.find((a) => a.type === 'reply_ready')
+        readyRef.current = emailReady || replyReady !== undefined
+        if (emailReady) {
+          lastReadyRef.current = 'email'
+          void refreshEmail()
+        }
+        if (replyReady) {
+          lastReadyRef.current = 'reply'
+          void showReply(replyReady.id, replyReady.label.replace(/^WhatsApp to /, ''))
+        }
         refresh()
         await speakReply(session, reply.reply, reply.speechLanguage)
       } catch (err) {
@@ -158,7 +198,7 @@ export function useAssistant(): UseAssistant {
       }
       listenAgain(session)
     },
-    [addLine, anyLanguage, end, handleApproval, isCurrent, listenAgain, refresh, refreshEmail, speakReply],
+    [addLine, anyLanguage, driving, end, handleApproval, isCurrent, listenAgain, refresh, refreshEmail, showReply, speakReply],
   )
 
   const handleUtterance = useCallback(
@@ -228,14 +268,15 @@ export function useAssistant(): UseAssistant {
     // In the Android app this keeps the microphone alive with the screen off; in a browser it does nothing.
     void startBackgroundListening()
 
-    // A fixed line, so a recording of it plays at once instead of waiting for the voice service.
-    const greeting = "Hi, I'm listening. What can I do for you?"
+    // The usual line is fixed, so a recording of it plays at once instead of waiting for the voice service.
+    const greeting = driving ? DRIVING_GREETING : "Hi, I'm listening. What can I do for you?"
     addLine('assistant', greeting)
     setPhase('speaking')
     session.player.startTurn(crypto.randomUUID())
-    await session.player.speakGreeting(greeting)
+    if (driving) await session.player.speak(greeting)
+    else await session.player.speakGreeting(greeting)
     listenAgain(session)
-  }, [addLine, end, handleUtterance, listenAgain])
+  }, [addLine, driving, end, handleUtterance, listenAgain])
 
   const tapOrb = useCallback(() => {
     const session = sessionRef.current
@@ -249,5 +290,5 @@ export function useAssistant(): UseAssistant {
 
   const clear = useCallback(() => setLines([]), [])
 
-  return { phase, lines, error, orbRef, tapOrb, end, clear, email }
+  return { phase, lines, error, orbRef, tapOrb, end, clear, email, reply: pendingReply }
 }

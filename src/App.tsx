@@ -16,6 +16,7 @@ import { UnsentBanner } from './features/history/UnsentBanner'
 import { NAVIGATE_EVENT } from './features/notifications/prefs'
 import { useNotificationScheduler } from './features/notifications/useNotificationScheduler'
 import { Onboarding } from './features/plan/Onboarding'
+import { SharedChatDialog } from './features/share/SharedChatDialog'
 import { SharedDialog } from './features/share/SharedDialog'
 import { useSharedContent } from './features/share/useSharedContent'
 import { GuidedTour } from './features/tour/GuidedTour'
@@ -170,16 +171,29 @@ export default function App() {
       </Suspense>
       {active && <Onboarding />}
       {active && shared && (
-        <SharedDialog
-          shared={shared}
-          onClose={clearShared}
-          onSeePlans={openPlans}
-          onSaved={() => {
-            clearShared()
-            setHistoryOnUnsent(false)
-            setTab('history')
-          }}
-        />
+        shared.kind === 'images' ? (
+          <SharedChatDialog
+            images={shared.images}
+            onClose={clearShared}
+            onSeePlans={openPlans}
+            onSaved={() => {
+              clearShared()
+              setHistoryOnUnsent(false)
+              setTab('history')
+            }}
+          />
+        ) : (
+          <SharedDialog
+            shared={shared}
+            onClose={clearShared}
+            onSeePlans={openPlans}
+            onSaved={() => {
+              clearShared()
+              setHistoryOnUnsent(false)
+              setTab('history')
+            }}
+          />
+        )
       )}
       {active && (
         <GuidedTour open={tourOpen} step={tourStep} onStep={setTourStep} onFinish={finishTour} onShow={showStep} />
