@@ -3,7 +3,7 @@ import { SITE, supportMailto } from '../../config/site'
 import { LegalLayout } from './LegalLayout'
 
 const HELP: { question: string; answer: string }[] = [
-  { question: 'It will not let me record.', answer: 'Allow the microphone for Volita in your browser or phone settings, then reload. On an iPhone, open Volita from the Home Screen icon.' },
+  { question: 'It will not let me record.', answer: 'Allow the microphone for Volita in your browser or phone settings, then reload. On an iPhone, open Volita from the Home Screen icon. The Check my phone page (volita.netlify.app/check) tests this for you in about a minute.' },
   { question: 'I forgot my password.', answer: 'Email us from the address you signed up with and we will help you back in.' },
   { question: 'How do I delete my account and everything in it?', answer: 'Open Profile, scroll to the end and choose Delete my account and data. You can download a copy of your data first.' },
   { question: 'How do I get the free Pro trial?', answer: 'Open Profile and tap Try Pro free. It needs no card and lasts 14 days.' },

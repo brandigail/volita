@@ -34,3 +34,8 @@
   from = "/support"
   to = "/index.html"
   status = 200
+
+[[redirects]]
+  from = "/check"
+  to = "/index.html"
+  status = 200

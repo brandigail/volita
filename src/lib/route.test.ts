@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { publicPageFor } from './route'
 
 describe('publicPageFor', () => {
-  it('finds the three public pages, ignoring case and a trailing slash', () => {
+  it('finds the four public pages, ignoring case and a trailing slash', () => {
     expect(publicPageFor('/privacy')).toBe('privacy')
     expect(publicPageFor('/Terms/')).toBe('terms')
     expect(publicPageFor('/support')).toBe('support')
+    expect(publicPageFor('/check/')).toBe('check')
   })
 
   it('leaves the home address and unknown addresses to the app', () => {

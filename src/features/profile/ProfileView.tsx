@@ -202,6 +202,9 @@ export function ProfileView({ user, showSubscriptions, activityLogged, gmailRetu
       </p>
       {activityLogged && <TesterNotice />}
       <InstallHelp />
+      <p className="muted mt-4 text-sm">
+        Something not working on this phone? <a className="font-semibold underline" href="/check">Check my phone</a>: it tests the microphone, sound and more in about a minute.
+      </p>
       <ProfileForm key={user.id} initial={profileFromUser(user)} email={user.email} />
       <TrialCard />
       <PlansSection />
