@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiRequestError, transcribeRecording } from '../../lib/api'
 import { askAssistant } from '../../lib/assistant-api'
 import { authClient } from '../../lib/auth-client'
-import { startBackgroundListening, stopBackgroundListening } from '../../lib/native-listening'
+import { isAndroidApp, startBackgroundListening, stopBackgroundListening } from '../../lib/native-listening'
 import { MAX_ASSISTANT_CHATS, type AssistantAction, type AssistantChat, type AssistantTurn } from '../../types/assistant'
 import { usePlan } from '../../providers/usePlan'
 import { effectiveSpoken } from '../language/languageSettings'
@@ -183,7 +183,7 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
         const reading = await inboxChatsFor(text)
         inboxChatsRef.current = mergeChats(inboxChatsRef.current, reading.chats, MAX_ASSISTANT_CHATS)
         const chats = mergeChats(chatsForAssistant(), inboxChatsRef.current, MAX_ASSISTANT_CHATS)
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving, inboxTitles: reading.titles, catchUp: reading.chats.length > 0 || reading.titles.length > 0 })
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving, inboxTitles: reading.titles, catchUp: reading.chats.length > 0 || reading.titles.length > 0, inboxAvailable: isAndroidApp })
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)

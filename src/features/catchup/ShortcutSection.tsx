@@ -68,7 +68,7 @@ export function ShortcutSection() {
         iPhone Shortcut: catch me up
       </h2>
       <p className="muted mt-1 text-sm">
-        On an iPhone, a screenshot can&apos;t be shared into Volita directly. This Shortcut sends it for you and reads the summary out loud, even with the screen locked. It uses a personal access code that can only read chat screenshots.
+        Apple does not let any app on an iPhone read WhatsApp by itself, and a screenshot can&apos;t be shared into Volita directly. This Shortcut sends a screenshot you take of a chat and reads the summary out loud. The chat has to be open on the screen when you take it. It uses a personal access code that can only read chat screenshots. Reading WhatsApp with no screenshot works only in the Volita Android app.
       </p>
 
       <div className="surface mt-4 flex flex-col gap-4 p-5">

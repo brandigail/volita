@@ -1,6 +1,7 @@
 import { Car, Loader2, MessageCircle, Mic, Square } from 'lucide-react'
 import { useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
+import { isAndroidApp } from '../../lib/native-listening'
 import { useAssistant, type AssistantPhase } from './useAssistant'
 
 /** One big word for what Volita is doing, readable at a glance. */
@@ -61,6 +62,7 @@ export function DrivingMode({ onClose }: DrivingModeProps) {
             <li>Put the phone in a holder, then start. Only use this where the law allows hands-free use.</li>
             <li>Volita reads everything out loud and speaks short answers.</li>
             <li>Nothing is sent unless you say “send it”. Even then WhatsApp opens with your words filled in, and you press Send when it is safe.</li>
+            {!isAndroidApp && <li>Volita cannot read your WhatsApp messages on this phone. That works only in the Android app.</li>}
             <li>Pull over for anything that needs your eyes or hands.</li>
           </ul>
           <button

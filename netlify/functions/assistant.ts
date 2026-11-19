@@ -60,6 +60,7 @@ const requestSchema = z.object({
   chats: z.array(chatSchema).max(MAX_ASSISTANT_CHATS).default([]),
   driving: z.boolean().default(false),
   inboxTitles: z.array(z.string().max(80)).max(12).default([]),
+  inboxAvailable: z.boolean().default(false),
   /** The app read chats from the phone for this turn. */
   catchUp: z.boolean().default(false),
 })
@@ -165,7 +166,7 @@ export default async function handler(req: Request): Promise<Response> {
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email, { chats: request.data.chats.map((chat) => chat.contact || 'someone'), driving: request.data.driving }),
+      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email, { chats: request.data.chats.map((chat) => chat.contact || 'someone'), driving: request.data.driving, inboxAvailable: request.data.inboxAvailable }),
     },
     ...request.data.messages.map(({ role, content, actions }): ChatMessage => {
       if (role === 'user' || !actions?.length) return { role, content }

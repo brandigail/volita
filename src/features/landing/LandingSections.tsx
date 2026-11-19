@@ -42,6 +42,7 @@ const FEATURES: { icon: typeof Mic; title: string; text: string }[] = [
   { icon: FileText, title: 'Quotes that add up', text: 'Say the items and prices. Volita lists them, adds the VAT and the total, and can make a PDF.' },
   { icon: MessageCircle, title: 'Messages in your voice', text: 'WhatsApp, SMS, email and social posts, signed with your name and business every time.' },
   { icon: Sunrise, title: 'A hands-free assistant', text: 'Ask what is on today, which quotes nobody answered, or what you told Mrs Jones. It answers out loud.' },
+  { icon: MessageCircle, title: 'WhatsApp catch-up (Android)', text: 'In the Android app, say "catch me up with John" and Volita reads what came in, hands-free. On an iPhone, add a screenshot of the chat instead.' },
   { icon: Users, title: 'It remembers your clients', text: 'Saved prices, names and preferences, so you stop repeating yourself on every job.' },
   { icon: CalendarDays, title: 'Your agenda, one place', text: 'Link your Google, Outlook or Apple calendar, add meetings by voice and set send-later reminders.' },
   { icon: Languages, title: 'Speak your language', text: 'Talk in English, Afrikaans, Spanish and many more, and get a draft in the language the client reads.' },

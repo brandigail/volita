@@ -3,6 +3,23 @@ import { useCallback, useEffect, useState } from 'react'
 import { nativeInbox, type InboxStatus } from '../../lib/native-inbox'
 import { ChatNames } from './ChatNames'
 
+/** Shown on an iPhone or in a browser, where Volita cannot read WhatsApp by itself, so nobody expects it to. */
+function AndroidOnlyNote() {
+  return (
+    <div className="surface w-full max-w-md p-4 text-left" data-testid="inbox-android-only">
+      <h2 className="flex items-center gap-2 text-sm font-extrabold">
+        <MessageCircleMore className="size-4 text-brand-400" aria-hidden="true" />
+        WhatsApp catch-up
+        <span className="ml-auto rounded-full bg-black/10 px-2 py-0.5 text-xs font-bold dark:bg-white/10">Android app only</span>
+      </h2>
+      <p className="mt-2 text-sm">
+        Volita can read your WhatsApp messages for you, hands-free, only in its Android app. Apple does not let any app on an iPhone do this, and a browser cannot either.
+      </p>
+      <p className="muted mt-2 text-sm">Here, take a screenshot of the chat and add it on the Record tab, and Volita will read it and tell you what they want.</p>
+    </div>
+  )
+}
+
 /**
  * Switches on hands-free WhatsApp catch-up in the Android app. Android keeps this behind its own "Notification access" screen,
  * so the person turns it on there; this card explains what it does and shows whether it is on. It appears only in the Android app.
@@ -25,7 +42,8 @@ export function InboxCard() {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [refresh])
 
-  if (!nativeInbox.available || !status) return null
+  if (!nativeInbox.available) return <AndroidOnlyNote />
+  if (!status) return null
 
   const clear = async () => {
     await nativeInbox.clear()

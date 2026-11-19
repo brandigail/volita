@@ -38,6 +38,8 @@ export interface AssistantRequest {
   catchUp?: boolean
   /** True in driving mode: replies are only heard, so the assistant keeps them short and confirms every send. */
   driving?: boolean
+  /** True in the Android app, the only place Volita can read WhatsApp messages by itself. Anywhere else the assistant says so plainly. */
+  inboxAvailable?: boolean
 }
 
 /** Things the assistant did on the user's behalf this turn, so the screen can show them. */

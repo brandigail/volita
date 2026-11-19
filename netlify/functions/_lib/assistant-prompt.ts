@@ -77,10 +77,16 @@ Driving mode (they are driving or have their hands full and cannot look at the s
 - Before anything is written to someone, say who it is for and what it says, then wait for them to say send it. Never open or send anything on your own.
 - If you are not sure what they meant, ask one short question. Never guess a name or a number.`
 
+/** Said only where Volita cannot read WhatsApp by itself (an iPhone or a browser), so it never promises what the device cannot do. */
+const NO_INBOX_RULES = `
+This device cannot read WhatsApp by itself. That works only in the Volita Android app, and Apple does not allow any app to do it on an iPhone. If they ask you to catch them up with someone and no chat from them has been added, say that plainly in one sentence, never pretend to look, and tell them they can add a screenshot of the chat, or share it into Volita, and you will read it. Never suggest it will work on this device later.`
+
 export interface PromptExtras {
   /** Who the chats added as screenshots are with. */
   chats?: string[]
   driving?: boolean
+  /** The app can read WhatsApp messages by itself (the Android app). */
+  inboxAvailable?: boolean
 }
 
 export function assistantSystemPrompt(
@@ -101,7 +107,7 @@ export function assistantSystemPrompt(
     .filter(Boolean)
     .join(' ')
   return `${PERSONA}
-${level === 'read' ? '' : MEMORY_RULES + PRICE_RULES}${emailEnabled ? EMAIL_RULES : ''}${CHAT_RULES}${extras.chats?.length ? `
+${level === 'read' ? '' : MEMORY_RULES + PRICE_RULES}${emailEnabled ? EMAIL_RULES : ''}${CHAT_RULES}${extras.inboxAvailable ? '' : NO_INBOX_RULES}${extras.chats?.length ? `
 The user has added screenshots of chats with: ${extras.chats.join(', ')}. Use catch_up to hear what they say.` : ''}${extras.driving ? DRIVING_RULES : ''}
 ${PLAN_NOTES[level]}
 
