@@ -123,3 +123,22 @@ describe('reply_to', () => {
     expect(await runChatTool('send_whatsapp', {}, ctx)).toBeNull()
   })
 })
+
+describe('catch_up with chats read from the phone', () => {
+  it('hands over the messages to be summarised when a chat has no summary yet', async () => {
+    const fromPhone: AssistantChat = {
+      contact: 'Abigail Smith',
+      summary: '',
+      needsReply: true,
+      asked: [],
+      messages: [
+        { sender: 'Abigail Smith', mine: false, text: 'Are you coming?' },
+        { sender: 'Abigail Smith', mine: false, text: 'Hello??' },
+      ],
+    }
+    const result = JSON.parse((await runChatTool('catch_up', {}, context({ chats: [fromPhone] }))) ?? '{}')
+    expect(result.chats[0].messages).toEqual(['Abigail Smith: Are you coming?', 'Abigail Smith: Hello??'])
+    expect(result.chats[0].summary).toContain('summarise')
+    expect(result.chats[0].asking).toBeUndefined()
+  })
+})

@@ -3,7 +3,7 @@ import { ApiRequestError, transcribeRecording } from '../../lib/api'
 import { askAssistant } from '../../lib/assistant-api'
 import { authClient } from '../../lib/auth-client'
 import { startBackgroundListening, stopBackgroundListening } from '../../lib/native-listening'
-import type { AssistantAction, AssistantTurn } from '../../types/assistant'
+import { MAX_ASSISTANT_CHATS, type AssistantAction, type AssistantChat, type AssistantTurn } from '../../types/assistant'
 import { usePlan } from '../../providers/usePlan'
 import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
@@ -12,6 +12,7 @@ import { SpeechPlayer } from './speech'
 import { spokenWelcome } from '../../lib/greeting'
 import { visitGreeting } from '../../lib/visit-greeting'
 import { chatsForAssistant } from '../catchup/chatStore'
+import { inboxChatsFor, mergeChats } from '../inbox/inboxChats'
 import { useGreeting } from '../profile/useGreeting'
 import { takeDailyWelcome } from './welcome'
 import { usePendingEmail, type UsePendingEmail } from './usePendingEmail'
@@ -83,6 +84,8 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
   const { show: showReply, open: openReply, cancel: cancelReply } = pendingReply
   /** Whether a reply is waiting, and which kind of thing the assistant prepared last, for the spoken "send it". */
   const replyWaitingRef = useRef(false)
+  /** WhatsApp chats read from this phone during the conversation, kept so "tell her I am on my way" still knows who "her" is. */
+  const inboxChatsRef = useRef<AssistantChat[]>([])
   const lastReadyRef = useRef<'email' | 'reply' | null>(null)
   /** The email waiting for approval, readable from callbacks that outlive a render. */
   const pendingRef = useRef(email.pending)
@@ -105,6 +108,7 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
   const end = useCallback(() => {
     const session = sessionRef.current
     sessionRef.current = null
+    inboxChatsRef.current = []
     if (session) {
       session.listener.stop()
       session.player.stop()
@@ -174,7 +178,10 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
           listenAgain(session)
           return
         }
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats: chatsForAssistant(), driving })
+        // What the person said may be about a chat on this phone ("catch me up with Abigail"); only then is it read.
+        inboxChatsRef.current = mergeChats(inboxChatsRef.current, await inboxChatsFor(text), MAX_ASSISTANT_CHATS)
+        const chats = mergeChats(chatsForAssistant(), inboxChatsRef.current, MAX_ASSISTANT_CHATS)
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving })
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)

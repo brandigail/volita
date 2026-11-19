@@ -7,6 +7,7 @@ import { UsageMeter } from '../plan/UsageMeter'
 import { AssistantOrb } from './AssistantOrb'
 import { BriefingCard } from './BriefingCard'
 import { ChatShelf } from '../catchup/ChatShelf'
+import { InboxCard } from '../inbox/InboxCard'
 import { useGreeting } from '../profile/useGreeting'
 import { DrivingMode } from './DrivingMode'
 import { EmailCard } from './EmailCard'
@@ -112,6 +113,7 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
         </button>
       )}
       {driving && <DrivingMode onClose={() => setDriving(false)} />}
+      {!active && <InboxCard />}
       {!active && <ChatShelf />}
       {!active && <VoicePicker />}
       {!active && lines.length === 0 && <BriefingCard />}

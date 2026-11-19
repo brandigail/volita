@@ -84,7 +84,7 @@ const CONFIRMATIONS: Record<AssistantAction['type'], string> = {
   contact_saved: "Got it, I've saved their details.",
   memory_forgotten: "Done, I've forgotten that.",
   email_ready: 'I have the email ready on your screen. Tap Send when you are happy with it.',
-  reply_ready: 'I have your reply ready on the screen. Say send it, or tap the button, when you are happy with it.',
+  reply_ready: 'I have your reply ready. Say send it, or tap the button, when you are happy with it.',
 }
 
 export default async function handler(req: Request): Promise<Response> {

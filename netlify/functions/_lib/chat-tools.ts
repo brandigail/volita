@@ -71,8 +71,10 @@ async function catchUp(ctx: ToolContext): Promise<string> {
   const chats = ctx.chats.map((chat) => ({
     contact: chat.contact || 'someone',
     waitingForReply: chat.needsReply,
-    summary: chat.summary,
-    asking: chat.asked,
+    // A chat read from a screenshot arrives summarised. One read from the phone's own copy of WhatsApp has no summary yet, so its messages are given to be summarised.
+    ...(chat.summary
+      ? { summary: chat.summary, asking: chat.asked }
+      : { summary: 'Not summarised yet: read the messages below and summarise them.', messages: chat.messages.map((m) => `${m.mine ? 'Me' : m.sender || 'Them'}: ${m.text}`) }),
   }))
 
   let emails: unknown[] = []
@@ -94,7 +96,7 @@ async function catchUp(ctx: ToolContext): Promise<string> {
 function spokenReply(who: string, body: string): string {
   const text = body.replace(/\s+/g, ' ').trim()
   const shown = text.length > SPOKEN_BODY_CHARS ? `${text.slice(0, SPOKEN_BODY_CHARS).replace(/\s\S*$/, '')}, and a bit more that you can see on the screen` : text
-  return `Here is your WhatsApp to ${who}. ${shown.replace(/[.!?,;:\s]+$/, '')}. It is waiting on your screen. Say "send it" to open WhatsApp with it filled in, or tell me what to change.`
+  return `Here is your WhatsApp to ${who}. ${shown.replace(/[.!?,;:\s]+$/, '')}. It is ready. Say "send it" when you are happy with it, or tell me what to change.`
 }
 
 async function replyTo(args: unknown, ctx: ToolContext): Promise<string> {

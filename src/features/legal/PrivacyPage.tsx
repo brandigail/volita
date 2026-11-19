@@ -44,6 +44,9 @@ export function PrivacyPage() {
           <li>If you use it, an invite link code and how many friends joined through it.</li>
         </ul>
         <p>
+          If you switch on WhatsApp catch-up in the Android app, Volita keeps a copy of the WhatsApp messages that reach your phone, for 7 days, on your phone only. It is never uploaded. A chat is read, and sent to our reading service, only when you ask about it (for example "catch me up with Abigail"), and what it says is not saved by {SITE.name}. You can delete the copy at any time in the app, or switch it off in Android&apos;s Notification access settings. Those messages hold other people&apos;s words, so use it only where you are comfortable doing so.
+        </p>
+        <p>
           We do not keep your voice recordings, your photos or your chat screenshots. A photo you add for a caption, or a screenshot you add to be caught up on a chat, is sent securely to Groq to be read
           and is not saved by {SITE.name}. A chat holds other people&apos;s words, so only add a screenshot when you are comfortable sharing it with our reading service. We do not sell your information and we
           do not show adverts.

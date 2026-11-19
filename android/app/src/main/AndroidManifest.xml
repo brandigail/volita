@@ -48,6 +48,17 @@
             android:exported="false"
             android:foregroundServiceType="microphone" />
 
+        <!-- Keeps a private copy, on this phone only, of WhatsApp messages as they arrive. Android starts it only after the person switches on Notification access for Volita. -->
+        <service
+            android:name=".WhatsAppListenerService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

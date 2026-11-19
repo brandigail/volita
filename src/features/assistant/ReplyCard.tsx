@@ -6,7 +6,7 @@ import type { UsePendingReply } from './usePendingReply'
  * here: the button (or "send it") opens WhatsApp with the words filled in, and the person presses Send there.
  */
 export function ReplyCard({ reply }: { reply: UsePendingReply }) {
-  const { pending, busy, needsTap } = reply
+  const { pending, busy, needsTap, direct } = reply
   if (!pending) return null
   const { draft, who } = pending
 
@@ -25,14 +25,14 @@ export function ReplyCard({ reply }: { reply: UsePendingReply }) {
       <div className="flex flex-wrap gap-2">
         <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void reply.open()}>
           <MessageCircle className="size-4" aria-hidden="true" />
-          Open WhatsApp
+          {direct ? 'Send on WhatsApp' : 'Open WhatsApp'}
         </button>
         <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void reply.cancel()}>
           <X className="size-4" aria-hidden="true" />
           Cancel
         </button>
       </div>
-      <p className="muted text-xs">Say “send it” to open WhatsApp, or tell me what to change. You still press Send in WhatsApp.</p>
+      <p className="muted text-xs">{direct ? 'Say “send it” and I will send it on WhatsApp, or tell me what to change.' : 'Say “send it” to open WhatsApp, or tell me what to change. You still press Send in WhatsApp.'}</p>
     </div>
   )
 }
