@@ -43,7 +43,11 @@ export function PrivacyPage() {
           <li>Counts of how much you have used, so the daily limits of your plan can be applied, and which plan or free trial you are on.</li>
           <li>If you use it, an invite link code and how many friends joined through it.</li>
         </ul>
-        <p>We do not keep your voice recordings. We do not sell your information and we do not show adverts.</p>
+        <p>
+          We do not keep your voice recordings, your photos or your chat screenshots. A photo you add for a caption, or a screenshot you add to be caught up on a chat, is sent securely to Groq to be read
+          and is not saved by {SITE.name}. A chat holds other people&apos;s words, so only add a screenshot when you are comfortable sharing it with our reading service. We do not sell your information and we
+          do not show adverts.
+        </p>
       </section>
 
       <section>
@@ -62,7 +66,7 @@ export function PrivacyPage() {
         <h2>Who handles it for us</h2>
         <p>We use a few other companies to run {SITE.name}. They process your information only to provide their part of the service. All of them keep data in the United States, so your information leaves South Africa.</p>
         <ul>
-          <li>Groq: turns your voice into text, writes drafts and gives the assistant its natural voices.</li>
+          <li>Groq: turns your voice into text, reads photos and chat screenshots, writes drafts and gives the assistant its natural voices.</li>
           <li>Neon: the database where your account and drafts are stored.</li>
           <li>Netlify: hosts the app and runs its server code.</li>
           <li>Your email company (Google, Microsoft, Yahoo, Apple or another): only if you choose to connect your email (see below).</li>

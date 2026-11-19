@@ -5,7 +5,7 @@ export const SITE = {
   /** Who runs the service, as named in the Terms and Privacy pages. */
   operator: 'Brandon Myers, South Africa',
   /** The day the Terms and Privacy pages were last changed. */
-  legalUpdated: '16 November 2026',
+  legalUpdated: '19 November 2026',
 } as const
 
 export const supportMailto = (subject: string): string => `mailto:${SITE.supportEmail}?subject=${encodeURIComponent(subject)}`

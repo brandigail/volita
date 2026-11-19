@@ -26,6 +26,7 @@ const limitsSchema = z.object({
   templates: z.boolean(),
   priceList: z.boolean(),
   photoCaption: z.boolean(),
+  catchUpsPerDay: z.number(),
   quotePdf: z.boolean(),
   followUps: z.boolean(),
   morningBriefing: z.boolean(),

@@ -6,6 +6,7 @@ import { usePlan } from '../../providers/usePlan'
 import { planForChannel } from '../../types/plans'
 import { DRAFT_CATEGORIES, type DraftCategory } from '../../types/draft'
 import { UsageMeter } from '../plan/UsageMeter'
+import { CatchUpCard } from '../catchup/CatchUpCard'
 import { PhotoCaption } from './PhotoCaption'
 import { ChannelIcon } from '../../components/ChannelIcon'
 import { reportActivity } from '../../lib/activity-api'
@@ -141,6 +142,7 @@ export function RecordView({ onNavigate }: RecordViewProps) {
             </div>
           )}
 
+          {choosing && <CatchUpCard onDraft={note.loadDraft} onSeePlans={seePlans} />}
           {choosing && <PhotoCaption category={category} onDraft={note.loadDraft} onSeePlans={seePlans} />}
           {choosing && <UsageMeter kind="drafts" />}
         </>

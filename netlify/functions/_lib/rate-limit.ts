@@ -4,7 +4,7 @@ import { errorResponse, upgradeResponse } from './http.ts'
 import { noteLimitHit } from './safety.ts'
 import { describeError } from './safe-log.ts'
 
-export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'email'
+export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'catchup' | 'email'
 
 export interface QuotaLimits {
   /** Calls one user may make in any rolling minute. */
@@ -65,6 +65,9 @@ export function limitsFor(endpoint: MeteredEndpoint, plan: PlanId): QuotaLimits 
       return { perMinute: 12, perDay: 150, globalPerDay: 2000 }
     case 'caption':
       return { perMinute: 4, perDay: Math.max(10, limits.draftsPerDay), globalPerDay: 300 }
+    case 'catchup':
+      // Each catch-up is one vision call, a large share of the free token budget.
+      return { perMinute: 4, perDay: limits.catchUpsPerDay, globalPerDay: 400 }
   }
 }
 
@@ -143,6 +146,7 @@ const NOUN: Record<MeteredEndpoint, string> = {
   memory: 'memory changes',
   lookup: 'web searches',
   caption: 'photo captions',
+  catchup: 'chat catch-ups',
   email: 'email requests',
 }
 
@@ -152,7 +156,7 @@ function nextPlan(plan: PlanId): PlanId | null {
 }
 
 /** Endpoints whose daily cap is what the plan sells, so hitting it is an invitation to upgrade rather than a fault. */
-const PLAN_METERED: readonly MeteredEndpoint[] = ['generate', 'assistant', 'transcribe', 'listen', 'lookup']
+const PLAN_METERED: readonly MeteredEndpoint[] = ['generate', 'assistant', 'transcribe', 'listen', 'lookup', 'catchup']
 
 function denial(counts: UsageCounts, limits: QuotaLimits, endpoint: MeteredEndpoint, plan: PlanId): Response {
   const noun = NOUN[endpoint]

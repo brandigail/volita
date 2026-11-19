@@ -2,6 +2,7 @@ import { Camera, Loader2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { UpgradeNote } from '../../components/UpgradeNote'
 import { ApiRequestError } from '../../lib/api'
+import { shrinkImage } from '../../lib/image'
 import { captionPhoto } from '../../lib/plan-api'
 import { usePlan } from '../../providers/usePlan'
 import type { DraftCategory, GeneratedDraft } from '../../types/draft'
@@ -9,18 +10,6 @@ import type { DraftCategory, GeneratedDraft } from '../../types/draft'
 /** Longest side of the photo sent for captioning; keeps the upload small and fast. */
 const MAX_SIDE = 1024
 const JPEG_QUALITY = 0.8
-
-/** Shrinks a photo in the browser and returns it as a JPEG data URL. */
-async function shrink(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(bitmap.width * scale)
-  canvas.height = Math.round(bitmap.height * scale)
-  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-  bitmap.close()
-  return canvas.toDataURL('image/jpeg', JPEG_QUALITY)
-}
 
 interface PhotoCaptionProps {
   category: DraftCategory
@@ -42,7 +31,7 @@ export function PhotoCaption({ category, onDraft, onSeePlans }: PhotoCaptionProp
     setBusy(true)
     setError(null)
     try {
-      const { draft } = await captionPhoto(await shrink(file), category, note.trim())
+      const { draft } = await captionPhoto(await shrinkImage(file, MAX_SIDE, JPEG_QUALITY), category, note.trim())
       onDraft(draft, note.trim() || 'Photo')
       refresh()
     } catch (err) {

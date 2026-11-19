@@ -35,6 +35,8 @@ export interface PlanLimits {
   templates: boolean
   priceList: boolean
   photoCaption: boolean
+  /** Chat screenshots Volita may read and summarise in a day ("catch me up"). */
+  catchUpsPerDay: number
   quotePdf: boolean
   followUps: boolean
   morningBriefing: boolean
@@ -79,6 +81,7 @@ const FREE: PlanLimits = {
   templates: false,
   priceList: false,
   photoCaption: false,
+  catchUpsPerDay: 3,
   quotePdf: false,
   followUps: false,
   morningBriefing: false,
@@ -105,6 +108,7 @@ const BASIC: PlanLimits = {
   templates: true,
   priceList: true,
   photoCaption: true,
+  catchUpsPerDay: 20,
   quotePdf: true,
   followUps: true,
   morningBriefing: false,
@@ -120,6 +124,7 @@ const PRO: PlanLimits = {
   assistantTurnsPerDay: 100,
   premiumVoicePerMonth: 600,
   webLookupsPerDay: 30,
+  catchUpsPerDay: 60,
   assistantTools: 'full',
   memoryItems: null,
   contacts: null,
