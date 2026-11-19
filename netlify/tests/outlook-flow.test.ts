@@ -74,7 +74,7 @@ suite('Outlook', () => {
   let oauth: typeof import('../functions/_lib/google-oauth.ts')
   let store: typeof import('../functions/_lib/gmail-store.ts')
   let mailStore: typeof import('../functions/_lib/mail-store.ts')
-  const context = (): ToolContext => ({ userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '', chats: [], driving: false })
+  const context = (): ToolContext => ({ userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '', chats: [], driving: false, inboxTitles: [] })
   const callback = (code: string) => get(`/api/mail/outlook/callback?code=${code}&state=${encodeURIComponent(oauth.createState(user.id))}`)
   const pageCode = async (res: Response) => /gmail=([a-z_]+)/.exec(await res.text())?.[1]
 

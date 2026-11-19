@@ -32,6 +32,8 @@ export interface AssistantRequest {
   spokenLanguage?: string
   /** Chats the user added as screenshots on this device (never stored by the server). */
   chats?: AssistantChat[]
+  /** When the person named someone who matched no WhatsApp chat on their phone: the names of their recent chats, so the assistant can ask which one. */
+  inboxTitles?: string[]
   /** True in driving mode: replies are only heard, so the assistant keeps them short and confirms every send. */
   driving?: boolean
 }

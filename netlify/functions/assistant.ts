@@ -58,6 +58,7 @@ const requestSchema = z.object({
   spokenLanguage: z.string().refine((code) => SPOKEN_CODES.includes(code)).optional(),
   chats: z.array(chatSchema).max(MAX_ASSISTANT_CHATS).default([]),
   driving: z.boolean().default(false),
+  inboxTitles: z.array(z.string().max(80)).max(12).default([]),
 })
 
 /** Some models wrap their reasoning in <think> tags; it must never be spoken. */
@@ -129,6 +130,7 @@ export default async function handler(req: Request): Promise<Response> {
     userText: request.data.messages.filter((m) => m.role === 'user').map((m) => m.content).join(' ').toLowerCase(),
     chats: request.data.chats,
     driving: request.data.driving,
+    inboxTitles: request.data.inboxTitles,
   }
   const { conversationId } = request.data
   const lastUserText = request.data.messages[request.data.messages.length - 1].content

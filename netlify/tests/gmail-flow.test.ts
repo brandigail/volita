@@ -135,7 +135,7 @@ suite('Gmail feature', () => {
   let assistantTools: typeof import('../functions/_lib/assistant-tools.ts')
 
   const context = (user: SessionUser): ToolContext => ({
-    userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '', chats: [], driving: false,
+    userId: user.id, plan: user.plan, profile: user.profile, timeZone: 'Africa/Johannesburg', apiKey: 'unused', deadlineAt: Date.now() + 9_000, actions: [], emailRead: false, userText: '', chats: [], driving: false, inboxTitles: [],
   })
 
   beforeAll(async () => {

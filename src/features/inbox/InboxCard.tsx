@@ -1,6 +1,7 @@
 import { MessageCircleMore, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { nativeInbox, type InboxStatus } from '../../lib/native-inbox'
+import { ChatNames } from './ChatNames'
 
 /**
  * Switches on hands-free WhatsApp catch-up in the Android app. Android keeps this behind its own "Notification access" screen,
@@ -9,6 +10,8 @@ import { nativeInbox, type InboxStatus } from '../../lib/native-inbox'
 export function InboxCard() {
   const [status, setStatus] = useState<InboxStatus | null>(null)
   const [cleared, setCleared] = useState(false)
+  /** Bumped when the saved messages change, so the list of chats below reloads. */
+  const [version, setVersion] = useState(0)
 
   const refresh = useCallback(() => {
     void nativeInbox.status().then(setStatus)
@@ -27,6 +30,7 @@ export function InboxCard() {
   const clear = async () => {
     await nativeInbox.clear()
     setCleared(true)
+    setVersion((current) => current + 1)
     refresh()
   }
 
@@ -55,6 +59,7 @@ export function InboxCard() {
             </button>
           </div>
           {cleared && <p role="status" className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">Deleted from this phone.</p>}
+          <ChatNames key={version + status.count} />
         </>
       ) : (
         <>

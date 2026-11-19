@@ -57,3 +57,23 @@ export function chatsNamedIn(utterance: string, chats: InboxChatInfo[]): InboxCh
     .filter((info) => nameWords(info.chat).some((word) => spoken.some((said) => closeEnough(word, said))))
     .sort((a, b) => b.lastTime - a.lastTime)
 }
+
+const ASKS_ABOUT_PERSON =
+  /\b(catch me up (with|on)|messages? from|anything from|what (did|has|is)\s+\w+\s+(say\w*|said|send\w*|sent|writ\w*|wrote|messag\w*|text\w*)|(did|has)\s+\w+\s+(say\w*|said|send\w*|sent|writ\w*|wrote|messag\w*|text\w*)|tell me what \w+ (said|wrote|sent)|read me \w+ messages?)\b/
+
+/** True when the person asks about one particular person's messages, not their messages in general. */
+export function asksAboutPerson(utterance: string): boolean {
+  const spoken = normalise(utterance)
+  return ASKS_ABOUT_PERSON.test(spoken) && !/\b(catch me up|catch up)\s*$/.test(spoken)
+}
+
+const NOT_NAMES = new Set(['the', 'my', 'any', 'all', 'you', 'him', 'her', 'them', 'me', 'i', 'he', 'she', 'they', 'it', 'today', 'this', 'that', 'what', 'who', 'new', 'some'])
+
+const NAME_AFTER = /(?:catch me up (?:with|on)|messages? from|anything from|what did|what has|what is|did|has|tell me what|read me)\s+([\p{L}']+)/iu
+
+/** The name the person said ("Abigail" in "catch me up with Abigail"), or null if no name stands out. */
+export function guessName(utterance: string): string | null {
+  const found = NAME_AFTER.exec(utterance)?.[1]
+  if (!found || NOT_NAMES.has(found.toLowerCase())) return null
+  return found.replace(/'s$/i, '')
+}

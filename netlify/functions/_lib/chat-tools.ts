@@ -86,10 +86,16 @@ async function catchUp(ctx: ToolContext): Promise<string> {
     notes.push('Reading their email is part of the Pro plan; mention it only if they ask about email.')
   }
 
+  if (ctx.inboxTitles.length > 0) {
+    notes.push(
+      'The person named someone, but no WhatsApp chat on their phone has that name. Say you could not find a chat with that name, read out a few of the chat names in otherChatsOnPhone, and ask which one is theirs. Do not guess.',
+    )
+  }
+
   if (chats.length === 0 && emails.length === 0) {
     notes.push('Nothing to catch up on. Tell them they can add screenshots of a WhatsApp chat with the button on this screen, or share them to Volita from WhatsApp, and then ask again.')
   }
-  return JSON.stringify({ notice: UNTRUSTED, chats, emails, notes })
+  return JSON.stringify({ notice: UNTRUSTED, chats, emails, notes, ...(ctx.inboxTitles.length > 0 ? { otherChatsOnPhone: ctx.inboxTitles } : {}) })
 }
 
 /** How a reply that is waiting is worded aloud: who it is for, what it says, and how to send it. */

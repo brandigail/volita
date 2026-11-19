@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chatsNamedIn, normalise, wantsCatchUp } from './match'
+import { asksAboutPerson, chatsNamedIn, guessName, normalise, wantsCatchUp } from './match'
 
 const chats = [
   { chat: 'Abigail Smith', count: 15, lastTime: 300 },
@@ -38,3 +38,22 @@ describe('inbox matching', () => {
     expect(wantsCatchUp('add a meeting tomorrow at ten')).toBe(false)
   })
 })
+
+describe('asking about a person', () => {
+  it('tells a named person from a general catch-up', () => {
+    for (const phrase of ['Catch me up with Abigail.', 'What did Abigail say?', 'Any messages from Abigail', 'Has Abigail messaged me?', 'tell me what Sipho said']) {
+      expect(asksAboutPerson(phrase)).toBe(true)
+    }
+    for (const phrase of ['Catch me up.', 'what did I miss?', 'add a meeting tomorrow at ten', 'any new messages']) {
+      expect(asksAboutPerson(phrase)).toBe(false)
+    }
+  })
+
+  it('picks out the name that was said', () => {
+    expect(guessName('Catch me up with Abigail.')).toBe('Abigail')
+    expect(guessName('What did Abigail say?')).toBe('Abigail')
+    expect(guessName('any messages from Sipho')).toBe('Sipho')
+    expect(guessName('has she messaged me')).toBeNull()
+    expect(guessName('what did the supplier say')).toBeNull()
+  })
+});

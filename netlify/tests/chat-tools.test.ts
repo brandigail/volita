@@ -45,6 +45,7 @@ function context(overrides: Partial<ToolContext> = {}): ToolContext {
     userText: '',
     chats: [],
     driving: false,
+    inboxTitles: [],
     ...overrides,
   }
 }
@@ -140,5 +141,13 @@ describe('catch_up with chats read from the phone', () => {
     expect(result.chats[0].messages).toEqual(['Abigail Smith: Are you coming?', 'Abigail Smith: Hello??'])
     expect(result.chats[0].summary).toContain('summarise')
     expect(result.chats[0].asking).toBeUndefined()
+  })
+})
+
+describe('catch_up when the person named someone with no chat', () => {
+  it('lists the chats on the phone and tells the assistant to ask which one, not to guess', async () => {
+    const result = JSON.parse((await runChatTool('catch_up', {}, context({ inboxTitles: ['Squishmellow', 'Sipho Dlamini'] }))) ?? '{}')
+    expect(result.otherChatsOnPhone).toEqual(['Squishmellow', 'Sipho Dlamini'])
+    expect(result.notes.join(' ')).toContain('ask which one')
   })
 })

@@ -45,6 +45,13 @@ public class WhatsAppListenerService extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         connected = true;
+        // Android does not announce notifications that were already showing when access was switched on, so read them now.
+        try {
+            StatusBarNotification[] showing = getActiveNotifications();
+            if (showing != null) for (StatusBarNotification sbn : showing) ingest(sbn);
+        } catch (RuntimeException ignored) {
+            // Could not list them; new messages are still kept as they arrive.
+        }
     }
 
     @Override
@@ -60,6 +67,11 @@ public class WhatsAppListenerService extends NotificationListenerService {
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        ingest(sbn);
+    }
+
+    /** Keeps the messages in one WhatsApp notification, whether it just arrived or was already showing. */
+    private void ingest(StatusBarNotification sbn) {
         if (sbn == null || !isWhatsApp(sbn.getPackageName())) return;
         Notification notification = sbn.getNotification();
         if (notification == null || (notification.flags & Notification.FLAG_GROUP_SUMMARY) != 0) return;

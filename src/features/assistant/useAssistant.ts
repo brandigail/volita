@@ -12,7 +12,7 @@ import { SpeechPlayer } from './speech'
 import { spokenWelcome } from '../../lib/greeting'
 import { visitGreeting } from '../../lib/visit-greeting'
 import { chatsForAssistant } from '../catchup/chatStore'
-import { inboxChatsFor, mergeChats } from '../inbox/inboxChats'
+import { inboxChatsFor, mergeChats, resetInboxConversation } from '../inbox/inboxChats'
 import { useGreeting } from '../profile/useGreeting'
 import { takeDailyWelcome } from './welcome'
 import { usePendingEmail, type UsePendingEmail } from './usePendingEmail'
@@ -109,6 +109,7 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
     const session = sessionRef.current
     sessionRef.current = null
     inboxChatsRef.current = []
+    resetInboxConversation()
     if (session) {
       session.listener.stop()
       session.player.stop()
@@ -179,9 +180,10 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
           return
         }
         // What the person said may be about a chat on this phone ("catch me up with Abigail"); only then is it read.
-        inboxChatsRef.current = mergeChats(inboxChatsRef.current, await inboxChatsFor(text), MAX_ASSISTANT_CHATS)
+        const reading = await inboxChatsFor(text)
+        inboxChatsRef.current = mergeChats(inboxChatsRef.current, reading.chats, MAX_ASSISTANT_CHATS)
         const chats = mergeChats(chatsForAssistant(), inboxChatsRef.current, MAX_ASSISTANT_CHATS)
-        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving })
+        const reply = await askAssistant(session.history.slice(-HISTORY_TURNS), session.conversationId, effectiveSpoken(anyLanguage), { chats, driving, inboxTitles: reading.titles })
         if (!isCurrent(session)) return
         session.history.push({ role: 'assistant', content: reply.reply, actions: reply.actions })
         addLine('assistant', reply.reply, reply.actions)

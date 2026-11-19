@@ -42,6 +42,8 @@ export interface ToolContext {
   chats: AssistantChat[]
   /** True in driving mode: the person can only listen, so nothing opens or sends without their spoken yes. */
   driving: boolean
+  /** Names of recent WhatsApp chats, given only when the person named someone who matched none of them. */
+  inboxTitles: string[]
 }
 
 const MAX_RANGE_DAYS = 31
