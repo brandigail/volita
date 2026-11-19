@@ -59,3 +59,14 @@ export async function saveContact(input: ContactInput, id?: string): Promise<Con
 export async function deleteContact(id: string): Promise<void> {
   await request(`/api/contacts/${id}`, { method: 'DELETE' })
 }
+
+export interface ImportSummary {
+  added: number
+  skippedExisting: number
+  skippedNoRoom: number
+}
+
+/** Saves the chosen people from a contacts file in one request. Already saved people are skipped by the server. */
+export async function importContacts(contacts: { name: string; phone: string; email: string }[]): Promise<ImportSummary> {
+  return parse(z.object({ added: z.number(), skippedExisting: z.number(), skippedNoRoom: z.number() }), await request('/api/contacts-import', jsonInit('POST', { contacts })))
+}

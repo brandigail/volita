@@ -1,11 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Mail, Pencil, Phone, Plus, Trash2, UserRound } from 'lucide-react'
 import { MEMORY_LIMITS, type Contact, type ContactInput } from '../../types/memory'
+import { ContactImport } from './ContactImport'
 
 interface ContactsListProps {
   contacts: Contact[]
   onSave: (input: ContactInput, id?: string) => Promise<boolean>
   onRemove: (id: string) => Promise<boolean>
+  /** Called after people were imported from a contacts file, so the list reloads. */
+  onImported: () => void
 }
 
 const EMPTY: ContactInput = { name: '', email: '', phone: '', relationship: '', notes: '' }
@@ -97,7 +100,7 @@ function ContactRow({ contact, onEdit, onRemove }: { contact: Contact; onEdit: (
 }
 
 /** The people Volita knows, so "email Sipho" comes out addressed to the right person. */
-export function ContactsList({ contacts, onSave, onRemove }: ContactsListProps) {
+export function ContactsList({ contacts, onSave, onRemove, onImported }: ContactsListProps) {
   const [editing, setEditing] = useState<string | 'new' | null>(null)
   const stopEditing = () => setEditing(null)
 
@@ -113,6 +116,8 @@ export function ContactsList({ contacts, onSave, onRemove }: ContactsListProps) 
           Add a person
         </button>
       )}
+
+      <ContactImport existing={contacts} onImported={onImported} />
 
       {contacts.length === 0 ? (
         <p className="muted mt-4 text-sm">No one yet. Tell the assistant "save Sipho, my accountant, his email is…" or add a person above.</p>

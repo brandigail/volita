@@ -13,6 +13,7 @@ import { loadActivitySource, summarise, timelineFor } from './customer-timeline.
 import { saveDraftRow } from './draft-saver.ts'
 import type { ToolDefinition } from './groq-chat.ts'
 import { listContacts } from './memory-store.ts'
+import { runSummaryTool, SUMMARY_TOOLS, SUMMARY_TOOL_NAMES } from './summary-tools.ts'
 import { formatWhen, todayIn } from './time.ts'
 
 /**
@@ -20,15 +21,16 @@ import { formatWhen, todayIn } from './time.ts'
  * request for the owner to approve. None of them sends anything to a customer: a reminder waits for the owner's "send it".
  */
 
-export const BUSINESS_TOOL_NAMES = new Set(['customer_story', 'money_owed', 'create_invoice', 'mark_invoice_paid', 'chase_payment', 'ask_for_review'])
+export const BUSINESS_TOOL_NAMES = new Set(['customer_story', 'money_owed', 'create_invoice', 'mark_invoice_paid', 'chase_payment', 'ask_for_review', ...SUMMARY_TOOL_NAMES])
 
 /** Words that suggest the money tools are needed. They are only shown to the model then, because every tool costs tokens on every call. */
-const BUSINESS_WORDS = /\b(invoice|invoices|owe|owes|owed|outstanding|overdue|paid|payment|payments|pay|chase|remind|reminder|customer|customers|client|story|review|reviews|bill|billed|unpaid|vat)\b/i
+const BUSINESS_WORDS = /\b(invoice|invoices|owe|owes|owed|outstanding|overdue|paid|payment|payments|pay|chase|remind|reminder|customer|customers|client|story|review|reviews|bill|billed|unpaid|vat|summary|wrap|wrap-up|earn|earned|takings|revenue|turnover|income)\b/i
 
 /** Whether this turn (the latest words and a little of what came before) is about money or customers. */
 export const wantsBusinessTools = (recentText: string): boolean => BUSINESS_WORDS.test(recentText)
 
 export const BUSINESS_TOOLS: ToolDefinition[] = [
+  ...SUMMARY_TOOLS,
   {
     type: 'function',
     function: {
@@ -272,7 +274,9 @@ export async function runBusinessTool(name: string, args: unknown, ctx: ToolCont
       return markPaidTool(args, ctx)
     case 'chase_payment':
       return chasePaymentTool(args, ctx)
-    default:
+    case 'ask_for_review':
       return askForReviewTool(args, ctx)
+    default:
+      return runSummaryTool(name, args, ctx)
   }
 }

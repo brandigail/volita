@@ -135,6 +135,20 @@ suite('business tools', () => {
     expect(row.sent_at).toBeNull()
   })
 
+  it('sums up the week from the books: invoiced, paid, still owed', async () => {
+    const result = await run('money_summary', { period: 'week' })
+    expect(result).toMatchObject({ period: 'the last 7 days', invoiced: { count: 4 }, paid: { count: 1 } })
+    expect(result.stillOwed).toMatch(/^R/)
+    expect(await run('money_summary', {})).toMatchObject({ period: 'the last 7 days' })
+  })
+
+  it('wraps up the day: what was paid, what is owed, and the first job tomorrow', async () => {
+    expect(await run('day_wrap', {})).toMatchObject({ paidToday: { count: 1 }, tomorrowFirstJob: 'nothing booked yet', draftsNotSentYet: expect.any(Number) })
+    const { addAgendaItem } = await import('../functions/_lib/agenda.ts')
+    await addAgendaItem(userId, { title: 'Fit geyser at Mrs Naidoo', startsAt: new Date(Date.now() + 26 * 3_600_000).toISOString(), endsAt: null, notes: '' })
+    expect(((await run('day_wrap', {})) as { tomorrowFirstJob: string }).tomorrowFirstJob).toContain('Fit geyser at Mrs Naidoo')
+  })
+
   it('tells the story of a customer from the books, and says so when nothing is known', async () => {
     expect(await run('customer_story', { name: 'Mrs Dlamini' })).toMatchObject({ customer: 'Mrs Dlamini', recent: expect.any(Array) })
     expect(await run('customer_story', { name: 'Nobody Atall' })).toMatchObject({ error: expect.stringContaining('Nothing is saved') })

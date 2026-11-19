@@ -11,7 +11,7 @@ import { useMemory } from './useMemory'
 
 /** Everything Volita has been told to remember, in one place the person can read, correct and delete. */
 export function MemorySection() {
-  const { memories, contacts, error, addNote, editNote, removeNote, saveContact, removeContact } = useMemory()
+  const { memories, contacts, error, addNote, editNote, removeNote, saveContact, removeContact, reload } = useMemory()
   const { limits } = usePlan()
   const [styleNote, setStyleNote] = useState<string | null>(null)
   const [learning, setLearning] = useState(false)
@@ -96,7 +96,7 @@ export function MemorySection() {
           </div>
           <div>
             <h3 className="mb-2 text-sm font-bold">People</h3>
-            <ContactsList contacts={contacts} onSave={saveContact} onRemove={removeContact} />
+            <ContactsList contacts={contacts} onSave={saveContact} onRemove={removeContact} onImported={reload} />
           </div>
         </div>
       )}

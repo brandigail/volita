@@ -11,6 +11,10 @@ export function useMemory() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  /** Bumped to load everything again, for example after contacts were imported. */
+  const [version, setVersion] = useState(0)
+  const reload = useCallback(() => setVersion((current) => current + 1), [])
+
   useEffect(() => {
     let cancelled = false
     api
@@ -24,7 +28,7 @@ export function useMemory() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [version])
 
   /** Runs a change; returns whether it worked, and leaves the message in `error` when it did not. */
   const attempt = useCallback(async (change: () => Promise<void>): Promise<boolean> => {
@@ -68,5 +72,5 @@ export function useMemory() {
       setContacts((current) => current.filter((c) => c.id !== id))
     })
 
-  return { memories, contacts, error, addNote, editNote, removeNote, saveContact, removeContact }
+  return { memories, contacts, error, addNote, editNote, removeNote, saveContact, removeContact, reload }
 }
