@@ -21,6 +21,20 @@ export interface DraftToSave {
   recipient?: string
 }
 
+/** Saves a finished draft, encrypted, to the person's history. `transcript` is what it was made from; the history shows it as the original request. */
+export async function saveDraftRow(userId: string, draft: GeneratedDraft, transcript: string): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const sql = neon(process.env.DATABASE_URL ?? '')
+  const [{ total }] = (await sql.query('SELECT count(*)::int AS total FROM drafts WHERE user_id = $1', [userId])) as { total: number }[]
+  if (total >= MAX_DRAFTS) return { ok: false, message: `The user already has ${MAX_DRAFTS} drafts, so nothing was saved. Ask them to delete some.` }
+  const text = encryptDraftText(userId, { recipient: draft.recipient, subject: draft.subject, body: draft.body, transcript })
+  const [saved] = (await sql.query(
+    `INSERT INTO drafts (user_id, category, recipient, subject, body, transcript, language, original_body)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $5) RETURNING id`,
+    [userId, draft.category, text.recipient, text.subject, text.body, text.transcript, draft.language],
+  )) as { id: string }[]
+  return { ok: true, id: saved.id }
+}
+
 /** Writes a draft for the user with the model and saves it, encrypted, to their history. The shared path for every tool that creates a draft. */
 export async function writeAndSaveDraft(ctx: ToolContext, { category, instruction, language, recipient }: DraftToSave): Promise<SavedDraft> {
   const limits = planLimits(ctx.plan)
@@ -39,14 +53,6 @@ export async function writeAndSaveDraft(ctx: ToolContext, { category, instructio
   if (!result.ok) return { ok: false, message: result.message }
 
   const draft = recipient ? { ...result.draft, recipient } : result.draft
-  const sql = neon(process.env.DATABASE_URL ?? '')
-  const [{ total }] = (await sql.query('SELECT count(*)::int AS total FROM drafts WHERE user_id = $1', [ctx.userId])) as { total: number }[]
-  if (total >= MAX_DRAFTS) return { ok: false, message: `The user already has ${MAX_DRAFTS} drafts, so nothing was saved. Ask them to delete some.` }
-  const text = encryptDraftText(ctx.userId, { recipient: draft.recipient, subject: draft.subject, body: draft.body, transcript: instruction })
-  const [saved] = (await sql.query(
-    `INSERT INTO drafts (user_id, category, recipient, subject, body, transcript, language, original_body)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $5) RETURNING id`,
-    [ctx.userId, draft.category, text.recipient, text.subject, text.body, text.transcript, draft.language],
-  )) as { id: string }[]
-  return { ok: true, id: saved.id, draft }
+  const saved = await saveDraftRow(ctx.userId, draft, instruction)
+  return saved.ok ? { ok: true, id: saved.id, draft } : saved
 }

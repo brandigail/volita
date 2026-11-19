@@ -23,6 +23,7 @@ import { UpgradeNote } from '../../components/UpgradeNote'
 import { learnStyle } from '../../lib/plan-api'
 import { usePlan } from '../../providers/usePlan'
 import { DraftTools } from './DraftTools'
+import { PromiseOffer } from './PromiseOffer'
 import { permissionState, requestPermission } from '../notifications/notify'
 import { requestReschedule } from '../notifications/prefs'
 import { ReadAloudButton } from './ReadAloudButton'
@@ -266,6 +267,7 @@ export function DraftCard({ result, onChange, saveStatus, onSeePlans }: DraftCar
           </div>
 
           <DraftTools draft={draft} transcript={transcript} onChange={onChange} onSeePlans={onSeePlans} />
+          {draft.category !== 'NOTE' && <PromiseOffer body={draft.body} recipient={draft.recipient} />}
 
           {limits.sendAtReminders ? (
             <SendAtField id="draft-send-at" value={sendAt} sent={sent} disabled={saveStatus !== 'saved'} onChange={(next) => void handleSendAt(next)} />

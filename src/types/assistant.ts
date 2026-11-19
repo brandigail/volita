@@ -53,8 +53,11 @@ export type AssistantAction =
   | { type: 'memory_forgotten'; id: string; label: string }
   /** An email written for the user to approve; `id` is the waiting email. Only the user can send it. */
   | { type: 'email_ready'; id: string; label: string }
-  /** A reply written for the user to approve; uid=197609(brand) gid=197609 groups=197609 is the saved draft. WhatsApp opens only when the user says send it or taps the button. */
+  /** A reply written for the user to approve; `id` is the saved draft. WhatsApp opens only when the user says send it or taps the button. */
   | { type: 'reply_ready'; id: string; label: string }
+  /** An invoice the assistant made as a draft; `id` is the invoice. It is not sent to the customer until the user sends it. */
+  | { type: 'invoice_ready'; id: string; label: string }
+  | { type: 'invoice_paid'; id: string; label: string }
 
 export interface AssistantResponse {
   reply: string

@@ -238,6 +238,11 @@ export async function deleteDraftInvoice(userId: string, id: string): Promise<'d
   return (await getInvoice(userId, id)) ? 'sent' : 'missing'
 }
 
+/** Counts a payment reminder as sent, so the next one is not suggested until its day. Does nothing once the invoice is paid or cancelled. */
+export async function recordReminderSent(userId: string, invoiceId: string): Promise<void> {
+  await sql().query("UPDATE invoices SET reminders_sent = reminders_sent + 1, last_reminded_at = now(), updated_at = now() WHERE id = $1 AND user_id = $2 AND status = 'SENT'", [invoiceId, userId])
+}
+
 export interface MoneyOwed {
   /** Everything sent and not yet paid. */
   owedCents: number

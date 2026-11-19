@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, BellRing, Car, Brain, CalendarPlus, CheckCheck, FilePenLine, Sparkles, Square, Trash2, UserPlus } from 'lucide-react'
+import { AlertCircle, Banknote, BellRing, Car, Brain, CalendarPlus, CheckCheck, FilePenLine, FileText, Sparkles, Square, Trash2, UserPlus } from 'lucide-react'
 import type { Tab } from '../../components/TabBar'
 import { warmUp } from '../../lib/assistant-api'
 import type { AssistantAction } from '../../types/assistant'
@@ -52,7 +52,11 @@ function ActionChip({ action, onNavigate }: { action: AssistantAction; onNavigat
               ? { icon: UserPlus, text: `Saved person: ${action.label}`, tab: 'profile' as const }
               : action.type === 'memory_forgotten'
                 ? { icon: Brain, text: `Forgot: ${action.label}`, tab: 'profile' as const }
-                : { icon: CheckCheck, text: `Marked sent: ${action.label}`, tab: 'history' as const }
+                : action.type === 'invoice_ready'
+                  ? { icon: FileText, text: `Invoice made: ${action.label}`, tab: 'business' as const }
+                  : action.type === 'invoice_paid'
+                    ? { icon: Banknote, text: `Paid: ${action.label}`, tab: 'business' as const }
+                    : { icon: CheckCheck, text: `Marked sent: ${action.label}`, tab: 'history' as const }
   const Icon = config.icon
   return (
     <button

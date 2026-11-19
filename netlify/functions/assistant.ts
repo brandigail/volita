@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ASSISTANT_CHAT_MESSAGES, MAX_ASSISTANT_CHATS, MAX_ASSISTANT_CHAT_TEXT, READ_BACK_QUESTION, type AssistantAction, type AssistantResponse } from '../../src/types/assistant.ts'
 import { TOOLS, runTool, toolsFor, type ToolContext } from './_lib/assistant-tools.ts'
+import { BUSINESS_TOOL_NAMES } from './_lib/business-tools.ts'
 import { assistantSystemPrompt } from './_lib/assistant-prompt.ts'
 import { answerCatchUp, isCatchUpTurn } from './_lib/catch-up-turn.ts'
 import { chat, type ChatMessage } from './_lib/groq-chat.ts'
@@ -90,6 +91,8 @@ const CONFIRMATIONS: Record<AssistantAction['type'], string> = {
   memory_forgotten: "Done, I've forgotten that.",
   email_ready: 'I have the email ready on your screen. Tap Send when you are happy with it.',
   reply_ready: 'I have your reply ready. Say send it, or tap the button, when you are happy with it.',
+  invoice_ready: 'The invoice is made as a draft. Open the Business tab to send it.',
+  invoice_paid: "Done, I've marked that invoice as paid.",
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -161,12 +164,14 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   const limits = planLimits(session.user.plan)
-  const tools = toolsFor(session.user.plan)
+  const recentText = request.data.messages.slice(-4).map((m) => m.content).join(' ')
+  const tools = toolsFor(session.user.plan, recentText)
+  const businessOn = tools.some((tool) => BUSINESS_TOOL_NAMES.has(tool.function.name))
   const models = assistantModels()
   const messages: ChatMessage[] = [
     {
       role: 'system',
-      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email, { chats: request.data.chats.map((chat) => chat.contact || 'someone'), driving: request.data.driving, inboxAvailable: request.data.inboxAvailable }),
+      content: assistantSystemPrompt(profile, timeZone, limits.memoryItems === 0 ? '' : await loadMemoryContext(session.user.id, lastUserText), limits.assistantTools, limits.email, { chats: request.data.chats.map((chat) => chat.contact || 'someone'), driving: request.data.driving, inboxAvailable: request.data.inboxAvailable, business: businessOn }),
     },
     ...request.data.messages.map(({ role, content, actions }): ChatMessage => {
       if (role === 'user' || !actions?.length) return { role, content }

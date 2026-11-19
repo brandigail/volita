@@ -6,6 +6,7 @@ import { LANGUAGES, languageName } from '../../../src/types/languages.ts'
 import type { Profile } from '../../../src/types/profile.ts'
 import { buildSignature } from '../../../src/lib/profile.ts'
 import { addAgendaItem, listAgenda } from './agenda.ts'
+import { BUSINESS_TOOLS, BUSINESS_TOOL_NAMES, runBusinessTool, wantsBusinessTools } from './business-tools.ts'
 import { CHAT_TOOLS, runChatTool } from './chat-tools.ts'
 import { EMAIL_TOOLS, EMAIL_TOOL_NAMES, runEmailTool } from './email-tools.ts'
 import { LOOKUP_TOOLS, runLookupTool } from './lookup-tool.ts'
@@ -165,6 +166,7 @@ export const TOOLS: ToolDefinition[] = [
   ...LOOKUP_TOOLS,
   ...EMAIL_TOOLS,
   ...CHAT_TOOLS,
+  ...BUSINESS_TOOLS,
   ...MEMORY_TOOLS,
   ...PRICE_TOOLS,
 ]
@@ -175,14 +177,20 @@ const READ_TOOL_NAMES = new Set(['get_agenda', 'find_drafts', 'get_draft', 'catc
 function toolAllowed(name: string, plan: PlanId): boolean {
   const { assistantTools: level, email } = planLimits(plan)
   if (EMAIL_TOOL_NAMES.has(name)) return email
+  if (BUSINESS_TOOL_NAMES.has(name)) return planLimits(plan).business
   if (READ_TOOL_NAMES.has(name)) return true
   if (name === 'look_up') return level === 'full'
   return level !== 'read'
 }
 
-/** The tools the model is shown on this plan. Free can read; Basic can also write and remember; Pro can also search the web. */
-export function toolsFor(plan: PlanId): ToolDefinition[] {
-  return TOOLS.filter((tool) => toolAllowed(tool.function.name, plan))
+/**
+ * The tools the model is shown on this plan. Free can read; Basic can also write and remember; Pro can also search the web and run the
+ * money side. The money tools are shown only when the recent conversation is about money or customers, since every tool costs tokens on
+ * every call and the free AI service allows only about 8,000 a minute.
+ */
+export function toolsFor(plan: PlanId, recentText = ''): ToolDefinition[] {
+  const business = wantsBusinessTools(recentText)
+  return TOOLS.filter((tool) => toolAllowed(tool.function.name, plan) && (business || !BUSINESS_TOOL_NAMES.has(tool.function.name)))
 }
 
 const getAgendaArgs = z.object({ from_date: z.string(), to_date: z.string() })
@@ -422,6 +430,7 @@ export async function runTool(name: string, rawArguments: string, ctx: ToolConte
           (await runLookupTool(name, args, ctx)) ??
           (await runEmailTool(name, args, ctx)) ??
           (await runChatTool(name, args, ctx)) ??
+          (await runBusinessTool(name, args, ctx)) ??
           (await runMemoryTool(name, args, ctx)) ??
           (await runPriceTool(name, args, ctx)) ??
           fail(`There is no tool called ${name}.`)

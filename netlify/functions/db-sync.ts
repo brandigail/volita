@@ -4,6 +4,8 @@ import { z } from 'zod'
 import type { ListDraftsResponse, SaveDraftResponse } from '../../src/types/api.ts'
 import { draftStatusSchema, saveDraftSchema } from '../../src/types/draft-schema.ts'
 import type { Draft, DraftCategory } from '../../src/types/draft.ts'
+import { recordReminderSent } from './_lib/business-store.ts'
+import { CHASE_MARKER } from '../../src/lib/business-messages.ts'
 import { decryptDraftRow, encryptDraftText } from './_lib/draft-store.ts'
 import { planLimits } from '../../src/types/plans.ts'
 import { errorResponse, json, upgradeResponse } from './_lib/http.ts'
@@ -139,6 +141,8 @@ async function updateStatus(req: Request, sql: NeonQueryFunction<false, false>, 
   if (!parsed.success) return errorResponse(400, 'Send {"sent": true}, {"sendAt": "<date>" or null} and/or {"followUpDone": true}.')
   const { sent, sendAt, followUpDone } = parsed.data
   if (sendAt && !planLimits(user.plan).sendAtReminders) return upgradeResponse('Send-at reminders are part of the Basic plan.', 'basic')
+  // Marking a payment reminder as sent counts it against its invoice, once.
+  const wasUnsent = sent === true ? ((await sql.query('SELECT sent_at FROM drafts WHERE id = $1 AND user_id = $2', [id, userId])) as { sent_at: string | null }[])[0]?.sent_at === null : false
   // A field that is left out keeps its current value; an explicit null clears the planned send time.
   const rows = (await sql.query(
     `UPDATE drafts SET
@@ -149,5 +153,9 @@ async function updateStatus(req: Request, sql: NeonQueryFunction<false, false>, 
      WHERE id = $1 AND user_id = $2 RETURNING ${COLUMNS}`,
     [id, userId, sent ?? null, sendAt !== undefined, sendAt ?? null, followUpDone ?? null],
   )) as DraftRow[]
-  return rows.length > 0 ? json<SaveDraftResponse>({ draft: toDraft(userId, rows[0]) }) : errorResponse(404, 'Draft not found.')
+  if (rows.length === 0) return errorResponse(404, 'Draft not found.')
+  const draft = toDraft(userId, rows[0])
+  const reminderFor = wasUnsent ? CHASE_MARKER.exec(draft.transcript)?.[1] : undefined
+  if (reminderFor) await recordReminderSent(userId, reminderFor).catch((err: unknown) => console.error('Could not count the payment reminder:', describeError(err)))
+  return json<SaveDraftResponse>({ draft })
 }

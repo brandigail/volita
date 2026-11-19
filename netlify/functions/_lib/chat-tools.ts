@@ -99,7 +99,7 @@ async function catchUp(ctx: ToolContext): Promise<string> {
 }
 
 /** How a reply that is waiting is worded aloud: who it is for, what it says, and how to send it. */
-function spokenReply(who: string, body: string): string {
+export function spokenReply(who: string, body: string): string {
   const text = body.replace(/\s+/g, ' ').trim()
   const shown = text.length > SPOKEN_BODY_CHARS ? `${text.slice(0, SPOKEN_BODY_CHARS).replace(/\s\S*$/, '')}, and a bit more that you can see on the screen` : text
   return `Here is your WhatsApp to ${who}. ${shown.replace(/[.!?,;:\s]+$/, '')}. It is ready. Say "send it" when you are happy with it, or tell me what to change.`

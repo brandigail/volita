@@ -5,12 +5,14 @@ import { deleteInvoice, patchInvoice } from '../../lib/business-api'
 import { authClient } from '../../lib/auth-client'
 import { buildInvoicePdf } from '../../lib/invoice-pdf'
 import { invoiceMessage, mailtoLink, prettyDate, whatsAppLink } from '../../lib/invoice-text'
-import { daysBetween, formatRand, lineCents } from '../../lib/money'
+import { chaserMessage, reviewMessage } from '../../lib/business-messages'
+import { CHASE_AFTER_DAYS, daysBetween, formatRand, lineCents, nextChase } from '../../lib/money'
 import { profileFromUser } from '../../lib/profile'
 import { deliverPdf } from '../../lib/quote-pdf'
 import type { BusinessSettings, Invoice, InvoiceStatus } from '../../types/business'
 import { todayLocal } from './dates'
 import { lookOf, STATUS_LOOK } from './invoiceLook'
+import { MessagePanel } from './MessagePanel'
 
 interface InvoiceDetailProps {
   invoice: Invoice
@@ -53,6 +55,8 @@ export function InvoiceDetail({ invoice, settings, onChange, onDeleted, onBack }
     })
 
   const overdueDays = invoice.status === 'SENT' ? Math.max(0, daysBetween(invoice.dueOn, today)) : 0
+  const stage = nextChase(overdueDays, invoice.remindersSent)
+  const waitDays = invoice.status === 'SENT' && stage === null && invoice.remindersSent < CHASE_AFTER_DAYS.length ? CHASE_AFTER_DAYS[invoice.remindersSent] - overdueDays : 0
 
   return (
     <article className="surface flex flex-col gap-4 p-5" aria-label={`Invoice ${invoice.number}`}>
@@ -155,6 +159,34 @@ export function InvoiceDetail({ invoice, settings, onChange, onDeleted, onBack }
           {error}
         </p>
       )}
+
+      {profile && stage !== null && (
+        <MessagePanel
+          key={`chase-${invoice.remindersSent}`}
+          heading={`Payment reminder ${stage} of ${CHASE_AFTER_DAYS.length}`}
+          why={`This invoice is ${overdueDays} days late. Read it, change anything, then send it from your own WhatsApp or email.`}
+          message={chaserMessage(stage, invoice, profile, today)}
+          phone={invoice.customerPhone}
+          email={invoice.customerEmail}
+          confirmLabel="I sent this reminder"
+          onConfirm={async () => onChange(await patchInvoice(invoice.id, { reminded: true }))}
+        />
+      )}
+      {invoice.status === 'SENT' && stage === null && invoice.remindersSent >= CHASE_AFTER_DAYS.length && (
+        <p className="muted text-sm">All three reminders have been sent. It is time to phone {invoice.customerName}.</p>
+      )}
+      {waitDays > 0 && overdueDays > 0 && <p className="muted text-sm">Next payment reminder in {waitDays} day{waitDays === 1 ? '' : 's'}.</p>}
+
+      {profile && invoice.status === 'PAID' && settings.reviewLink && (
+        <MessagePanel
+          heading="Ask for a review"
+          why="The job is paid. A happy customer is the best time to ask."
+          message={reviewMessage(invoice.customerName, settings.reviewLink, profile)}
+          phone={invoice.customerPhone}
+          email={invoice.customerEmail}
+        />
+      )}
+      {invoice.status === 'PAID' && !settings.reviewLink && <p className="muted text-sm">Add your Google review link under My details and Volita will write a review request for each paid job.</p>}
     </article>
   )
 }

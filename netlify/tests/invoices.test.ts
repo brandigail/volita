@@ -106,6 +106,16 @@ suite('invoices', () => {
     expect((await edit({ note: 'changed after sending' })).status).toBe(409)
   })
 
+  it('counts the payment reminders that were sent, and nothing else changes', async () => {
+    const made = await create()
+    const patch = async (body: unknown) => (await (await invoices(call('PATCH', `/api/invoices/${made.id}`, body))).json()) as Invoice
+    await patch({ status: 'SENT' })
+    const once = await patch({ reminded: true })
+    expect(once).toMatchObject({ remindersSent: 1, status: 'SENT', totalCents: 655_500 })
+    expect(once.lastRemindedAt).not.toBeNull()
+    expect((await patch({ reminded: true })).remindersSent).toBe(2)
+  })
+
   it('deletes a draft but not a sent invoice', async () => {
     const draft = await create()
     expect((await invoices(call('DELETE', `/api/invoices/${draft.id}`))).status).toBe(200)
