@@ -31,6 +31,7 @@ import { TermsGate } from './features/legal/TermsGate'
 // The signed-in screens are loaded on demand, so a visitor on the landing page does not download the whole app first.
 const AgendaView = lazy(() => import('./features/agenda/AgendaView').then((m) => ({ default: m.AgendaView })))
 const AssistantView = lazy(() => import('./features/assistant/AssistantView').then((m) => ({ default: m.AssistantView })))
+const BusinessView = lazy(() => import('./features/business/BusinessView').then((m) => ({ default: m.BusinessView })))
 const HistoryView = lazy(() => import('./features/history/HistoryView').then((m) => ({ default: m.HistoryView })))
 const ProfileView = lazy(() => import('./features/profile/ProfileView').then((m) => ({ default: m.ProfileView })))
 const RecordView = lazy(() => import('./features/record/RecordView').then((m) => ({ default: m.RecordView })))
@@ -163,6 +164,8 @@ export default function App() {
         <AssistantView onNavigate={setTab} />
       ) : tab === 'agenda' ? (
         <AgendaView onNavigate={setTab} />
+      ) : tab === 'business' ? (
+        <BusinessView />
       ) : tab === 'history' ? (
         <HistoryView key={String(historyOnUnsent)} initialStatus={historyOnUnsent ? 'UNSENT' : 'ALL'} />
       ) : (

@@ -44,6 +44,8 @@ export interface PlanLimits {
   writingStyle: boolean
   /** Connect an email account (Gmail, Outlook, Yahoo, business email...) so the assistant can find and read emails and prepare replies that the user approves. */
   email: boolean
+  /** Customers with their story, invoices and payment reminders, promises, bookings and review requests. */
+  business: boolean
 }
 
 export interface Plan {
@@ -88,6 +90,7 @@ const FREE: PlanLimits = {
   toneRewrite: false,
   writingStyle: false,
   email: false,
+  business: false,
 }
 
 const BASIC: PlanLimits = {
@@ -115,6 +118,7 @@ const BASIC: PlanLimits = {
   toneRewrite: false,
   writingStyle: false,
   email: false,
+  business: false,
 }
 
 const PRO: PlanLimits = {
@@ -133,6 +137,7 @@ const PRO: PlanLimits = {
   toneRewrite: true,
   writingStyle: true,
   email: true,
+  business: true,
 }
 
 export const FREE_PLAN: Plan = {
@@ -176,6 +181,7 @@ export const PLANS: readonly (Plan & { id: PaidPlanId })[] = [
       'Unlimited memory and people',
       'Morning briefing, rewrite in a different tone, learns your writing style',
       'Connect your email (Gmail, Outlook, Yahoo and more): find and read emails, and reply by voice',
+      'Business tab: customers with their story, invoices with VAT and PDF, payment reminders, promise reminders, a booking link and review requests',
       'Up to 3 linked calendars and priority support',
     ],
     limits: PRO,

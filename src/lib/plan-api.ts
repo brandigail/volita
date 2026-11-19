@@ -33,6 +33,7 @@ const limitsSchema = z.object({
   toneRewrite: z.boolean(),
   writingStyle: z.boolean(),
   email: z.boolean(),
+  business: z.boolean(),
 })
 
 const planStateSchema = z.object({

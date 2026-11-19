@@ -1,11 +1,12 @@
-import { CalendarDays, History, Mic, Sparkles, UserRound } from 'lucide-react'
+import { Briefcase, CalendarDays, History, Mic, Sparkles, UserRound } from 'lucide-react'
 
-export type Tab = 'record' | 'assistant' | 'agenda' | 'history' | 'profile'
+export type Tab = 'record' | 'assistant' | 'agenda' | 'business' | 'history' | 'profile'
 
 const TABS = [
   { id: 'record', label: 'Record', icon: Mic },
   { id: 'assistant', label: 'Assistant', icon: Sparkles },
   { id: 'agenda', label: 'Agenda', icon: CalendarDays },
+  { id: 'business', label: 'Business', icon: Briefcase },
   { id: 'history', label: 'History', icon: History },
   { id: 'profile', label: 'Profile', icon: UserRound },
 ] as const
