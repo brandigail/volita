@@ -82,6 +82,9 @@ export const auth = betterAuth({
       phone: { type: 'string', required: false },
       signature: { type: 'string', required: false },
       calendarUrl: { type: 'string', required: false },
+      /** What Volita calls the person, and what their business does (see PersonalTouch in Profile). */
+      nickname: { type: 'string', required: false },
+      businessAbout: { type: 'string', required: false },
       /** YYYY-MM-DD, given at sign-up (or once, by accounts made before the age check). */
       birthDate: { type: 'string', required: false },
       /** Set by the owner (or by an under-18 date of birth). The person cannot change it. */

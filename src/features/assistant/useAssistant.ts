@@ -9,7 +9,10 @@ import { effectiveSpoken } from '../language/languageSettings'
 import { Listener, ScreenLock, type Utterance } from './listener'
 import { classifyApproval } from './approval'
 import { SpeechPlayer } from './speech'
+import { callName, spokenWelcome } from '../../lib/greeting'
 import { chatsForAssistant } from '../catchup/chatStore'
+import { useGreeting } from '../profile/useGreeting'
+import { takeDailyWelcome } from './welcome'
 import { usePendingEmail, type UsePendingEmail } from './usePendingEmail'
 import { usePendingReply, type UsePendingReply } from './usePendingReply'
 
@@ -65,6 +68,7 @@ export interface AssistantOptions {
 
 export function useAssistant({ driving = false }: AssistantOptions = {}): UseAssistant {
   const { limits, refresh } = usePlan()
+  const { profile } = useGreeting()
   const anyLanguage = limits.anyLanguage
   const [phase, setPhase] = useState<AssistantPhase>('idle')
   const [lines, setLines] = useState<ChatLine[]>([])
@@ -269,14 +273,16 @@ export function useAssistant({ driving = false }: AssistantOptions = {}): UseAss
     void startBackgroundListening()
 
     // The usual line is fixed, so a recording of it plays at once instead of waiting for the voice service.
-    const greeting = driving ? DRIVING_GREETING : "Hi, I'm listening. What can I do for you?"
+    // The first conversation of the day gets a personal welcome by name; later ones use the quick recorded greeting.
+    const welcome = !driving && profile !== null && callName(profile) !== '' && takeDailyWelcome()
+    const greeting = driving ? DRIVING_GREETING : welcome && profile ? spokenWelcome(profile) : "Hi, I'm listening. What can I do for you?"
     addLine('assistant', greeting)
     setPhase('speaking')
     session.player.startTurn(crypto.randomUUID())
-    if (driving) await session.player.speak(greeting)
+    if (driving || welcome) await session.player.speak(greeting)
     else await session.player.speakGreeting(greeting)
     listenAgain(session)
-  }, [addLine, driving, end, handleUtterance, listenAgain])
+  }, [addLine, driving, end, handleUtterance, listenAgain, profile])
 
   const tapOrb = useCallback(() => {
     const session = sessionRef.current

@@ -7,6 +7,7 @@ import { UsageMeter } from '../plan/UsageMeter'
 import { AssistantOrb } from './AssistantOrb'
 import { BriefingCard } from './BriefingCard'
 import { ChatShelf } from '../catchup/ChatShelf'
+import { useGreeting } from '../profile/useGreeting'
 import { DrivingMode } from './DrivingMode'
 import { EmailCard } from './EmailCard'
 import { ReplyCard } from './ReplyCard'
@@ -65,6 +66,7 @@ function ActionChip({ action, onNavigate }: { action: AssistantAction; onNavigat
 }
 
 export function AssistantView({ onNavigate }: AssistantViewProps) {
+  const { line: greeting } = useGreeting()
   const { phase, lines, error, orbRef, tapOrb, end, clear, email, reply } = useAssistant()
   // The voice and listening services start cold; waking them now means they are ready when the user taps the orb.
   useEffect(() => {
@@ -78,7 +80,7 @@ export function AssistantView({ onNavigate }: AssistantViewProps) {
       <div className="animate-rise">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1 text-xs font-semibold backdrop-blur">
           <Sparkles className="size-3.5 text-ember-400" aria-hidden="true" />
-          Hands-free assistant
+          {greeting ?? 'Hands-free assistant'}
         </p>
         <h1 id="assistant-heading" className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl">
           Just talk.

@@ -12,6 +12,8 @@ export const authClient = createAuthClient({
         phone: { type: 'string', required: false },
         signature: { type: 'string', required: false },
         calendarUrl: { type: 'string', required: false },
+        nickname: { type: 'string', required: false },
+        businessAbout: { type: 'string', required: false },
         birthDate: { type: 'string', required: false },
         suspendedAt: { type: 'date', required: false, input: false },
         termsVersion: { type: 'string', required: false },

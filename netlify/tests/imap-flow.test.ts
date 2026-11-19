@@ -106,7 +106,7 @@ suite('email with an app password (IMAP and SMTP)', () => {
     mailStore = await import('../functions/_lib/mail-store.ts')
     const id = `imaptest-${RUN}`
     await sql?.query('INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, true)', [id, 'Test Dad', `imaptest.${RUN}@example.com`])
-    user = { id, email: `imaptest.${RUN}@example.com`, plan: 'pro', planSource: 'default', isOwner: false, profile: { name: 'Dad Myers', businessName: 'Myers Decks', role: 'Owner', phone: '', signature: '', calendarUrl: '' } }
+    user = { id, email: `imaptest.${RUN}@example.com`, plan: 'pro', planSource: 'default', isOwner: false, profile: { name: 'Dad Myers', businessName: 'Myers Decks', role: 'Owner', phone: '', signature: '', calendarUrl: '', nickname: '', businessAbout: '' } }
   })
 
   afterAll(async () => {

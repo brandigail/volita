@@ -36,7 +36,7 @@ function context(overrides: Partial<ToolContext> = {}): ToolContext {
   return {
     userId: 'u1',
     plan: 'pro',
-    profile: { name: 'Brandon', businessName: '', role: '', phone: '', signature: 'Brandon', calendarUrl: '' },
+    profile: { name: 'Brandon', businessName: '', role: '', phone: '', signature: 'Brandon', calendarUrl: '', nickname: '', businessAbout: '' },
     timeZone: 'Africa/Johannesburg',
     apiKey: 'unused',
     deadlineAt: Date.now() + 9_000,

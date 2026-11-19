@@ -8,6 +8,10 @@ export interface Profile {
   signature: string
   /** Private iCal address of the user's calendar (Google, Outlook or Apple). Read-only; empty when not linked. */
   calendarUrl: string
+  /** What Volita calls the person in greetings, for example "Mayoman". Empty means their first name. */
+  nickname: string
+  /** One line on what the business does, so Volita can be personal and drafts fit the trade. */
+  businessAbout: string
 }
 
 export const PROFILE_LIMITS = {
@@ -18,6 +22,8 @@ export const PROFILE_LIMITS = {
   signature: 500,
   /** Room for three calendar links of 500 characters after encryption (about 40% longer), one per line. */
   calendarUrl: 2400,
+  nickname: 40,
+  businessAbout: 200,
 } as const satisfies Record<keyof Profile, number>
 
 /** The user fields Better Auth stores; extra profile columns are null until the user fills them in. */
@@ -28,4 +34,6 @@ export interface ProfileSource {
   phone?: string | null
   signature?: string | null
   calendarUrl?: string | null
+  nickname?: string | null
+  businessAbout?: string | null
 }

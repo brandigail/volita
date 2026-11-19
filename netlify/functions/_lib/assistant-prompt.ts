@@ -89,7 +89,13 @@ export function assistantSystemPrompt(
   emailEnabled = false,
   extras: PromptExtras = {},
 ): string {
-  const who = [profile.name && `Their name is ${profile.name}.`, profile.businessName && `Their business is ${profile.businessName}.`, profile.role && `Their role is ${profile.role}.`]
+  const who = [
+    profile.name && `Their name is ${profile.name}.`,
+    profile.nickname && `They like to be called ${profile.nickname}. Use it now and then, warmly, never in every sentence, and never inside a draft or message written to someone else.`,
+    profile.businessName && `Their business is ${profile.businessName}.`,
+    profile.businessAbout && `What the business does: ${profile.businessAbout}.`,
+    profile.role && `Their role is ${profile.role}.`,
+  ]
     .filter(Boolean)
     .join(' ')
   return `${PERSONA}

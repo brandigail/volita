@@ -14,6 +14,7 @@ import { SubscriptionSection } from '../subscription/SubscriptionSection'
 import { FeedbackForm } from '../tour/FeedbackForm'
 import { AccountData } from './AccountData'
 import { InstallHelp, TesterNotice } from './DeviceNotices'
+import { PersonalTouch } from './PersonalTouch'
 import { CalendarConnect } from './CalendarConnect'
 import { EmailConnect } from './EmailConnect'
 import { authClient } from '../../lib/auth-client'
@@ -79,7 +80,7 @@ function ProfileForm({ initial, email }: { initial: Profile; email: string }) {
     setSave({ kind: 'saving' })
     try {
       // The calendar links are managed on their own (see /api/calendars); sending the old copy here would overwrite them.
-      const { error } = await authClient.updateUser({ name: next.name, businessName: next.businessName, role: next.role, phone: next.phone, signature: next.signature })
+      const { error } = await authClient.updateUser({ name: next.name, businessName: next.businessName, role: next.role, phone: next.phone, signature: next.signature, nickname: next.nickname, businessAbout: next.businessAbout })
       if (error) {
         setSave({ kind: 'error', message: error.message ?? 'Could not save your profile. Please try again.' })
         return
@@ -128,6 +129,8 @@ function ProfileForm({ initial, email }: { initial: Profile; email: string }) {
         onChange={set('phone')}
         autoComplete="tel"
       />
+
+      <PersonalTouch profile={profile} onChange={(field, value) => set(field)(value)} />
 
       <CalendarConnect accountEmail={email} />
 

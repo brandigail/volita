@@ -27,7 +27,7 @@ suite('iPhone Shortcut access code', () => {
   let readChatFn: (req: Request) => Promise<Response>
   const userId = `shortcuttest-${RUN}`
   const email = `shortcuttest.${RUN}@example.com`
-  const profile = { name: 'T', businessName: '', role: '', phone: '', signature: '', calendarUrl: '' }
+  const profile = { name: 'T', businessName: '', role: '', phone: '', signature: '', calendarUrl: '', nickname: '', businessAbout: '' }
 
   const readWith = (token: string | null, body: string | Uint8Array, type: string) =>
     new Request('http://localhost:8888/api/read-chat', { method: 'POST', headers: { 'Content-Type': type, ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body })

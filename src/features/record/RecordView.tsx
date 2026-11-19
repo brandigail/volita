@@ -7,6 +7,7 @@ import { planForChannel } from '../../types/plans'
 import { DRAFT_CATEGORIES, type DraftCategory } from '../../types/draft'
 import { UsageMeter } from '../plan/UsageMeter'
 import { CatchUpCard } from '../catchup/CatchUpCard'
+import { useGreeting } from '../profile/useGreeting'
 import { PhotoCaption } from './PhotoCaption'
 import { ChannelIcon } from '../../components/ChannelIcon'
 import { reportActivity } from '../../lib/activity-api'
@@ -31,6 +32,7 @@ interface RecordViewProps {
 }
 
 export function RecordView({ onNavigate }: RecordViewProps) {
+  const { line: greeting } = useGreeting()
   const { state, limits, refresh } = usePlan()
   // Until the plan has loaded, limits are the Free defaults. Showing them would flash locks and a 60 second limit at
   // someone on a paid plan (slow on a phone), so nothing is locked or fallen back until the real plan is known.
@@ -84,7 +86,7 @@ export function RecordView({ onNavigate }: RecordViewProps) {
       <div className="animate-rise">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-(--line) bg-(--surface) px-3 py-1 text-xs font-semibold backdrop-blur">
           <Sparkles className="size-3.5 text-ember-400" aria-hidden="true" />
-          Voice in, finished message out
+          {greeting ?? 'Voice in, finished message out'}
         </p>
         <h1 id="record-heading" className="mt-4 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl">
           Say it once.

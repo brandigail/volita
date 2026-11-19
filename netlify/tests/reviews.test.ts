@@ -14,7 +14,7 @@ const hasDb = Boolean(process.env.DATABASE_URL)
 const suite = hasDb ? describe : describe.skip
 const sql = hasDb ? neon(process.env.DATABASE_URL ?? '') : null
 const RUN = Math.random().toString(36).slice(2, 8)
-const profile = { name: 'T', businessName: '', role: '', phone: '', signature: '', calendarUrl: '' }
+const profile = { name: 'T', businessName: '', role: '', phone: '', signature: '', calendarUrl: '', nickname: '', businessAbout: '' }
 const call = (method: string, body?: unknown, path = '/api/reviews') =>
   new Request(`http://localhost:8888${path}`, { method, headers: { 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })
 

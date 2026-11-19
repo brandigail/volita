@@ -112,7 +112,7 @@ async function makeUser(plan: PlanId, label: string): Promise<SessionUser> {
   const email = `gmailtest.${RUN}.${label}@example.com`
   await sql?.query('INSERT INTO "user" (id, name, email, "emailVerified") VALUES ($1, $2, $3, true)', [id, 'Test Dad', email])
   createdIds.push(id)
-  return { id, email, plan, planSource: 'default', isOwner: false, profile: { name: 'Dad Myers', businessName: 'Myers Decks', role: 'Owner', phone: '', signature: '', calendarUrl: '' } }
+  return { id, email, plan, planSource: 'default', isOwner: false, profile: { name: 'Dad Myers', businessName: 'Myers Decks', role: 'Owner', phone: '', signature: '', calendarUrl: '', nickname: '', businessAbout: '' } }
 }
 
 const rows = async (query: string, params: unknown[]) => (await sql?.query(query, params)) as Record<string, unknown>[]

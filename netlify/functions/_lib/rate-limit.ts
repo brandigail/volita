@@ -4,7 +4,7 @@ import { errorResponse, upgradeResponse } from './http.ts'
 import { noteLimitHit } from './safety.ts'
 import { describeError } from './safe-log.ts'
 
-export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'catchup' | 'email'
+export type MeteredEndpoint = 'transcribe' | 'generate' | 'assistant' | 'listen' | 'speak' | 'calendar' | 'feedback' | 'export' | 'memory' | 'lookup' | 'caption' | 'catchup' | 'nickname' | 'email'
 
 export interface QuotaLimits {
   /** Calls one user may make in any rolling minute. */
@@ -65,6 +65,8 @@ export function limitsFor(endpoint: MeteredEndpoint, plan: PlanId): QuotaLimits 
       return { perMinute: 12, perDay: 150, globalPerDay: 2000 }
     case 'caption':
       return { perMinute: 4, perDay: Math.max(10, limits.draftsPerDay), globalPerDay: 300 }
+    case 'nickname':
+      return { perMinute: 3, perDay: 10, globalPerDay: 200 }
     case 'catchup':
       // Each catch-up is one vision call, a large share of the free token budget.
       return { perMinute: 4, perDay: limits.catchUpsPerDay, globalPerDay: 400 }
@@ -147,6 +149,7 @@ const NOUN: Record<MeteredEndpoint, string> = {
   lookup: 'web searches',
   caption: 'photo captions',
   catchup: 'chat catch-ups',
+  nickname: 'name suggestions',
   email: 'email requests',
 }
 

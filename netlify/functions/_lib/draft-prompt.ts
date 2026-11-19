@@ -60,6 +60,7 @@ function senderBlock(profile: Profile): string {
     profile.name && `Name: ${profile.name}`,
     profile.businessName && `Business: ${profile.businessName}`,
     profile.role && `Role: ${profile.role}`,
+    profile.businessAbout && `What the business does: ${profile.businessAbout}`,
   ].filter(Boolean)
   if (lines.length === 0) return ''
   return `\n\nThe sender (the person dictating). Mention the business only where it is natural, for example on a quote or in a social post:\n${lines.join('\n')}`
